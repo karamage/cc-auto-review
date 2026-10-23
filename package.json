@@ -20,7 +20,9 @@
     "lint": "oxlint .",
     "format": "biome format --write .",
     "check": "bun run typecheck && bun run lint && biome format . && bun test",
-    "app:dmg": "bun run build && tauri build --bundles dmg"
+    "app:dmg": "bun run build && tauri build --bundles dmg",
+    "app:build:universal": "bun run build:client && bun scripts/build-server.ts universal-apple-darwin && tauri build --target universal-apple-darwin --bundles app",
+    "app:dmg:universal": "bun run build:client && bun scripts/build-server.ts universal-apple-darwin && tauri build --target universal-apple-darwin --bundles dmg"
   },
   "dependencies": {
     "hono": "^4.12.32",

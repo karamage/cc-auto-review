@@ -20,7 +20,7 @@ diff と AI の指摘を 1 画面で見て、指摘を採用・却下・編集�
 
 ## インストール
 
-ソースからビルドし（[開発](#開発)を参照）、`src-tauri/target/release/bundle/macos/` にできる `CC Auto Review.app` を `/Applications` に入れてください。
+ソースからビルドし（[開発](#開発)を参照）、できた `CC Auto Review.app` を `/Applications` に入れてください。`bun run app:build:universal` なら、Apple Silicon と Intel の両方で動く 1 つのアプリが `src-tauri/target/universal-apple-darwin/release/bundle/macos/` にできます。
 
 > 署名していないため、初回は右クリックして「開く」を選んでください。
 
@@ -109,6 +109,8 @@ bun install
 bun run check        # 型検査 + lint + format の確認 + テスト
 bun run app:build    # 画面・サーバの実行ファイル・CC Auto Review.app をビルド
 bun run app:dmg      # .dmg も作る（Finder の自動操作の許可が要ることがある）
+bun run app:build:universal   # Apple Silicon と Intel の両方で動く 1 つの .app
+bun run app:dmg:universal     # 同じものを .dmg で
 ```
 
 ブラウザだけで開発する場合（Tauri なし）:

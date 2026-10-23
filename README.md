@@ -20,7 +20,7 @@ The app looks for `gh` and `claude` in your login shell's `PATH`, so it works wh
 
 ## Install
 
-Build it from source (see [Development](#development)), then drag `CC Auto Review.app` from `src-tauri/target/release/bundle/macos/` into `/Applications`.
+Build it from source (see [Development](#development)), then drag `CC Auto Review.app` into `/Applications`. `bun run app:build:universal` produces a single app for both Apple Silicon and Intel Macs in `src-tauri/target/universal-apple-darwin/release/bundle/macos/`.
 
 > The app is not signed. On first launch, right-click it and choose **Open**.
 
@@ -109,6 +109,8 @@ bun install
 bun run check        # typecheck + lint + format check + tests
 bun run app:build    # builds the UI, the server binary and CC Auto Review.app
 bun run app:dmg      # also builds a .dmg (Finder automation permission may be required)
+bun run app:build:universal   # one .app for both Apple Silicon and Intel Macs
+bun run app:dmg:universal     # the same, as a .dmg
 ```
 
 Browser-only development (no Tauri):

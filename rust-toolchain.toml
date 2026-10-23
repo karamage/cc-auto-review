@@ -1,4 +1,6 @@
-# Tauri 2 の依存は新しい Rust（edition 2024）を要る。古い既定のツールチェーンでも、ここでは stable を使う
+# Tauri 2 の依存は新しい Rust（edition 2024）を要る。古い既定のツールチェーンでも、ここでは stable を使う。
+# universal ビルド（Apple Silicon と Intel の両方）に要る 2 つのターゲットも入れる
 [toolchain]
 channel = "stable"
 profile = "minimal"
+targets = ["aarch64-apple-darwin", "x86_64-apple-darwin"]
