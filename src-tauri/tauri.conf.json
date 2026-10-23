@@ -23,7 +23,10 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["app", "dmg"],
+    "targets": [
+      "app",
+      "dmg"
+    ],
     "category": "DeveloperTool",
     "shortDescription": "Review GitHub pull requests with Claude Code",
     "icon": [
@@ -33,12 +36,16 @@
       "icons/icon.icns",
       "icons/icon.png"
     ],
-    "externalBin": ["binaries/cc-auto-review-server"],
+    "externalBin": [
+      "binaries/cc-auto-review-server"
+    ],
     "resources": {
       "../dist/client/": "client/"
     },
     "macOS": {
-      "minimumSystemVersion": "11.0"
+      "minimumSystemVersion": "11.0",
+      "entitlements": "./Entitlements.plist",
+      "hardenedRuntime": true
     }
   }
 }

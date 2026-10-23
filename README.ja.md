@@ -22,7 +22,7 @@ diff と AI の指摘を 1 画面で見て、指摘を採用・却下・編集�
 
 ソースからビルドし（[開発](#開発)を参照）、できた `CC Auto Review.app` を `/Applications` に入れてください。`bun run app:build:universal` なら、Apple Silicon と Intel の両方で動く 1 つのアプリが `src-tauri/target/universal-apple-darwin/release/bundle/macos/` にできます。
 
-> 署名していないため、初回は右クリックして「開く」を選んでください。
+> 手元でビルドしたアプリは署名されていません。開けないときは「システム設定 → プライバシーとセキュリティ → このまま開く」で許可してください。`bun run release:mac` で作った DMG は署名・公証済みなので、そのまま開けます。
 
 ## 使い方
 
@@ -121,6 +121,25 @@ bun run dev:client   # Vite（localhost:5173。/api は 4711 にプロキシ）
 ```
 
 テストは実際の `gh` / `claude` / `git` を起動せず、`CommandRunner` の偽実装を使います。
+
+### 署名・公証した DMG を作る
+
+最初に一度だけ準備します（Apple Developer Program への加入が必要です）。
+
+1. 「Developer ID Application」の証明書を作る: Xcode → Settings → Accounts → Manage Certificates → `+`
+2. 公証の認証情報をキーチェーンに保存する（パスワードには [App 用パスワード](https://support.apple.com/ja-jp/102654)を使う）
+
+   ```bash
+   xcrun notarytool store-credentials cc-auto-review --apple-id <Apple ID> --team-id <Team ID>
+   ```
+
+あとは次のコマンドで作れます。
+
+```bash
+bun run release:mac   # → release/CC-Auto-Review_<version>_universal.dmg
+```
+
+universal 版のアプリをビルドし、Hardened Runtime 付きで署名します（同梱の Bun サーバが JIT を使えるよう `src-tauri/Entitlements.plist` で許可）。続けてアプリを公証してチケットを貼り、DMG にまとめ、DMG も公証してチケットを貼ります。証明書を選ぶときは `APPLE_SIGNING_IDENTITY`、別のプロファイルを使うときは `NOTARY_PROFILE` を指定します。
 
 ## ライセンス
 

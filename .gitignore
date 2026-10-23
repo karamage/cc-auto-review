@@ -7,3 +7,6 @@ dist
 src-tauri/target
 src-tauri/gen
 src-tauri/binaries
+
+# 配布用の DMG（scripts/release-mac.ts）
+release

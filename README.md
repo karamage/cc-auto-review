@@ -22,7 +22,7 @@ The app looks for `gh` and `claude` in your login shell's `PATH`, so it works wh
 
 Build it from source (see [Development](#development)), then drag `CC Auto Review.app` into `/Applications`. `bun run app:build:universal` produces a single app for both Apple Silicon and Intel Macs in `src-tauri/target/universal-apple-darwin/release/bundle/macos/`.
 
-> The app is not signed. On first launch, right-click it and choose **Open**.
+> A locally built app is not signed. If macOS refuses to open it, allow it in **System Settings → Privacy & Security → Open Anyway**. Release DMGs built with `bun run release:mac` are signed and notarized and open normally.
 
 ## Usage
 
@@ -121,6 +121,25 @@ bun run dev:client   # Vite on localhost:5173, proxies /api to 4711
 ```
 
 Tests never start real `gh` / `claude` / `git`; they use a fake `CommandRunner`.
+
+### Releasing a signed, notarized DMG
+
+One-time setup (requires an Apple Developer Program membership):
+
+1. Create a **Developer ID Application** certificate: Xcode → Settings → Accounts → Manage Certificates → `+`.
+2. Save notarization credentials to the keychain (use an [app-specific password](https://support.apple.com/102654)):
+
+   ```bash
+   xcrun notarytool store-credentials cc-auto-review --apple-id <Apple ID> --team-id <Team ID>
+   ```
+
+Then:
+
+```bash
+bun run release:mac   # → release/CC-Auto-Review_<version>_universal.dmg
+```
+
+The script builds the universal app, signs it with Hardened Runtime (`src-tauri/Entitlements.plist` lets the bundled Bun server use its JIT), notarizes and staples the app, packs it into a DMG, and notarizes and staples the DMG. Set `APPLE_SIGNING_IDENTITY` to pick a certificate and `NOTARY_PROFILE` to use another keychain profile.
 
 ## License
 
