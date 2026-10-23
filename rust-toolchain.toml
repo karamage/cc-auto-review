@@ -1,0 +1,4 @@
+# Tauri 2 の依存は新しい Rust（edition 2024）を要る。古い既定のツールチェーンでも、ここでは stable を使う
+[toolchain]
+channel = "stable"
+profile = "minimal"

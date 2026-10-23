@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "default",
+  "description": "The splash screen needs no permissions; the app UI is served by the bundled local server and does not use Tauri APIs.",
+  "windows": ["main"],
+  "permissions": []
+}

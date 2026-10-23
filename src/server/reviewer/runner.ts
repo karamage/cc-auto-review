@@ -1,0 +1,160 @@
+import { unlink } from "node:fs/promises";
+import type { ReviewModel, ReviewResult } from "../../shared/types.ts";
+import type { LocalizedText } from "../../shared/i18n.ts";
+import { AppError } from "../errors.ts";
+import type { CommandRunner } from "../exec.ts";
+import { FindingParseError, parseReviewResult } from "./parse.ts";
+import { ENV_BASE, ENV_HEAD, ENV_REPO, type ReadTarget } from "./remote-read.ts";
+import { UsageRecorder } from "./usage.ts";
+
+export class ReviewTimeoutError extends AppError {
+  constructor(message: string | LocalizedText) {
+    super(message);
+    this.name = "ReviewTimeoutError";
+  }
+}
+
+/** claude 自体が異常終了した場合。再実行しても直らないので retry しない */
+export class ReviewCommandError extends AppError {
+  constructor(message: string | LocalizedText, detail?: string) {
+    super(message, detail);
+    this.name = "ReviewCommandError";
+  }
+}
+
+export interface FileReader {
+  read(path: string): Promise<string>;
+  remove(path: string): Promise<void>;
+}
+
+export class BunFileReader implements FileReader {
+  async read(path: string): Promise<string> {
+    return await Bun.file(path).text();
+  }
+  async remove(path: string): Promise<void> {
+    try {
+      await unlink(path);
+    } catch {
+      // 既に無い場合は何もしない
+    }
+  }
+}
+
+/**
+ * 作業ディレクトリに無いファイルは remote-read だけで読ませる。git も任意の gh も許可しない。
+ * Skill や MCP、WebFetch などは、プロファイルで利用者が明示したものだけを足す
+ */
+export function allowedTools(
+  remoteReadCommand: string,
+  extraTools: readonly string[] = [],
+): string {
+  return [`Read,Grep,Glob,Write,Bash(${remoteReadCommand}:*)`, ...extraTools].join(",");
+}
+
+/** 1 回の AI レビューの実行条件 */
+export interface ReviewRunOptions {
+  /** null なら --model を付けず、claude の設定に任せる */
+  model?: ReviewModel | null;
+  /** 追加で許すツール */
+  tools?: readonly string[];
+  timeoutMs?: number;
+}
+
+export interface ReviewTarget extends ReadTarget {
+  /** claude の cwd */
+  workDir: string;
+}
+
+export class ReviewRunner {
+  constructor(
+    private readonly runner: CommandRunner,
+    private readonly files: FileReader,
+    private readonly remoteReadCommand: string,
+    /** 画面に出す Claude Code の使用量。実行のたびに出力から読んで更新する */
+    readonly usage: UsageRecorder = new UsageRecorder(),
+  ) {}
+
+  async review(
+    target: ReviewTarget,
+    prompt: string,
+    outputPath: string,
+    options: ReviewRunOptions = {},
+  ): Promise<ReviewResult> {
+    try {
+      return await this.attempt(target, prompt, outputPath, options);
+    } catch (error) {
+      // 再実行して直る見込みがあるのは「出力の形が崩れた」ときだけ
+      if (!(error instanceof FindingParseError)) throw error;
+      return await this.attempt(target, prompt, outputPath, options);
+    } finally {
+      await this.files.remove(outputPath);
+    }
+  }
+
+  private async attempt(
+    target: ReviewTarget,
+    prompt: string,
+    outputPath: string,
+    { model = null, tools = [], timeoutMs = 600_000 }: ReviewRunOptions,
+  ): Promise<ReviewResult> {
+    const result = await this.runner.run(
+      [
+        "claude",
+        "-p",
+        prompt,
+        // 結果の JSON には利用枠の状態が載らない。イベントの流れで受け取る（-p では --verbose が要る）
+        "--output-format",
+        "stream-json",
+        "--verbose",
+        "--allowedTools",
+        allowedTools(this.remoteReadCommand, tools),
+        ...(model === null ? [] : ["--model", model]),
+      ],
+      {
+        cwd: target.workDir,
+        timeoutMs,
+        // remote-read が読む先。claude にはコマンドの引数しか触らせない
+        env: {
+          [ENV_REPO]: target.repo,
+          [ENV_HEAD]: target.headSha,
+          [ENV_BASE]: target.baseSha,
+        },
+      },
+    );
+    // 失敗した回も枠は消費している。上限に達して失敗したなら、その状態こそ見せたい
+    this.usage.record(result.stdout);
+
+    if (result.timedOut) {
+      throw new ReviewTimeoutError({
+        ja: `AI レビューが ${Math.round(timeoutMs / 1000)} 秒で終わらなかったため中断しました`,
+        en: `The AI review was stopped because it did not finish within ${Math.round(timeoutMs / 1000)} seconds`,
+      });
+    }
+
+    if (result.exitCode !== 0) {
+      // 再実行しても同じ結果になる。パース失敗として retry させない
+      throw new ReviewCommandError(
+        {
+          ja: `AI レビューの実行に失敗しました（終了コード ${result.exitCode}）`,
+          en: `The AI review failed (exit code ${result.exitCode})`,
+        },
+        [result.stderr, result.stdout].join("\n").trim().slice(0, 2000),
+      );
+    }
+
+    let raw: string;
+    try {
+      raw = await this.files.read(outputPath);
+    } catch {
+      throw new FindingParseError(
+        {
+          ja: "レビュー結果のファイルが作成されませんでした",
+          en: "The review did not write its result file",
+        },
+        [result.stdout, result.stderr].join("\n").slice(0, 2000),
+      );
+    }
+
+    return parseReviewResult(raw);
+  }
+}

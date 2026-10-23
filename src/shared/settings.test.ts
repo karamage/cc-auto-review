@@ -1,0 +1,76 @@
+import { expect, test } from "bun:test";
+import {
+  compilePattern,
+  DEFAULT_PROFILE_ID,
+  defaultSettings,
+  findProfile,
+  normalizeSettings,
+} from "./settings.ts";
+
+test("何も無ければ既定の設定になる", () => {
+  expect(normalizeSettings(null)).toEqual(defaultSettings());
+  expect(normalizeSettings("broken")).toEqual(defaultSettings());
+});
+
+test("保存したものをそのまま読み直せる", () => {
+  const settings = defaultSettings();
+  expect(normalizeSettings(JSON.parse(JSON.stringify(settings)))).toEqual(settings);
+});
+
+test("既定のプロファイルは、有効な観点を持ち、ツールを何も許さない", () => {
+  const profile = findProfile(defaultSettings(), null);
+  expect(profile.id).toBe(DEFAULT_PROFILE_ID);
+  expect(profile.perspectives.filter((p) => p.enabled).length).toBeGreaterThan(3);
+  expect(profile.allowedTools).toEqual([]);
+});
+
+test("プロファイルを全部消したら既定に戻し、存在しない id の参照は先頭に寄せる", () => {
+  const settings = normalizeSettings({ profiles: [], defaultProfileId: "nope" });
+  expect(settings.profiles.length).toBeGreaterThan(0);
+  const custom = normalizeSettings({
+    profiles: [{ id: "a", name: "A", perspectives: [] }],
+    defaultProfileId: "nope",
+    autopilot: { profileId: "nope", routing: [{ label: "x", mention: "", profileId: "nope" }] },
+  });
+  expect(custom.defaultProfileId).toBe("a");
+  expect(custom.autopilot.profileId).toBe("a");
+  // 消えたプロファイルを指す規則は捨てる
+  expect(custom.autopilot.routing).toEqual([]);
+});
+
+test("名前の無いプロファイルや見出しの無い観点は捨て、同じ id には番号を足す", () => {
+  const settings = normalizeSettings({
+    profiles: [
+      { id: "a", name: "A", perspectives: [{ title: "", description: "x" }, { title: "T" }] },
+      { id: "a", name: "B" },
+      { id: "c", name: "  " },
+    ],
+  });
+  expect(settings.profiles.map((p) => p.id)).toEqual(["a", "a-2"]);
+  expect(settings.profiles[0]?.perspectives.map((p) => p.title)).toEqual(["T"]);
+});
+
+test("数値は範囲に丸め、モデルは決めた別名か null だけを通す", () => {
+  const settings = normalizeSettings({
+    timeoutMinutes: 999,
+    defaultModel: "--dangerously-skip-permissions",
+    autopilot: { intervalMinutes: 0, model: null },
+  });
+  expect(settings.timeoutMinutes).toBe(60);
+  expect(settings.defaultModel).toBeNull();
+  expect(settings.autopilot.intervalMinutes).toBe(1);
+  expect(settings.autopilot.model).toBeNull();
+});
+
+test("ツールの指定に使えない文字を含むものは捨てる", () => {
+  const settings = normalizeSettings({
+    profiles: [{ id: "a", name: "A", allowedTools: ["Skill", "mcp__docs", "Bash;rm -rf /", ""] }],
+  });
+  expect(settings.profiles[0]?.allowedTools).toEqual(["Skill", "mcp__docs"]);
+});
+
+test("正規表現は (?i) で大文字小文字を区別せず、書き損じは null", () => {
+  expect(compilePattern("(?i)auth")?.test("src/AUTH/a.ts")).toBe(true);
+  expect(compilePattern("auth")?.test("src/AUTH/a.ts")).toBe(false);
+  expect(compilePattern("(")).toBeNull();
+});

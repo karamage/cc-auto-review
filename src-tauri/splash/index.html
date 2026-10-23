@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <title>CC Auto Review</title>
+    <style>
+      :root { color-scheme: dark; }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        display: grid;
+        place-items: center;
+        background: radial-gradient(900px 600px at 50% 0%, rgb(46 233 255 / 0.12), transparent 65%), #030a16;
+        color: #e6f3ff;
+        font: 14px/1.6 -apple-system, BlinkMacSystemFont, "Hiragino Sans", system-ui, sans-serif;
+      }
+      main { width: min(640px, calc(100% - 48px)); text-align: center; }
+      h1 { margin: 0 0 8px; font-size: 20px; letter-spacing: 0.08em; }
+      p { margin: 0; color: #7d98bd; }
+      .spinner {
+        width: 28px; height: 28px; margin: 0 auto 18px;
+        border: 2px solid rgb(46 233 255 / 0.2); border-top-color: #2ee9ff; border-radius: 50%;
+        animation: spin 0.9s linear infinite;
+      }
+      @keyframes spin { to { transform: rotate(360deg); } }
+      pre {
+        margin: 18px 0 0; padding: 12px 14px; max-height: 50vh; overflow: auto; text-align: left;
+        white-space: pre-wrap; font: 12px/1.5 ui-monospace, Menlo, monospace;
+        color: #ffb3c2; background: rgb(255 77 109 / 0.08); border: 1px solid rgb(255 77 109 / 0.3); border-radius: 8px;
+      }
+      [hidden] { display: none; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <div class="spinner" id="spinner"></div>
+      <h1>CC AUTO REVIEW</h1>
+      <p id="status">Starting… / 起動しています…</p>
+      <pre id="error" hidden></pre>
+    </main>
+    <script>
+      window.showError = (message) => {
+        document.getElementById("spinner").hidden = true;
+        document.getElementById("status").textContent =
+          "Could not start. Check that gh and claude are installed and that `gh auth login` is done. / 起動できませんでした。gh と claude がインストール済みで、gh auth login が済んでいるか確かめてください。";
+        const error = document.getElementById("error");
+        error.textContent = message;
+        error.hidden = false;
+      };
+    </script>
+  </body>
+</html>

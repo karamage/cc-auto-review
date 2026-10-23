@@ -1,0 +1,41 @@
+{
+  "name": "cc-auto-review",
+  "version": "0.1.0",
+  "description": "A desktop app that reviews GitHub pull requests with your local Claude Code",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "bun run build:client && bun src/server/index.ts",
+    "dev:server": "bun --watch src/server/index.ts --port 4711",
+    "dev:client": "vite",
+    "build:client": "vite build",
+    "build:server": "bun scripts/build-server.ts",
+    "build": "bun run build:client && bun run build:server",
+    "tauri": "tauri",
+    "app:dev": "bun run build && tauri dev",
+    "app:build": "bun run build && tauri build --bundles app",
+    "test": "bun test",
+    "typecheck": "tsc --noEmit",
+    "lint": "oxlint .",
+    "format": "biome format --write .",
+    "check": "bun run typecheck && bun run lint && biome format . && bun test",
+    "app:dmg": "bun run build && tauri build --bundles dmg"
+  },
+  "dependencies": {
+    "hono": "^4.12.32",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.5.5",
+    "@tauri-apps/cli": "^2.12.4",
+    "@types/bun": "^1.3.14",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@vitejs/plugin-react": "^6.0.4",
+    "oxlint": "~1.75.0",
+    "typescript": "7",
+    "vite": "8"
+  }
+}
