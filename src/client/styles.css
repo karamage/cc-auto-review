@@ -294,7 +294,8 @@ legend { padding: 0; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
   align-items: start;
   margin-top: 28px;
 }
-.review-main { grid-area: main; display: grid; gap: 20px; min-width: 0; }
+/* 列を明示しないと暗黙の列が中身の最小幅まで広がり、PR 説明の大きな表や画像が右パネルへはみ出す */
+.review-main { grid-area: main; display: grid; grid-template-columns: minmax(0, 1fr); gap: 20px; min-width: 0; }
 
 .review-panel {
   grid-area: panel;
