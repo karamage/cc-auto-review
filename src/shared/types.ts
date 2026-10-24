@@ -151,6 +151,21 @@ export interface PriorFindingCheck {
   comment: ExistingComment;
 }
 
+/**
+ * i18n の観点で、元の日本語と locale ファイルの日本語を並べたもの 1 件。
+ * 一致しているかは AI に決めさせず、文字列を比べて決める
+ */
+export interface I18nComparison {
+  /** locale のキー。分からなければ空 */
+  key: string;
+  /** 変更前のコードなどにあった、元の日本語 */
+  original: string;
+  /** locale ファイルに書かれた日本語 */
+  locale: string;
+  /** 前後の空白を除いて完全に一致するか */
+  match: boolean;
+}
+
 /** AI レビュー 1 回分の結果 */
 export interface ReviewResult {
   findings: Finding[];
@@ -158,6 +173,8 @@ export interface ReviewResult {
   priorChecks: { commentId: number; status: PriorFindingStatus; evidence: string }[];
   /** AI が判定した変更のリスク。リスクの判定を頼んでいなければ null */
   risk: RiskAssessment | null;
+  /** 元の日本語と locale の日本語の比較。i18n の観点が無効なら null */
+  i18nComparisons: I18nComparison[] | null;
 }
 
 /**
@@ -262,6 +279,8 @@ export type ReviewStreamEvent =
       priorChecks: PriorFindingCheck[];
       /** 変更のリスク。パスと規模の規則と AI の判定を合わせたもの。判定を頼んでいなければ無い */
       risk?: RiskAssessment | null;
+      /** 元の日本語と locale の日本語の比較。i18n の観点で AI レビューした回だけある */
+      i18nComparisons?: I18nComparison[] | null;
       /** PR の説明文（無ければタイトル）の言語。読み取れなければ無い */
       descriptionLang?: Lang | null;
       /** 完全自動運転の回で、PR に自動判断のラベルが付いていたか。判定を頼んでいなければ無い */

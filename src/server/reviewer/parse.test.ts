@@ -159,3 +159,25 @@ test("リスクの判定を読み取る。段階を読めなければ判定が�
   ).toBeNull();
   expect(parseReviewResult(JSON.stringify({ findings: [] })).risk).toBeNull();
 });
+
+test("元の日本語と locale の日本語は、AI の判定ではなく文字列を比べて一致を決める", () => {
+  const result = parseReviewResult(
+    JSON.stringify({
+      findings: [],
+      i18nComparisons: [
+        { key: "history.open", original: "履歴を見る", locale: " 履歴を見る ", match: false },
+        { key: "", original: "帳票出力", locale: "帳票出力設定", match: true },
+        { key: "x", original: "", locale: "" },
+        "broken",
+      ],
+    }),
+  );
+  expect(result.i18nComparisons).toEqual([
+    { key: "history.open", original: "履歴を見る", locale: "履歴を見る", match: true },
+    { key: "", original: "帳票出力", locale: "帳票出力設定", match: false },
+  ]);
+});
+
+test("i18nComparisons が書かれていなければ null", () => {
+  expect(parseReviewResult('{"findings": []}').i18nComparisons).toBeNull();
+});

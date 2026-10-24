@@ -75,7 +75,7 @@ export interface AutopilotConfig {
 }
 
 export interface Settings {
-  version: 1;
+  version: 2;
   profiles: ReviewProfile[];
   /** レビュー画面で最初に選ばれるプロファイル */
   defaultProfileId: string;
@@ -85,6 +85,12 @@ export interface Settings {
   timeoutMinutes: number;
   autopilot: AutopilotConfig;
 }
+
+/**
+ * i18n の観点の id。これが有効な回は、元の日本語と locale の日本語の対応も AI に書かせ、
+ * 一致しているかを画面に出す
+ */
+export const I18N_PERSPECTIVE_ID = "i18n";
 
 /**
  * 既定の観点。指摘の精度を上げるため、どれも「確かめられる問題」に絞る。
@@ -146,6 +152,14 @@ export const DEFAULT_PERSPECTIVES: readonly Perspective[] = [
     description:
       "Whether the implementation does what the PR description and the linked issues say, and nothing silently beyond it.",
     enabled: true,
+  },
+  {
+    id: I18N_PERSPECTIVE_ID,
+    title: "i18n",
+    description:
+      "Review the translations added or changed in locale files. Report mistranslations, and wording that a native speaker of that language would find unnatural or hard to understand, with a better phrasing. Also check that moving a Japanese string into a locale file did not change the original Japanese.",
+    // 翻訳を含まない PR がほとんどなので、既定では切っておき、要る PR で入れてもらう
+    enabled: false,
   },
 ];
 
@@ -248,7 +262,7 @@ export const DEFAULT_IGNORED_PATHS: readonly string[] = [
 
 export function defaultSettings(): Settings {
   return {
-    version: 1,
+    version: 2,
     profiles: defaultProfiles(),
     defaultProfileId: DEFAULT_PROFILE_ID,
     defaultModel: null,
@@ -268,6 +282,11 @@ export function defaultSettings(): Settings {
       ignoredPaths: [...DEFAULT_IGNORED_PATHS],
     },
   };
+}
+
+/** i18n の観点が有効か。有効なら元の日本語と locale の日本語の比較も頼む */
+export function hasI18nPerspective(profile: ReviewProfile): boolean {
+  return profile.perspectives.some((p) => p.id === I18N_PERSPECTIVE_ID && p.enabled);
 }
 
 /** id で探し、無ければ既定のプロファイル、それも無ければ先頭 */
@@ -384,7 +403,10 @@ export function normalizeSettings(raw: unknown): Settings {
     ? value.profiles.flatMap((p, i) => normalizeProfile(p, i) ?? [])
     : defaults.profiles;
   // プロファイルが 1 つも無いと AI レビューを実行できない。消し切ったら既定に戻す
-  const usable = profiles.length > 0 ? dedupeIds(profiles) : defaults.profiles;
+  const deduped = profiles.length > 0 ? dedupeIds(profiles) : defaults.profiles;
+  // version 1 の設定には i18n の観点が無い。あとから既定に足した観点なので、切った状態で足す。
+  // 一度足したあとは、利用者が消したらそのままにする
+  const usable = value.version === 2 ? deduped : deduped.map(addI18nPerspective);
   const ids = new Set(usable.map((p) => p.id));
   const pick = (id: unknown): string =>
     typeof id === "string" && ids.has(id) ? id : (usable[0] as ReviewProfile).id;
@@ -393,7 +415,7 @@ export function normalizeSettings(raw: unknown): Settings {
   const label = (v: unknown, fallback: string): string => str(v, fallback, 50).trim() || fallback;
 
   return {
-    version: 1,
+    version: 2,
     profiles: usable,
     defaultProfileId: pick(value.defaultProfileId),
     defaultModel: model(value.defaultModel, defaults.defaultModel),
@@ -413,6 +435,12 @@ export function normalizeSettings(raw: unknown): Settings {
       ignoredPaths: strings(auto.ignoredPaths, DEFAULT_IGNORED_PATHS),
     },
   };
+}
+
+function addI18nPerspective(profile: ReviewProfile): ReviewProfile {
+  if (profile.perspectives.some((p) => p.id === I18N_PERSPECTIVE_ID)) return profile;
+  const i18n = DEFAULT_PERSPECTIVES.find((p) => p.id === I18N_PERSPECTIVE_ID) as Perspective;
+  return { ...profile, perspectives: [...profile.perspectives, { ...i18n }] };
 }
 
 /** 同じ id のプロファイルが並ぶと選べなくなる。2 つ目以降に番号を足す */

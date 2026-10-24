@@ -269,3 +269,16 @@ test("リスクの判定は頼んだときだけ載せる", () => {
   expect(buildReviewPrompt({ ...BASE, assessRisk: true })).toContain('"risk"');
   expect(buildReviewPrompt(BASE)).not.toContain("## Risk assessment");
 });
+
+test("i18n の観点は既定で切ってあり、有効にした回だけ元の日本語との比較を頼む", () => {
+  expect(buildReviewPrompt(BASE)).not.toContain("i18nComparisons");
+
+  const profile: ReviewProfile = {
+    ...PROFILE,
+    perspectives: PROFILE.perspectives.map((p) => ({ ...p, enabled: p.id === "i18n" })),
+  };
+  const prompt = buildReviewPrompt({ ...BASE, profile });
+  expect(prompt).toContain("**i18n**");
+  expect(prompt).toContain("## Original Japanese vs. locale Japanese");
+  expect(prompt).toContain('"i18nComparisons"');
+});

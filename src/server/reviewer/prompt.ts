@@ -1,5 +1,5 @@
 import type { Lang } from "../../shared/i18n.ts";
-import type { ReviewProfile } from "../../shared/settings.ts";
+import { hasI18nPerspective, type ReviewProfile } from "../../shared/settings.ts";
 import type { DiffFile, ExistingComment } from "../../shared/types.ts";
 import { isAgentConfig } from "../snapshot/manager.ts";
 
@@ -262,6 +262,28 @@ function readingSection(input: PromptInput): string {
 Read only as much of the surrounding code as you need. You do not need to read the whole repository.`;
 }
 
+/**
+ * i18n の観点が有効な回に、元の日本語と locale の日本語を並べさせる節。
+ * 一致しているかはサーバが文字列を比べて決めるので、AI には写させるだけにする
+ */
+function i18nSection(profile: ReviewProfile): string {
+  if (!hasI18nPerspective(profile)) return "";
+  return `## Original Japanese vs. locale Japanese
+
+For every Japanese string this PR moves into or edits in a locale (translation) file, find the original Japanese it replaces — the hard-coded text in the old code, or the previous value in the Japanese locale file — and write both to \`i18nComparisons\`.
+
+- original: the original Japanese, copied character for character from the old side of the diff
+- locale: the Japanese now in the locale file, copied character for character
+- key: the locale key, or an empty string if there is none
+- Copy the text exactly, including punctuation and spacing. Do not judge whether they match; that is decided from what you copy
+- Skip brand-new strings that replace no original Japanese
+- Include pairs that are identical too. If there are none, make \`i18nComparisons\` an empty array
+
+A difference between original and locale is also a finding under the i18n perspective unless the PR description says the wording was changed on purpose.
+
+`;
+}
+
 /** 完全自動運転で、人の判断が要る変更かを AI に決めさせる節 */
 function riskSection(assessRisk: boolean | undefined): string {
   if (assessRisk !== true) return "";
@@ -301,7 +323,7 @@ Your goal is to find the problems that would actually hurt if this change were m
 
 ${readingSection(input)}
 
-${fileListSection(input.files)}${descriptionSection(input.description)}${perspectivesSection(profile)}${methodSection(profile)}${teamSection(profile)}${exclusionSection(profile)}${agentConfigSection(input.files, input.remoteReadCommand)}${conversationSection(input.comments, input.author)}${instructionSection(input.instructions)}${riskSection(input.assessRisk)}## Output
+${fileListSection(input.files)}${descriptionSection(input.description)}${perspectivesSection(profile)}${methodSection(profile)}${teamSection(profile)}${exclusionSection(profile)}${agentConfigSection(input.files, input.remoteReadCommand)}${conversationSection(input.comments, input.author)}${instructionSection(input.instructions)}${i18nSection(profile)}${riskSection(input.assessRisk)}## Output
 
 Every finding must be **tied to a changed line**. line is the line number in the new file and must be inside the ranges listed above.
 
@@ -325,6 +347,13 @@ Write JSON in the following shape to \`${input.outputPath}\` with the Write tool
   "priorFindings": [
     { "commentId": 123, "status": "fixed", "evidence": "src/a.ts line 40 now rejects null" }
   ]${
+    hasI18nPerspective(profile)
+      ? `,
+  "i18nComparisons": [
+    { "key": "history.open", "original": "履歴を見る", "locale": "履歴を見る" }
+  ]`
+      : ""
+  }${
     input.assessRisk === true
       ? `,
   "risk": { "level": "medium", "reasons": ["Changes when an existing screen is shown"] }`

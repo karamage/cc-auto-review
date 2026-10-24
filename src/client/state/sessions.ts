@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from "react";
 import type {
+  I18nComparison,
   PostedReview,
   PriorFindingCheck,
   PRRef,
@@ -94,6 +95,8 @@ export interface ReviewSession {
   draft: DraftState;
   /** 過去の指摘が今のコードで直っているかの、AI の判定。draft と同じ回の AI レビューのもの */
   priorChecks: PriorFindingCheck[];
+  /** 元の日本語と locale の日本語の比較。draft と同じ回の AI レビューのもの。i18n の観点で見ていなければ null */
+  i18nComparisons: I18nComparison[] | null;
   instructions: string;
   /** AI レビューに使うモデル。"default" なら設定の既定、null なら claude の設定に任せる */
   model: ReviewModel | null | "default";
@@ -142,6 +145,7 @@ export function emptySession(lang: Lang = getLang()): ReviewSession {
       error: null,
       draft: initDraft([], lang),
       priorChecks: [],
+      i18nComparisons: null,
       instructions: "",
       model: "default",
       profileId: null,
@@ -385,6 +389,7 @@ async function execute(
           progress: "",
           draft: initDraft(event.findings, lang),
           priorChecks: event.priorChecks,
+          i18nComparisons: event.i18nComparisons ?? null,
           risk: event.risk ?? null,
           descriptionLang: event.descriptionLang ?? null,
           autoJudge: event.autoJudge === true,

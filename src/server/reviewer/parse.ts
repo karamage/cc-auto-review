@@ -1,5 +1,6 @@
 import {
   type Finding,
+  type I18nComparison,
   type PriorFindingStatus,
   type ReviewResult,
   SEVERITIES,
@@ -101,6 +102,19 @@ function parseRisk(raw: unknown): RiskAssessment | null {
   return { level: item.level, reasons };
 }
 
+/** 書かれていなければ null。頼んだ回かどうかは呼び出し側が決める */
+function parseI18nComparisons(raw: unknown): I18nComparison[] | null {
+  if (!Array.isArray(raw)) return null;
+  return raw.flatMap((item) => {
+    const entry = item as { key?: unknown; original?: unknown; locale?: unknown } | null;
+    if (entry === null || typeof entry !== "object") return [];
+    const original = text(entry.original);
+    const locale = text(entry.locale);
+    if (original === "" && locale === "") return [];
+    return [{ key: text(entry.key), original, locale, match: original === locale }];
+  });
+}
+
 export function parseReviewResult(output: string): ReviewResult {
   let parsed: unknown;
   try {
@@ -147,5 +161,8 @@ export function parseReviewResult(output: string): ReviewResult {
     findings,
     priorChecks: parsePriorChecks((parsed as { priorFindings?: unknown }).priorFindings),
     risk: parseRisk((parsed as { risk?: unknown }).risk),
+    i18nComparisons: parseI18nComparisons(
+      (parsed as { i18nComparisons?: unknown }).i18nComparisons,
+    ),
   };
 }

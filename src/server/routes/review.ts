@@ -16,7 +16,7 @@ import {
   reviewedChangedLines,
   ruleRisk,
 } from "../../shared/risk.ts";
-import { findProfile } from "../../shared/settings.ts";
+import { findProfile, hasI18nPerspective } from "../../shared/settings.ts";
 import type { AppDeps } from "../app.ts";
 import { anchorFindings } from "../diff/anchor.ts";
 import { diffDigest } from "../diff/digest.ts";
@@ -258,6 +258,8 @@ export function registerReviewRoutes(app: Hono, deps: AppDeps): void {
           type: "findings",
           findings: anchorFindings(result.findings, files, lang),
           priorChecks: attachComments(result.priorChecks, [...comments, ...reviewBodies]),
+          // i18n の観点で見た回は、AI が書き忘れても「比べるものが無かった」と出す
+          i18nComparisons: hasI18nPerspective(profile) ? (result.i18nComparisons ?? []) : null,
           // 判定を頼んだのに AI が書かなかったときは、安全側に倒して人に回す
           risk: assessRisk
             ? mergeRisk(

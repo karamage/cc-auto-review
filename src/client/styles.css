@@ -780,7 +780,7 @@ dialog.confirm p { font-size: 12.5px; margin: 0 0 8px; }
 .pr-body th, .pr-body td { border: 1px solid var(--border); padding: 6px 10px; }
 .pr-body blockquote { margin: 0; padding-left: 12px; border-left: 3px solid var(--border); color: var(--muted); }
 
-.unanchored, .conversation, .prior-checks {
+.unanchored, .conversation, .prior-checks, .i18n-comparisons {
   background: var(--sheet);
   border: 1px solid var(--border);
   border-radius: var(--radius);
@@ -986,6 +986,17 @@ button[data-variant="danger"] { color: var(--blocker); border-color: var(--block
 .prior-check-head a { font-size: 12px; margin-left: auto; }
 .prior-check-quote { margin: 6px 0 0; color: var(--muted); font-size: 12.5px; overflow-wrap: anywhere; }
 .prior-check-evidence { margin: 6px 0 0; line-height: 1.7; overflow-wrap: anywhere; }
+.i18n-comparisons > header { padding: 12px 0 4px; }
+.i18n-comparisons h2 { font-size: 14px; font-weight: 600; }
+.i18n-comparisons header p { margin: 2px 0 0; font-size: 12.5px; color: var(--muted); }
+.i18n-comparisons ol { margin: 0; padding-left: 20px; }
+.i18n-comparison { margin-top: 10px; overflow-wrap: anywhere; }
+.i18n-comparison-head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; margin: 0; font-size: 13px; }
+.i18n-comparison dl { display: grid; grid-template-columns: auto 1fr; gap: 2px 8px; margin: 4px 0 0; font-size: 12.5px; }
+.i18n-comparison dt { color: var(--muted); }
+.i18n-comparison dt::after { content: ":"; }
+.i18n-comparison dd { margin: 0; }
+.i18n-comparison[data-match="false"] .i18n-verdict { color: var(--blocker); font-weight: 600; }
 .prior-check-evidence code { padding: 1px 5px; background: var(--tint); border-radius: 3px; }
 .prior-status { font-size: 12px; font-weight: 600; color: var(--prior); }
 .existing-comment .prior-status { margin-left: 8px; }

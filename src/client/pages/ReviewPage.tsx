@@ -13,6 +13,7 @@ import { ApiError, browserClient, fetchPRDetail, submitReview } from "../api.ts"
 import { ConfirmButton } from "../components/ConfirmButton.tsx";
 import { DiffFileView } from "../components/DiffFileView.tsx";
 import { ExistingCommentCard } from "../components/ExistingCommentCard.tsx";
+import { I18nComparisons } from "../components/I18nComparisons.tsx";
 import { PriorChecks } from "../components/PriorChecks.tsx";
 import { priorCheckLookup } from "../state/prior.ts";
 import { FileIndex } from "../components/FileIndex.tsx";
@@ -383,6 +384,8 @@ export function ReviewPage({
           </section>
 
           {phase === "running" ? null : <PriorChecks checks={session.priorChecks} />}
+
+          {phase === "running" ? null : <I18nComparisons comparisons={session.i18nComparisons} />}
 
           {unanchored.length === 0 ? null : (
             <section className="unanchored">

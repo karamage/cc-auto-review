@@ -365,6 +365,14 @@ const ja = {
     expandDescription: "説明をすべて表示",
     priorChecksIntro: (summary: string) =>
       `AI が今のコードを読んで判定しました（${summary}）。作成者の返信や解決済みの印は根拠にしていません。`,
+    i18nHeading: "元の日本語 vs locales日本語の比較",
+    i18nIntro: (matched: number, total: number) =>
+      `${total} 件中 ${matched} 件が完全一致（前後の空白を除いて文字列を比べています）`,
+    i18nNone: "比べる日本語はありませんでした。",
+    i18nOriginal: "元",
+    i18nLocale: "locales",
+    i18nMatch: "完全一致",
+    i18nMismatch: "不一致",
     deletedLineComment: "削除された行へのコメント",
     collapse: "折りたたむ",
     readMore: "続きを読む",
@@ -887,6 +895,14 @@ const en: Messages = {
     expandDescription: "Show full description",
     priorChecksIntro: (summary) =>
       `The AI read the current code to judge these (${summary}). Author replies and resolved threads are not taken as evidence.`,
+    i18nHeading: "Original Japanese vs. locale Japanese",
+    i18nIntro: (matched, total) =>
+      `${matched} of ${total} match exactly (compared as strings, ignoring leading and trailing spaces)`,
+    i18nNone: "There was no Japanese to compare.",
+    i18nOriginal: "Original",
+    i18nLocale: "Locale",
+    i18nMatch: "Exact match",
+    i18nMismatch: "Mismatch",
     deletedLineComment: "Comment on a deleted line",
     collapse: "Collapse",
     readMore: "Read more",

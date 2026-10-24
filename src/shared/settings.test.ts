@@ -4,6 +4,8 @@ import {
   DEFAULT_PROFILE_ID,
   defaultSettings,
   findProfile,
+  hasI18nPerspective,
+  I18N_PERSPECTIVE_ID,
   normalizeSettings,
 } from "./settings.ts";
 
@@ -40,6 +42,7 @@ test("プロファイルを全部消したら既定に戻し、存在しない i
 
 test("名前の無いプロファイルや見出しの無い観点は捨て、同じ id には番号を足す", () => {
   const settings = normalizeSettings({
+    version: 2,
     profiles: [
       { id: "a", name: "A", perspectives: [{ title: "", description: "x" }, { title: "T" }] },
       { id: "a", name: "B" },
@@ -73,4 +76,30 @@ test("正規表現は (?i) で大文字小文字を区別せず、書き損じ�
   expect(compilePattern("(?i)auth")?.test("src/AUTH/a.ts")).toBe(true);
   expect(compilePattern("auth")?.test("src/AUTH/a.ts")).toBe(false);
   expect(compilePattern("(")).toBeNull();
+});
+
+test("i18n の観点はどの既定プロファイルにもあり、切ってある", () => {
+  for (const profile of defaultSettings().profiles) {
+    const i18n = profile.perspectives.find((p) => p.id === I18N_PERSPECTIVE_ID);
+    expect(i18n?.enabled).toBe(false);
+    expect(hasI18nPerspective(profile)).toBe(false);
+  }
+});
+
+test("version 1 の設定には i18n の観点を切った状態で足し、version 2 で消したものは足さない", () => {
+  const old = normalizeSettings({
+    version: 1,
+    profiles: [{ id: "a", name: "A", perspectives: [{ id: "x", title: "X" }] }],
+  });
+  expect(old.version).toBe(2);
+  expect(old.profiles[0]?.perspectives.map((p) => [p.id, p.enabled])).toEqual([
+    ["x", true],
+    [I18N_PERSPECTIVE_ID, false],
+  ]);
+
+  const removed = normalizeSettings({
+    version: 2,
+    profiles: [{ id: "a", name: "A", perspectives: [{ id: "x", title: "X" }] }],
+  });
+  expect(removed.profiles[0]?.perspectives.map((p) => p.id)).toEqual(["x"]);
 });
