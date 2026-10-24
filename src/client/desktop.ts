@@ -31,22 +31,29 @@ export function openExternal(post: Post, url: string): void {
 
 /**
  * 画面の外へのリンクを、webview の中ではなく既定のブラウザで開く。
- * リンクごとに書き換えずに済むよう、文書全体のクリックで拾う
+ * リンクごとに書き換えずに済むよう、文書全体のクリックで拾う。
+ * デスクトップアプリでは tauri-plugin-shell が body で target="_blank" のリンクを横取りし、
+ * 権限の無い IPC を呼んで何もしない。キャプチャ段階で先に拾い、そこへ伝えない
  */
 export function routeExternalLinks(post: Post): void {
-  document.addEventListener("click", (event) => {
-    if (event.defaultPrevented || event.button !== 0) return;
-    const anchor = (event.target as Element | null)?.closest?.("a[href]") as
-      | HTMLAnchorElement
-      | null
-      | undefined;
-    if (anchor === null || anchor === undefined) return;
-    const url = new URL(anchor.href, window.location.href);
-    if (url.origin === window.location.origin) return;
-    if (url.protocol !== "https:" && url.protocol !== "http:") return;
-    event.preventDefault();
-    openExternal(post, url.href);
-  });
+  window.addEventListener(
+    "click",
+    (event) => {
+      if (event.defaultPrevented || event.button !== 0) return;
+      const anchor = (event.target as Element | null)?.closest?.("a[href]") as
+        | HTMLAnchorElement
+        | null
+        | undefined;
+      if (anchor === null || anchor === undefined) return;
+      const url = new URL(anchor.href, window.location.href);
+      if (url.origin === window.location.origin) return;
+      if (url.protocol !== "https:" && url.protocol !== "http:") return;
+      event.preventDefault();
+      event.stopPropagation();
+      openExternal(post, url.href);
+    },
+    true,
+  );
 }
 
 /** OS の通知を出す。出せなくても一覧には印が残るので、失敗は無視する */
