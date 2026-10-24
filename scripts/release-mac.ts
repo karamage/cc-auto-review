@@ -1,7 +1,12 @@
 /**
  * 配布用の macOS アプリを作る。Developer ID で署名し、Apple の公証を通して、DMG にまとめる。
  *
- *   bun run release:mac
+ *   bun run release:mac              Apple Silicon 版と Intel 版の DMG を 1 つずつ
+ *   bun run release:mac arm64        Apple Silicon 版だけ
+ *   bun run release:mac x64          Intel 版だけ
+ *   bun run release:mac universal    両方で動く 1 つの DMG（同梱の Bun が 2 つ入り、約 2 倍の大きさになる）
+ *
+ * 既定で CPU ごとに分けるのは、アプリの大半が同梱の Bun サーバで、universal にするとそれが 2 つ入るから。
  *
  * 前もって要るもの（どちらも一度だけ）:
  * - キーチェーンに「Developer ID Application」の証明書（Xcode > Settings > Accounts > Manage Certificates で作れる）
@@ -19,18 +24,20 @@ import { mkdir, readFile, rm, symlink } from "node:fs/promises";
 import { join } from "node:path";
 
 const root = join(import.meta.dir, "..");
-const TARGET = "universal-apple-darwin";
 const APP_NAME = "CC Auto Review";
-const appPath = join(
-  root,
-  "src-tauri",
-  "target",
-  TARGET,
-  "release",
-  "bundle",
-  "macos",
-  `${APP_NAME}.app`,
-);
+
+/** コマンドラインでの呼び名 → Rust のターゲット。DMG の名前にも呼び名を使う */
+const ARCHES: Record<string, string> = {
+  arm64: "aarch64-apple-darwin",
+  x64: "x86_64-apple-darwin",
+  universal: "universal-apple-darwin",
+};
+const DEFAULT_ARCHES = ["arm64", "x64"];
+
+function appPathFor(target: string): string {
+  return join(root, "src-tauri", "target", target, "release", "bundle", "macos", `${APP_NAME}.app`);
+}
+
 const outDir = join(root, "release");
 const workDir = join(outDir, ".work");
 
@@ -87,29 +94,19 @@ async function notarize(file: string, profile: string): Promise<void> {
   }
 }
 
-async function main(): Promise<void> {
-  const identity = await signingIdentity();
-  const profile = process.env.NOTARY_PROFILE ?? "cc-auto-review";
-  const { version } = JSON.parse(await readFile(join(root, "package.json"), "utf8")) as {
-    version: string;
-  };
-  console.log(
-    `Signing identity: ${identity}\nNotary profile:   ${profile}\nVersion:          ${version}\n`,
-  );
-
-  // 認証情報が無ければ、時間のかかるビルドの前に止める
-  await run(["xcrun", "notarytool", "history", "--keychain-profile", profile], {
-    quiet: true,
-  }).catch(() => {
-    throw new Error(
-      `The notary profile "${profile}" is not usable. Save it with:\n  xcrun notarytool store-credentials ${profile} --apple-id <Apple ID> --team-id <Team ID>`,
-    );
-  });
+/** 1 つのアーキテクチャ分を、ビルド・署名・公証して DMG にする。できた DMG のパスを返す */
+async function release(
+  arch: string,
+  options: { identity: string; profile: string; version: string },
+): Promise<string> {
+  const { identity, profile, version } = options;
+  const target = ARCHES[arch] as string;
+  const appPath = appPathFor(target);
+  console.log(`\n=== ${arch} (${target}) ===\n`);
 
   // 1. ビルドと署名。公証はこのスクリプトが行うので、Tauri には認証情報を渡さない
-  await run(["bun", "run", "build:client"]);
-  await run(["bun", "scripts/build-server.ts", TARGET]);
-  await run(["bunx", "tauri", "build", "--target", TARGET, "--bundles", "app"], {
+  await run(["bun", "scripts/build-server.ts", target]);
+  await run(["bunx", "tauri", "build", "--target", target, "--bundles", "app"], {
     env: {
       APPLE_SIGNING_IDENTITY: identity,
       APPLE_ID: undefined,
@@ -136,7 +133,7 @@ async function main(): Promise<void> {
   await mkdir(staging, { recursive: true });
   await run(["ditto", appPath, join(staging, `${APP_NAME}.app`)]);
   await symlink("/Applications", join(staging, "Applications"));
-  const dmg = join(outDir, `CC-Auto-Review_${version}_universal.dmg`);
+  const dmg = join(outDir, `CC-Auto-Review_${version}_${arch}.dmg`);
   await rm(dmg, { force: true });
   await run([
     "hdiutil",
@@ -170,7 +167,43 @@ async function main(): Promise<void> {
   ]);
 
   await rm(workDir, { recursive: true, force: true });
-  console.log(`\nDone: ${dmg}`);
+  return dmg;
+}
+
+async function main(): Promise<void> {
+  const arches = process.argv.length > 2 ? process.argv.slice(2) : DEFAULT_ARCHES;
+  for (const arch of arches) {
+    if (ARCHES[arch] === undefined) {
+      throw new Error(`Unknown architecture: ${arch} (use ${Object.keys(ARCHES).join(", ")})`);
+    }
+  }
+
+  const identity = await signingIdentity();
+  const profile = process.env.NOTARY_PROFILE ?? "cc-auto-review";
+  const { version } = JSON.parse(await readFile(join(root, "package.json"), "utf8")) as {
+    version: string;
+  };
+  console.log(
+    `Signing identity: ${identity}\nNotary profile:   ${profile}\nVersion:          ${version}\nArchitectures:    ${arches.join(", ")}\n`,
+  );
+
+  // 認証情報が無ければ、時間のかかるビルドの前に止める
+  await run(["xcrun", "notarytool", "history", "--keychain-profile", profile], {
+    quiet: true,
+  }).catch(() => {
+    throw new Error(
+      `The notary profile "${profile}" is not usable. Save it with:\n  xcrun notarytool store-credentials ${profile} --apple-id <Apple ID> --team-id <Team ID>`,
+    );
+  });
+
+  // 画面は CPU に依らないので 1 回だけビルドする
+  await run(["bun", "run", "build:client"]);
+  const dmgs: string[] = [];
+  for (const arch of arches) {
+    // eslint-disable-next-line no-await-in-loop -- 公証は 1 つずつ出して、通ったのを確かめてから次へ進む
+    dmgs.push(await release(arch, { identity, profile, version }));
+  }
+  console.log(`\nDone:\n${dmgs.map((dmg) => `  ${dmg}`).join("\n")}`);
 }
 
 try {

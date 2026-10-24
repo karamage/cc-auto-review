@@ -20,7 +20,7 @@ diff と AI の指摘を 1 画面で見て、指摘を採用・却下・編集�
 
 ## インストール
 
-ソースからビルドし（[開発](#開発)を参照）、できた `CC Auto Review.app` を `/Applications` に入れてください。`bun run app:build:universal` なら、Apple Silicon と Intel の両方で動く 1 つのアプリが `src-tauri/target/universal-apple-darwin/release/bundle/macos/` にできます。
+ソースからビルドし（[開発](#開発)を参照）、できた `CC Auto Review.app` を `/Applications` に入れてください。`bun run app:build` はビルドしたマシンの CPU 向けのアプリを `src-tauri/target/release/bundle/macos/` に作ります。Apple Silicon の Mac から Intel 版を作るときは `bun run app:build:x64` を使います。`bun run app:build:universal` なら両方で動く 1 つのアプリになりますが、同梱の Bun サーバが 2 つ入るので約 2 倍（130 MB ほど）の大きさになります。
 
 > 手元でビルドしたアプリは署名されていません。開けないときは「システム設定 → プライバシーとセキュリティ → このまま開く」で許可してください。`bun run release:mac` で作った DMG は署名・公証済みなので、そのまま開けます。
 
@@ -109,7 +109,9 @@ bun install
 bun run check        # 型検査 + lint + format の確認 + テスト
 bun run app:build    # 画面・サーバの実行ファイル・CC Auto Review.app をビルド
 bun run app:dmg      # .dmg も作る（Finder の自動操作の許可が要ることがある）
-bun run app:build:universal   # Apple Silicon と Intel の両方で動く 1 つの .app
+bun run app:build:x64         # Intel Mac 向けの .app（Apple Silicon の Mac からも作れる）
+bun run app:dmg:x64           # 同じものを .dmg で
+bun run app:build:universal   # Apple Silicon と Intel の両方で動く 1 つの .app（約 2 倍の大きさ）
 bun run app:dmg:universal     # 同じものを .dmg で
 ```
 
@@ -136,10 +138,12 @@ bun run dev:client   # Vite（localhost:5173。/api は 4711 にプロキシ）
 あとは次のコマンドで作れます。
 
 ```bash
-bun run release:mac   # → release/CC-Auto-Review_<version>_universal.dmg
+bun run release:mac             # → release/CC-Auto-Review_<version>_arm64.dmg と _x64.dmg
+bun run release:mac arm64       # Apple Silicon 版だけ
+bun run release:mac universal   # 両方で動く 1 つの DMG（約 2 倍の大きさ）
 ```
 
-universal 版のアプリをビルドし、Hardened Runtime 付きで署名します（同梱の Bun サーバが JIT を使えるよう `src-tauri/Entitlements.plist` で許可）。続けてアプリを公証してチケットを貼り、DMG にまとめ、DMG も公証してチケットを貼ります。証明書を選ぶときは `APPLE_SIGNING_IDENTITY`、別のプロファイルを使うときは `NOTARY_PROFILE` を指定します。
+既定では Apple Silicon 版と Intel 版を別々に作ります。アプリの大半は同梱の Bun サーバで、universal にするとそれが 2 つ入るからです。CPU ごとにアプリをビルドし、Hardened Runtime 付きで署名します（同梱の Bun サーバが JIT を使えるよう `src-tauri/Entitlements.plist` で許可）。続けてアプリを公証してチケットを貼り、DMG にまとめ、DMG も公証してチケットを貼ります。証明書を選ぶときは `APPLE_SIGNING_IDENTITY`、別のプロファイルを使うときは `NOTARY_PROFILE` を指定します。
 
 ## ライセンス
 

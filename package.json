@@ -21,6 +21,8 @@
     "format": "biome format --write .",
     "check": "bun run typecheck && bun run lint && biome format . && bun test",
     "app:dmg": "bun run build && tauri build --bundles dmg",
+    "app:build:x64": "bun run build:client && bun scripts/build-server.ts x86_64-apple-darwin && tauri build --target x86_64-apple-darwin --bundles app",
+    "app:dmg:x64": "bun run build:client && bun scripts/build-server.ts x86_64-apple-darwin && tauri build --target x86_64-apple-darwin --bundles dmg",
     "app:build:universal": "bun run build:client && bun scripts/build-server.ts universal-apple-darwin && tauri build --target universal-apple-darwin --bundles app",
     "app:dmg:universal": "bun run build:client && bun scripts/build-server.ts universal-apple-darwin && tauri build --target universal-apple-darwin --bundles dmg",
     "release:mac": "bun scripts/release-mac.ts"
