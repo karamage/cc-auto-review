@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { t } from "../i18n.ts";
 import type { DraftItem, FindingStatus } from "../state/draft.ts";
+import { findingAnchorId } from "./FindingIndex.tsx";
 
 /** AI の本文に含まれる `code` だけをコードとして描く。Markdown 全体は解釈しない */
 export function renderInlineCode(text: string): ReactNode[] {
@@ -32,7 +33,14 @@ export function FindingCard({
     onStatus(item.status === status ? "pending" : status);
 
   return (
-    <article className="finding" data-severity={finding.severity} data-status={item.status}>
+    <article
+      className="finding"
+      id={findingAnchorId(finding.id)}
+      // 指摘一覧から飛んできたとき、キーボード操作の起点をこのカードに移す
+      tabIndex={-1}
+      data-severity={finding.severity}
+      data-status={item.status}
+    >
       <header>
         {number === undefined ? null : (
           <svg

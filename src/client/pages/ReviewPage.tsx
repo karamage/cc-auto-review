@@ -18,6 +18,7 @@ import { PriorChecks } from "../components/PriorChecks.tsx";
 import { priorCheckLookup } from "../state/prior.ts";
 import { FileIndex } from "../components/FileIndex.tsx";
 import { FindingCard } from "../components/FindingCard.tsx";
+import { FindingIndex } from "../components/FindingIndex.tsx";
 import { LanguageSwitch } from "../components/LanguageSwitch.tsx";
 import { ReviewingSheet } from "../components/ReviewingSheet.tsx";
 import { SeverityFilter } from "../components/SeverityFilter.tsx";
@@ -318,6 +319,10 @@ export function ReviewPage({
               </div>
             )}
           </section>
+
+          {phase !== "done" || draft.items.length === 0 ? null : (
+            <FindingIndex items={draft.items.filter(visible)} numberOf={numberOf} />
+          )}
 
           <FileIndex files={detail.files} draft={draft} />
 
