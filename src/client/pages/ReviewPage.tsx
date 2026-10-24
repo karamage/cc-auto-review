@@ -10,6 +10,7 @@ import {
   type Severity,
 } from "../../shared/types.ts";
 import { ApiError, browserClient, fetchPRDetail, submitReview } from "../api.ts";
+import { ConfirmButton } from "../components/ConfirmButton.tsx";
 import { DiffFileView } from "../components/DiffFileView.tsx";
 import { ExistingCommentCard } from "../components/ExistingCommentCard.tsx";
 import { PriorChecks } from "../components/PriorChecks.tsx";
@@ -305,18 +306,14 @@ export function ReviewPage({
                     ? text.savedKept
                     : text.savedStale(session.headSha?.slice(0, 7) ?? "")}
                 </p>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const message =
-                      session.posted === null ? text.confirmClear : text.confirmClearPosted;
-                    if (window.confirm(message)) {
-                      sessions.clear(pr);
-                    }
-                  }}
+                <ConfirmButton
+                  key={`${pr.repo}#${pr.number}`}
+                  message={session.posted === null ? text.confirmClear : text.confirmClearPosted}
+                  confirmLabel={text.clearConfirm}
+                  onConfirm={() => sessions.clear(pr)}
                 >
                   {text.clear}
-                </button>
+                </ConfirmButton>
               </div>
             )}
           </section>

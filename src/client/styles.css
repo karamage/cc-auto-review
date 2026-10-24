@@ -222,6 +222,8 @@ legend { padding: 0; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
   color: var(--muted);
 }
 .back button:hover { color: var(--fg); }
+.back .inline-confirm button { padding: 0 10px; border: 1px solid var(--border); }
+.back .inline-confirm button[data-variant="danger"] { border-color: var(--blocker); }
 
 /* PR 一覧のスタイルは末尾の「PR 一覧（出図台帳）」にまとめている */
 
@@ -420,6 +422,7 @@ legend { padding: 0; font-size: 12px; color: var(--muted); margin-bottom: 6px; }
 .saved-result {
   order: 11;
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 12px;
   padding-top: 12px;
@@ -958,6 +961,10 @@ button[data-variant="text"] {
   color: var(--accent);
 }
 button[data-variant="text"]:hover:not(:disabled) { text-decoration: underline; }
+
+.inline-confirm { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.inline-confirm > [role="alert"] { font-size: 12.5px; color: var(--fg); }
+button[data-variant="danger"] { color: var(--blocker); border-color: var(--blocker); }
 .existing-comment .badge {
   margin-left: 8px;
   padding: 0 6px;
@@ -2427,6 +2434,7 @@ dialog.confirm { border: 1px solid var(--ink-rule); border-radius: 14px; backgro
 }
 .settings-bar[data-dirty="true"] { border-color: var(--ink-rule); box-shadow: var(--glow); }
 .settings-bar > span { margin-right: auto; font-size: 13px; }
+.settings-bar > .inline-confirm { margin-right: 0; }
 
 .prompt-preview { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 24px; background: var(--backdrop); }
 .prompt-preview-sheet { display: grid; grid-template-rows: auto minmax(0, 1fr); width: min(980px, 100%); max-height: 88dvh; border: 1px solid var(--ink-rule); border-radius: 12px; background: var(--sheet); }

@@ -7,6 +7,7 @@ import {
 } from "../../shared/settings.ts";
 import { REVIEW_MODELS, type ReviewModel } from "../../shared/types.ts";
 import { ApiError, browserClient } from "../api.ts";
+import { ConfirmButton } from "../components/ConfirmButton.tsx";
 import { LanguageSwitch } from "../components/LanguageSwitch.tsx";
 import { t } from "../i18n.ts";
 import { setSettings, useSettings } from "../settings.ts";
@@ -347,11 +348,11 @@ function ProfileEditor({
           >
             {text.duplicate}
           </button>
-          <button
-            type="button"
+          <ConfirmButton
             disabled={draft.profiles.length <= 1}
-            onClick={() => {
-              if (!window.confirm(text.confirmRemove(profile.name))) return;
+            message={text.confirmRemove(profile.name)}
+            confirmLabel={text.remove}
+            onConfirm={() => {
               const profiles = draft.profiles.filter((_, i) => i !== index);
               const fallback = (profiles[0] as ReviewProfile).id;
               const keep = (id: string): string => (id === profile.id ? fallback : id);
@@ -368,7 +369,7 @@ function ProfileEditor({
             }}
           >
             {text.remove}
-          </button>
+          </ConfirmButton>
         </div>
       </div>
 
@@ -790,20 +791,20 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
       );
   };
 
-  const back = (): void => {
-    if (dirty && !window.confirm(`${text.unsaved}. ${text.discard}?`)) return;
-    onBack();
-  };
-
   return (
     <main className="page settings">
       <nav className="back">
-        <button type="button" onClick={back}>
+        <ConfirmButton
+          required={dirty}
+          message={text.unsaved}
+          confirmLabel={text.discardAndBack}
+          onConfirm={onBack}
+        >
           <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
             <path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" strokeWidth="1.6" />
           </svg>
           {text.back}
-        </button>
+        </ConfirmButton>
         <LanguageSwitch />
       </nav>
 
@@ -846,11 +847,11 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
                   ? text.unsaved
                   : ""}
         </span>
-        <button
-          type="button"
-          data-variant="text"
-          onClick={() => {
-            if (!window.confirm(text.confirmReset)) return;
+        <ConfirmButton
+          variant="text"
+          message={text.confirmReset}
+          confirmLabel={text.resetDefaults}
+          onConfirm={() => {
             void browserClient.fetchDefaultSettings().then((defaults) => {
               change(defaults);
               setResetCount((n) => n + 1);
@@ -858,7 +859,7 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
           }}
         >
           {text.resetDefaults}
-        </button>
+        </ConfirmButton>
         <button
           type="button"
           disabled={!dirty || status.kind === "saving"}

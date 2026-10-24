@@ -15,6 +15,7 @@ const MODEL_NAMES: Record<ReviewModel, string> = { opus: "Opus", sonnet: "Sonnet
  * ja を正とし、en は同じ形を必ず満たす（足りない文言は型検査で落ちる）
  */
 const ja = {
+  confirm: { cancel: "やめる" },
   // ---------- 共通 ----------
   relative: {
     justNow: "たった今",
@@ -356,6 +357,7 @@ const ja = {
     confirmClearPosted:
       "保存した AI レビューの結果と下書き、投稿の記録を消去しますか？投稿後の見守りも止まります。",
     clear: "結果を消去",
+    clearConfirm: "消去する",
     collapseDescription: "説明を折りたたむ",
     expandDescription: "説明をすべて表示",
     priorChecksIntro: (summary: string) =>
@@ -459,6 +461,7 @@ const ja = {
     saveFailed: (message: string) => `保存できませんでした: ${message}`,
     discard: "変更を破棄",
     unsaved: "未保存の変更があります",
+    discardAndBack: "破棄して戻る",
     resetDefaults: "すべて既定に戻す",
     confirmReset: "すべての設定を既定に戻しますか？保存するまでは反映されません。",
     storedAt: "設定は ~/.config/cc-auto-review/settings.json に保存されます。",
@@ -544,6 +547,7 @@ const ja = {
 export type Messages = typeof ja;
 
 const en: Messages = {
+  confirm: { cancel: "Cancel" },
   relative: {
     justNow: "just now",
     minutes: (n) => `${n} min ago`,
@@ -872,6 +876,7 @@ const en: Messages = {
     confirmClearPosted:
       "Clear the saved AI review result, draft, and posting record? Watching after posting will also stop.",
     clear: "Clear result",
+    clearConfirm: "Clear",
     collapseDescription: "Collapse description",
     expandDescription: "Show full description",
     priorChecksIntro: (summary) =>
@@ -970,6 +975,7 @@ const en: Messages = {
     saveFailed: (message) => `Could not save: ${message}`,
     discard: "Discard changes",
     unsaved: "You have unsaved changes",
+    discardAndBack: "Discard and go back",
     resetDefaults: "Reset everything to defaults",
     confirmReset: "Reset all settings to their defaults? Nothing changes until you save.",
     storedAt: "Settings are stored in ~/.config/cc-auto-review/settings.json.",
