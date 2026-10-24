@@ -61,6 +61,8 @@ export interface AutopilotConfig {
   approve: boolean;
   /** 承認の本文に LGTM 画像を添えるか */
   lgtmImage: boolean;
+  /** 操作盤の計器を動かすか。false なら回転や点滅を止めて、静止した図で見せる */
+  animations: boolean;
   /** 人が確かめたうえで、以降は人に回さずに進めてよいと決めた PR に付けるラベル */
   autoJudgeLabel: string;
   /** AI にレビューさせないと決めた PR に付けるラベル */
@@ -274,6 +276,7 @@ export function defaultSettings(): Settings {
       maxRounds: 3,
       approve: true,
       lgtmImage: false,
+      animations: true,
       autoJudgeLabel: "auto-judge",
       skipLabel: "skip-ai-review",
       routing: [],
@@ -427,6 +430,7 @@ export function normalizeSettings(raw: unknown): Settings {
       maxRounds: int(auto.maxRounds, defaults.autopilot.maxRounds, 1, 20),
       approve: bool(auto.approve, defaults.autopilot.approve),
       lgtmImage: bool(auto.lgtmImage, defaults.autopilot.lgtmImage),
+      animations: bool(auto.animations, defaults.autopilot.animations),
       autoJudgeLabel: label(auto.autoJudgeLabel, defaults.autopilot.autoJudgeLabel),
       skipLabel: label(auto.skipLabel, defaults.autopilot.skipLabel),
       routing: normalizeRouting(auto.routing, ids),

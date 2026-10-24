@@ -531,6 +531,8 @@ const ja = {
       approve: "指摘が無ければ承認する",
       approveHint: "オフにすると、指摘が無い旨をコメントするだけで、承認は人に任せます",
       lgtmImage: "承認の本文に LGTM 画像を添える",
+      animations: "操作盤のアニメーション",
+      animationsHint: "オフにすると、計器の回転や点滅を止めて静止した図で表示します",
       autoJudgeLabel: "自動判断に任せるラベル",
       autoJudgeLabelHint: "このラベルが付いた PR は、リスクを理由に人へ回しません",
       skipLabel: "AI レビューを見送るラベル",
@@ -1059,6 +1061,8 @@ const en: Messages = {
       approveHint:
         "When off, it only comments that nothing was found and leaves approval to a human",
       lgtmImage: "Attach an LGTM image to approvals",
+      animations: "Console animations",
+      animationsHint: "When off, the console's dial stops spinning and blinking and stays still",
       autoJudgeLabel: "Label to trust autopilot",
       autoJudgeLabelHint: "PRs with this label are not handed to a human because of risk",
       skipLabel: "Label to skip AI review",

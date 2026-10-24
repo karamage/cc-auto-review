@@ -568,6 +568,12 @@ function AutopilotTab({
           value={auto.skipLabel}
           onChange={(skipLabel) => set({ skipLabel })}
         />
+        <Toggle
+          label={text.animations}
+          hint={text.animationsHint}
+          checked={auto.animations}
+          onChange={(animations) => set({ animations })}
+        />
       </Section>
 
       <Section title={text.routing} intro={text.routingIntro}>

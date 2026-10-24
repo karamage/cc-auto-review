@@ -65,6 +65,11 @@ test("数値は範囲に丸め、モデルは決めた別名か null だけを�
   expect(settings.autopilot.model).toBeNull();
 });
 
+test("操作盤のアニメーションは既定で動かし、切った設定はそのまま読み直せる", () => {
+  expect(normalizeSettings({ autopilot: {} }).autopilot.animations).toBe(true);
+  expect(normalizeSettings({ autopilot: { animations: false } }).autopilot.animations).toBe(false);
+});
+
 test("ツールの指定に使えない文字を含むものは捨てる", () => {
   const settings = normalizeSettings({
     profiles: [{ id: "a", name: "A", allowedTools: ["Skill", "mcp__docs", "Bash;rm -rf /", ""] }],

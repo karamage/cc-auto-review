@@ -2393,6 +2393,10 @@ dialog.confirm { border: 1px solid var(--ink-rule); border-radius: 14px; backgro
   .autopilot *::before,
   .autopilot::before { animation: none !important; transition: none !important; }
 }
+/* 設定でアニメーションを切ったときも、同じく動きを止める */
+.autopilot[data-motion="off"] *,
+.autopilot[data-motion="off"] *::before,
+.autopilot[data-motion="off"]::before { animation: none !important; transition: none !important; }
 
 /* 自動運転の指標は言葉なので、数字より小さくしてカードに収める */
 .kpi:nth-child(5) .kpi-value { font-size: clamp(22px, 1.8vw, 32px); }

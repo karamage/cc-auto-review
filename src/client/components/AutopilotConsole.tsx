@@ -422,6 +422,7 @@ export function AutopilotConsole({
       className="autopilot"
       data-enabled={view.enabled}
       data-busy={view.busy}
+      data-motion={config.animations ? "on" : "off"}
       aria-labelledby="autopilot-title"
     >
       <div className="ap-figure">
