@@ -356,7 +356,12 @@ export function ReviewPage({
 
         <div className="review-main">
           <section className="pr-description" data-expanded={descriptionExpanded}>
-            <h2>{t().prDescription}</h2>
+            <div className="pr-description-head">
+              <h2>{t().prDescription}</h2>
+              <a href={detail.pr.url} target="_blank" rel="noreferrer">
+                {t().openOnGitHub}
+              </a>
+            </div>
             {detail.bodyHtml === "" ? (
               <p className="muted">{t().noDescription}</p>
             ) : (

@@ -734,7 +734,9 @@ dialog.confirm p { font-size: 12.5px; margin: 0 0 8px; }
   border: 1px solid var(--border);
   border-radius: var(--radius);
 }
-.pr-description > h2 { padding: 14px 20px 6px; font-size: 14px; font-weight: 600; }
+.pr-description-head { display: flex; align-items: baseline; gap: 12px; padding: 14px 20px 6px; }
+.pr-description-head h2 { font-size: 14px; font-weight: 600; }
+.pr-description-head a { font-size: 12px; }
 .pr-description > .muted { margin: 0; padding: 0 20px 14px; }
 .pr-description[data-expanded="false"] .pr-body {
   max-height: 280px;
