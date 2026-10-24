@@ -117,13 +117,23 @@ export function niceCeiling(max: number): number {
   return step * power;
 }
 
-/** 1 秒ごとに進む現在時刻 */
-function useClock(): number {
+/** step ミリ秒ごとに進む現在時刻。刻みの境目に合わせて進めるので、分の表示なら分が変わったときだけ描き直す */
+function useClock(step = 1000): number {
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {
-    const timer = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(timer);
-  }, []);
+    let timer: ReturnType<typeof setTimeout>;
+    const schedule = (): void => {
+      timer = setTimeout(
+        () => {
+          setNow(Date.now());
+          schedule();
+        },
+        step - (Date.now() % step),
+      );
+    };
+    schedule();
+    return () => clearTimeout(timer);
+  }, [step]);
   return now;
 }
 
@@ -215,27 +225,30 @@ const NAV: readonly {
 /** 製品の印。差分の + と − を、光る輪の中に置く */
 function BrandMark() {
   return (
-    <svg className="brand-mark" viewBox="0 0 48 48" aria-hidden="true">
-      <defs>
-        <linearGradient id="brand-ring" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stopColor="#2ee9ff" />
-          <stop offset="1" stopColor="#8b7bff" />
-        </linearGradient>
-      </defs>
-      <circle cx="24" cy="24" r="20" fill="none" stroke="url(#brand-ring)" strokeWidth="2" />
-      <circle
-        cx="24"
-        cy="24"
-        r="14"
-        fill="none"
-        stroke="url(#brand-ring)"
-        strokeWidth="1"
-        strokeDasharray="2 3"
-        className="brand-mark-orbit"
-      />
-      <path d="M16 20h8 M20 16v8" stroke="#3dffb0" strokeWidth="2.4" strokeLinecap="round" />
-      <path d="M24 30h8" stroke="#ff5f87" strokeWidth="2.4" strokeLinecap="round" />
-    </svg>
+    <span className="brand-mark" aria-hidden="true">
+      <svg viewBox="0 0 48 48">
+        <defs>
+          <linearGradient id="brand-ring" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stopColor="#2ee9ff" />
+            <stop offset="1" stopColor="#8b7bff" />
+          </linearGradient>
+        </defs>
+        <circle cx="24" cy="24" r="20" fill="none" stroke="url(#brand-ring)" strokeWidth="2" />
+        <path d="M16 20h8 M20 16v8" stroke="#3dffb0" strokeWidth="2.4" strokeLinecap="round" />
+        <path d="M24 30h8" stroke="#ff5f87" strokeWidth="2.4" strokeLinecap="round" />
+      </svg>
+      <svg viewBox="0 0 48 48" className="brand-mark-orbit">
+        <circle
+          cx="24"
+          cy="24"
+          r="14"
+          fill="none"
+          stroke="url(#brand-ring)"
+          strokeWidth="1"
+          strokeDasharray="2 3"
+        />
+      </svg>
+    </span>
   );
 }
 
@@ -248,7 +261,8 @@ export function TopBar({
   onOpenSettings?: () => void;
 }) {
   const text = t().dashboard;
-  const now = new Date(useClock());
+  // 時刻は分までしか出さない。コロンの点滅は CSS が受け持つ
+  const now = new Date(useClock(60_000));
   const weekday = now.toLocaleDateString(t().relative.locale, { weekday: "short" });
   return (
     <header className="topbar">
