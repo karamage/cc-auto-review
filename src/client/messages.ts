@@ -92,6 +92,9 @@ const ja = {
     reading: "コードを読み込んでいます…",
     disconnected: "AI レビューの結果を受け取る前に接続が切れました。もう一度実行してください。",
     failed: "AI レビューに失敗しました",
+    notifyDone: (pr: string) => `AI レビューが完了しました: ${pr}`,
+    notifyFailed: (pr: string) => `AI レビューに失敗しました: ${pr}`,
+    notifyFindings: (n: number) => (n === 0 ? "指摘はありませんでした" : `指摘が ${n} 件あります`),
   },
 
   // ---------- 投稿後の見守り ----------
@@ -618,6 +621,9 @@ const en: Messages = {
     reading: "Reading the code…",
     disconnected: "The connection closed before the AI review result arrived. Run it again.",
     failed: "The AI review failed",
+    notifyDone: (pr) => `AI review finished: ${pr}`,
+    notifyFailed: (pr) => `AI review failed: ${pr}`,
+    notifyFindings: (n) => (n === 0 ? "No findings" : `${n} ${n === 1 ? "finding" : "findings"}`),
   },
 
   watch: {

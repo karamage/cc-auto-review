@@ -408,3 +408,29 @@ async function execute(
     fail(e instanceof ApiError ? e.message : t().session.failed);
   }
 }
+
+/** AI レビューが終わった PR を知らせる。OS の通知など、画面に依存するので外から渡す */
+export type ReviewOutcomeListener = (pr: PRRef, session: ReviewSession) => void;
+
+/**
+ * AI レビューが実行中から完了か失敗に変わったら知らせる。
+ * 完全自動運転の回は、自動運転が結果を扱って人に回すときに知らせるので、ここでは知らせない。
+ * 止めるための関数を返す
+ */
+export function watchReviewOutcomes(
+  store: SessionStore,
+  listener: ReviewOutcomeListener,
+): () => void {
+  let previous = store.all();
+  return store.subscribe(() => {
+    const current = store.all();
+    for (const [key, session] of Object.entries(current)) {
+      if (previous[key]?.phase !== "running") continue;
+      if (session.phase !== "done" && session.phase !== "failed") continue;
+      if (session.autopilot?.status === "reviewing") continue;
+      const at = key.lastIndexOf("#");
+      listener({ repo: key.slice(0, at), number: Number(key.slice(at + 1)) }, session);
+    }
+    previous = current;
+  });
+}

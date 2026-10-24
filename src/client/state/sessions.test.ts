@@ -9,6 +9,7 @@ import {
   runReviews,
   sessionBadge,
   type SessionStorage,
+  watchReviewOutcomes,
 } from "./sessions.ts";
 
 const pr = { repo: "o/r", number: 1 };
@@ -232,4 +233,52 @@ test("順番待ちの間に消されたら、その PR は走らせない", asyn
   await done;
   expect(started).toEqual([1]);
   expect(store.get({ repo: "o/r", number: 2 }).phase).toBe("idle");
+});
+
+test("AI レビューが完了か失敗したら、PR ごとに 1 回だけ知らせる", async () => {
+  const store = createSessionStore();
+  const outcomes: string[] = [];
+  watchReviewOutcomes(store, (target, session) =>
+    outcomes.push(`${target.repo}#${target.number}:${session.phase}`),
+  );
+
+  await runReview(
+    fakeApi([{ type: "findings", findings: [finding("f1")], priorChecks: [] }]),
+    store,
+    pr,
+    "sha1",
+  );
+  // 結果が出たあとの下書きの編集では知らせない
+  store.update(pr, (s) => ({ ...s, draft: setStatus(s.draft, "f1", "accepted") }));
+  await runReview(
+    fakeApi([{ type: "error", message: "boom", raw: null }]),
+    store,
+    { repo: "o/r", number: 2 },
+    "sha2",
+  );
+  expect(outcomes).toEqual(["o/r#1:done", "o/r#2:failed"]);
+});
+
+test("完全自動運転の回と、実行中に消された回は知らせない", async () => {
+  const store = createSessionStore();
+  const outcomes: number[] = [];
+  watchReviewOutcomes(store, (target) => outcomes.push(target.number));
+
+  store.update(pr, (s) => ({
+    ...s,
+    autopilot: {
+      status: "reviewing",
+      pr: summary(1, "a"),
+      headSha: "a",
+      rounds: 0,
+      note: null,
+      updatedAt: new Date(0).toISOString(),
+    },
+  }));
+  await runReview(fakeApi([{ type: "findings", findings: [], priorChecks: [] }]), store, pr, "a");
+
+  const other = { repo: "o/r", number: 2 };
+  store.update(other, (s) => ({ ...s, phase: "running" }));
+  store.clear(other);
+  expect(outcomes).toEqual([]);
 });

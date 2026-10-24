@@ -7,7 +7,7 @@ import { notify, routeExternalLinks } from "./desktop.ts";
 import { getLang, setLang, subscribeLang, t } from "./i18n.ts";
 import { setSettings } from "./settings.ts";
 import { createAutopilotStore, startAutopilot, takeOverRereview } from "./state/autopilot.ts";
-import { createSessionStore } from "./state/sessions.ts";
+import { createSessionStore, watchReviewOutcomes } from "./state/sessions.ts";
 import { startWatcher } from "./state/watch.ts";
 import { openRemoteStorage } from "./storage.ts";
 import "./styles.css";
@@ -57,6 +57,23 @@ async function bootstrap(): Promise<void> {
       `${pr.title}\n${reasons.join("\n")}`,
     ),
   );
+
+  // AI レビューが終わったら、ほかのアプリを見ていても気づけるよう OS に通知する。
+  // アプリを見ている間は画面で分かるので、通知しない
+  watchReviewOutcomes(sessions, (pr, session) => {
+    if (document.hasFocus()) return;
+    const text = t().session;
+    const name = `${pr.repo}#${pr.number}`;
+    if (session.phase === "failed") {
+      notify(browserClient.post, text.notifyFailed(name), session.error?.message ?? "");
+    } else {
+      notify(
+        browserClient.post,
+        text.notifyDone(name),
+        text.notifyFindings(session.draft.items.length),
+      );
+    }
+  });
 
   createRoot(container).render(
     <StrictMode>
