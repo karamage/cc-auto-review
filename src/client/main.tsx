@@ -35,6 +35,8 @@ async function bootstrap(): Promise<void> {
 
   /** AI レビューの結果はアプリを閉じても残す。明示的に消すまで保持する */
   const sessions = createSessionStore(sessionStorage);
+  // 書き出しは少し遅らせてまとめている。閉じるときは待たずに送る
+  window.addEventListener("pagehide", () => void sessionStorage.flush());
   /** 完全自動運転のオン・オフ。オンにしたことはアプリを閉じても覚えておく */
   const autopilot = createAutopilotStore(autopilotStorage);
 

@@ -171,6 +171,11 @@ export type Sessions = Readonly<Record<string, ReviewSession>>;
 export interface SessionStorage {
   load(): string | null;
   save(data: string): void;
+  /**
+   * あれば、書き出しを少し遅らせてまとめる。無ければ変えるたびに save する。
+   * 下書きの入力や進捗のたびに全 PR の状態を JSON にすると、保存した結果が増えるほど重くなる
+   */
+  saveLazy?(serialize: () => string): void;
 }
 
 export interface SessionStore {
@@ -222,10 +227,12 @@ export function createSessionStore(storage: SessionStorage | null = null): Sessi
   let sessions: Sessions = restore(storage?.load() ?? null);
   const listeners = new Set<() => void>();
 
+  const serialize = (): string => JSON.stringify(sessions);
   const commit = (next: Sessions): void => {
     sessions = next;
     try {
-      storage?.save(JSON.stringify(sessions));
+      if (storage?.saveLazy === undefined) storage?.save(serialize());
+      else storage.saveLazy(serialize);
     } catch {
       // 保存に失敗しても、開いている間は手元の状態で動き続ける
     }

@@ -19,6 +19,21 @@ function heaviest(items: DraftItem[]): Severity | undefined {
   return SEVERITIES.find((s) => items.some((i) => i.anchored.finding.severity === s));
 }
 
+const NONE: never[] = [];
+
+/** 行番号ごとにまとめる。行ごとに配列を探し直すと、大きなファイルで行数 × 件数になる */
+function byLine<T>(values: T[], lineOf: (value: T) => number | null): Map<number, T[]> {
+  const map = new Map<number, T[]>();
+  for (const value of values) {
+    const line = lineOf(value);
+    if (line === null) continue;
+    const list = map.get(line);
+    if (list === undefined) map.set(line, [value]);
+    else list.push(value);
+  }
+  return map;
+}
+
 export function DiffFileView({
   file,
   items,
@@ -43,6 +58,8 @@ export function DiffFileView({
   // 変更後の行番号と突き合わせると別の行の下に出るので、ファイル単位でまとめる
   const inlineComments = comments.filter((c) => c.line !== null && c.side !== "LEFT");
   const fileLevelComments = comments.filter((c) => c.line === null || c.side === "LEFT");
+  const itemsAt = byLine(items, (i) => i.anchored.finding.line);
+  const commentsAt = byLine(inlineComments, (c) => c.line);
 
   const { dir, name } = splitPath(file.path);
   const lines = file.hunks.flatMap((h) => h.lines);
@@ -90,13 +107,9 @@ export function DiffFileView({
               </tr>
               {hunk.lines.map((line, index) => {
                 const lineItems =
-                  line.newLine === null
-                    ? []
-                    : items.filter((i) => i.anchored.finding.line === line.newLine);
+                  line.newLine === null ? NONE : (itemsAt.get(line.newLine) ?? NONE);
                 const lineComments =
-                  line.newLine === null
-                    ? []
-                    : inlineComments.filter((c) => c.line === line.newLine);
+                  line.newLine === null ? NONE : (commentsAt.get(line.newLine) ?? NONE);
 
                 return (
                   <Fragment key={`${hunk.header}-${index}`}>
