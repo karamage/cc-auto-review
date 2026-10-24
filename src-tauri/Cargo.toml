@@ -13,8 +13,9 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 tauri-build = { version = "2", features = [] }
 
 [dependencies]
-tauri = { version = "2", features = [] }
-tauri-plugin-shell = "2"
+# 既定の feature のうち、同梱の画面の圧縮（splash だけで 2 KB）、実行時の権限の組み立て（権限を使わない）、
+# Linux 向けの x11 / dbus は要らないので外す
+tauri = { version = "2", default-features = false, features = ["wry", "common-controls-v6"] }
 serde_json = "1"
 url = "2"
 
