@@ -7,6 +7,7 @@ import { BunFileReader, ReviewRunner, type FileReader } from "../reviewer/runner
 import { Translator } from "../reviewer/translate.ts";
 import { SnapshotManager } from "../snapshot/manager.ts";
 import { parseSubmitRequest } from "./submit.ts";
+import { bunStaticFiles } from "../runtime/bun.ts";
 
 const SUBMIT_CMD = "gh api --method POST repos/o/r/pulls/12/reviews --input -";
 const STATE_CMD = "gh pr view 12 --repo o/r --json state,headRefOid,author,labels";
@@ -45,6 +46,7 @@ function appWith(
       remoteReadCommand: "remote-read",
       translator: new Translator(runner, new StubFileReader(translationJson)),
       clientDir: "./dist/client",
+      staticFiles: bunStaticFiles,
       ...memoryDeps(),
     }),
   );

@@ -20,7 +20,7 @@ The app looks for `gh` and `claude` in your login shell's `PATH`, so it works wh
 
 ## Install
 
-Build it from source (see [Development](#development)), then drag `CC Auto Review.app` into `/Applications`. `bun run app:build` builds the app for the CPU of the machine you build on, in `src-tauri/target/release/bundle/macos/`. To build the Intel version on an Apple Silicon Mac, use `bun run app:build:x64`. `bun run app:build:universal` produces a single app for both, but it is about twice as large (around 130 MB) because it bundles two copies of the Bun server.
+Build it from source (see [Development](#development)), then drag `CC Auto Review.app` into `/Applications`. `bun run app:build` builds the app for the CPU of the machine you build on, in `src-tauri/target/release/bundle/macos/`. To build the Intel version on an Apple Silicon Mac, use `bun run app:build:x64`. `bun run app:build:universal` produces a single app for both. The per-CPU app is about 12 MB and the universal one about 23 MB.
 
 > A locally built app is not signed. If macOS refuses to open it, allow it in **System Settings → Privacy & Security → Open Anyway**. Release DMGs built with `bun run release:mac` are signed and notarized and open normally.
 
@@ -89,7 +89,8 @@ Settings and app state live in `~/.config/cc-auto-review/` (override with `CC_AU
 ```
 CC Auto Review.app
 ├── Tauri shell (Rust)         starts the server, opens a window on it
-└── cc-auto-review-server      Bun + Hono, bundled into one binary
+├── cc-auto-review-server      txiki.js (a ~6 MB JavaScript runtime) that runs server.js
+└── Resources/server.js        the Hono server, bundled into one JS file
     ├── serves the React UI and the API on 127.0.0.1 (random port, per-launch token)
     ├── gh  → PR list, diff, comments, posting reviews
     └── claude -p  → the review, in a temp dir with only the changed files
@@ -111,7 +112,7 @@ bun run app:build    # builds the UI, the server binary and CC Auto Review.app
 bun run app:dmg      # also builds a .dmg (Finder automation permission may be required)
 bun run app:build:x64         # .app for Intel Macs (can be built on Apple Silicon too)
 bun run app:dmg:x64           # the same, as a .dmg
-bun run app:build:universal   # one .app for both Apple Silicon and Intel Macs (about twice the size)
+bun run app:build:universal   # one .app for both Apple Silicon and Intel Macs
 bun run app:dmg:universal     # the same, as a .dmg
 ```
 
@@ -140,10 +141,10 @@ Then:
 ```bash
 bun run release:mac             # → release/CC-Auto-Review_<version>_arm64.dmg and _x64.dmg
 bun run release:mac arm64       # Apple Silicon only
-bun run release:mac universal   # one DMG for both (about twice the size)
+bun run release:mac universal   # one DMG for both
 ```
 
-By default the script builds separate Apple Silicon and Intel versions, because most of the app is the bundled Bun server and a universal build carries two copies of it. For each architecture it builds the app, signs it with Hardened Runtime (`src-tauri/Entitlements.plist` lets the bundled Bun server use its JIT), notarizes and staples the app, packs it into a DMG, and notarizes and staples the DMG. Set `APPLE_SIGNING_IDENTITY` to pick a certificate and `NOTARY_PROFILE` to use another keychain profile.
+By default the script builds separate Apple Silicon and Intel versions. For each architecture it builds the app, signs it with Hardened Runtime, notarizes and staples the app, packs it into a DMG, and notarizes and staples the DMG. Set `APPLE_SIGNING_IDENTITY` to pick a certificate and `NOTARY_PROFILE` to use another keychain profile.
 
 ## License
 

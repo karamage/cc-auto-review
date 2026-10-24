@@ -47,9 +47,13 @@ export async function runPreflight(
 }
 
 /** start から順に、isFree が true を返す最初のポートを探す */
-export function findAvailablePort(start: number, isFree: (port: number) => boolean): number {
+export async function findAvailablePort(
+  start: number,
+  isFree: (port: number) => Promise<boolean>,
+): Promise<number> {
   for (let port = start; port < start + 100; port += 1) {
-    if (isFree(port)) return port;
+    // eslint-disable-next-line no-await-in-loop -- 前から順に 1 つずつ確かめる
+    if (await isFree(port)) return port;
   }
   throw new AppError({
     ja: `${start} から ${start + 99} までのポートがすべて使用中です。使っていないポートを空けてください。`,

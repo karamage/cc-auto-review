@@ -9,6 +9,7 @@ import { GitHubClient } from "./github/client.ts";
 import { BunFileReader, ReviewRunner } from "./reviewer/runner.ts";
 import { Translator } from "./reviewer/translate.ts";
 import { SnapshotManager } from "./snapshot/manager.ts";
+import { bunStaticFiles } from "./runtime/bun.ts";
 
 // serveStatic の root/path 指定を検証するため、実ビルド成果物には依存せず
 // ダミーのクライアントディレクトリを用意する
@@ -34,6 +35,7 @@ function app() {
     remoteReadCommand: "remote-read",
     translator: new Translator(runner, new BunFileReader()),
     clientDir,
+    staticFiles: bunStaticFiles,
     ...memoryDeps(),
   });
 }

@@ -2,13 +2,7 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-  <!-- 同梱のサーバ（Bun でまとめた実行ファイル）は JavaScriptCore の JIT を使う。
-       Hardened Runtime の下では、これが無いと起動直後に落ちる -->
-  <key>com.apple.security.cs.allow-jit</key>
-  <true/>
-  <key>com.apple.security.cs.allow-unsigned-executable-memory</key>
-  <true/>
-  <key>com.apple.security.cs.disable-executable-page-protection</key>
-  <true/>
+  <!-- 同梱のサーバを動かす txiki.js は JIT を使わない（QuickJS のインタプリタ）ので、
+       Hardened Runtime の例外は要らない -->
 </dict>
 </plist>

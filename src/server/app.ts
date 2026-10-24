@@ -1,5 +1,6 @@
+import { join } from "node:path";
 import { Hono } from "hono";
-import { serveStatic } from "hono/bun";
+import { serveStatic } from "hono/serve-static";
 import type { Lang } from "../shared/i18n.ts";
 import { AppError } from "./errors.ts";
 import type { GitHubClient } from "./github/client.ts";
@@ -13,6 +14,7 @@ import { registerSystemRoutes } from "./routes/system.ts";
 import type { SnapshotManager } from "./snapshot/manager.ts";
 import type { Settings } from "../shared/settings.ts";
 import type { StateKey } from "./store/files.ts";
+import type { StaticFiles } from "./runtime/types.ts";
 import type { SystemActions } from "./system.ts";
 import { requestLang } from "./lang.ts";
 
@@ -34,6 +36,7 @@ export interface AppDeps {
   };
   system: SystemActions;
   clientDir: string;
+  staticFiles: StaticFiles;
   /**
    * API を呼ぶのに要る合言葉。デスクトップアプリが起動のたびに作って渡す。
    * localhost で待ち受けるので、ほかのアプリやブラウザのページから API を叩かせない。
@@ -81,8 +84,13 @@ export function createApp(deps: AppDeps): Hono {
   app.onError((error, c) => c.json(toErrorResponse(error, requestLang(c)), 500));
 
   // API 以外はビルド済みクライアントを返す。未知のパスは index.html（SPA フォールバック）
-  app.use("/*", serveStatic({ root: deps.clientDir }));
-  app.get("/*", serveStatic({ root: deps.clientDir, path: "index.html" }));
+  const files = {
+    getContent: (path: string) => deps.staticFiles.read(path),
+    isDir: (path: string) => deps.staticFiles.isDirectory(path),
+    join,
+  };
+  app.use("/*", serveStatic({ ...files, root: deps.clientDir }));
+  app.get("/*", serveStatic({ ...files, root: deps.clientDir, path: "index.html" }));
 
   return app;
 }

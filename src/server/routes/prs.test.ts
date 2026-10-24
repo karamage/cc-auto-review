@@ -15,6 +15,7 @@ import {
 import { BunFileReader, ReviewRunner } from "../reviewer/runner.ts";
 import { Translator } from "../reviewer/translate.ts";
 import { SnapshotManager } from "../snapshot/manager.ts";
+import { bunStaticFiles } from "../runtime/bun.ts";
 
 const PR_FIELDS =
   "number,title,author,headRefName,baseRefName,additions,deletions,changedFiles,updatedAt,url";
@@ -64,6 +65,7 @@ function appWith(responses: Record<string, Partial<import("../exec.ts").CommandR
       remoteReadCommand: "remote-read",
       translator: new Translator(runner, new BunFileReader()),
       clientDir: "./dist/client",
+      staticFiles: bunStaticFiles,
       ...memoryDeps(),
     }),
   );

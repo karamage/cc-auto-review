@@ -7,6 +7,7 @@ import { BunFileReader, ReviewRunner } from "../reviewer/runner.ts";
 import { Translator } from "../reviewer/translate.ts";
 import { SnapshotManager } from "../snapshot/manager.ts";
 import { memoryDeps } from "../store/memory.ts";
+import { bunStaticFiles } from "../runtime/bun.ts";
 
 function buildApp(token: string | null = null) {
   const runner = new FakeCommandRunner({});
@@ -18,6 +19,7 @@ function buildApp(token: string | null = null) {
     remoteReadCommand: "remote-read",
     translator: new Translator(runner, new BunFileReader()),
     clientDir: "./dist/client",
+    staticFiles: bunStaticFiles,
     token,
     ...deps,
   });

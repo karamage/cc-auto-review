@@ -13,7 +13,8 @@
  *   remote-read issue <番号|URL>          GitHub の Issue / PR のタイトル・状態・本文（PR の説明にある関連資料を読むため）
  */
 import { encodeContentPath } from "../github/client.ts";
-import { BunCommandRunner, type CommandRunner } from "../exec.ts";
+import type { CommandRunner } from "../exec.ts";
+import type { Runtime } from "../runtime/types.ts";
 
 export const ENV_REPO = "CC_AUTO_REVIEW_REPO";
 export const ENV_HEAD = "CC_AUTO_REVIEW_HEAD_SHA";
@@ -246,7 +247,7 @@ export async function remoteRead(
 }
 
 /** 環境変数で決めた PR を読む。claude から呼ばれるサブコマンドの入口 */
-export async function runRemoteRead(args: string[]): Promise<never> {
+export async function runRemoteRead(runtime: Runtime, args: string[]): Promise<never> {
   const repo = process.env[ENV_REPO];
   const headSha = process.env[ENV_HEAD];
   const baseSha = process.env[ENV_BASE];
@@ -254,12 +255,8 @@ export async function runRemoteRead(args: string[]): Promise<never> {
     console.error(`${ENV_REPO} / ${ENV_HEAD} / ${ENV_BASE} are not set`);
     process.exit(2);
   }
-  const output = await remoteRead(new BunCommandRunner(), { repo, headSha, baseSha }, args);
-  process.stdout.write(output.stdout);
-  process.stderr.write(output.stderr);
+  const output = await remoteRead(runtime.runner, { repo, headSha, baseSha }, args);
+  await runtime.write("stdout", output.stdout);
+  await runtime.write("stderr", output.stderr);
   process.exit(output.exitCode);
-}
-
-if (import.meta.main) {
-  await runRemoteRead(process.argv.slice(2));
 }

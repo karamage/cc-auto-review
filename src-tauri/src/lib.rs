@@ -1,6 +1,7 @@
 //! デスクトップアプリの殻。
 //!
-//! 画面と API はどちらも同梱のサーバ（Bun で 1 つにまとめた sidecar）が配る。
+//! 画面と API はどちらも同梱のサーバが配る。サーバは 1 つにまとめた JS（server.js）で、
+//! sidecar の txiki.js（tjs）が動かす。
 //! このアプリは sidecar を 127.0.0.1 の空いているポートで起動し、準備ができたら
 //! ウィンドウをその URL に向ける。localhost のほかのアプリから API を叩かせないよう、
 //! 起動のたびに作った合言葉を sidecar とウィンドウにだけ渡す。
@@ -39,12 +40,15 @@ fn start_server(app: &tauri::AppHandle) -> Result<(), Box<dyn std::error::Error>
         .get_webview_window("main")
         .ok_or("the main window is missing")?;
     let client_dir = app.path().resolve("client", BaseDirectory::Resource)?;
+    let server_js = app.path().resolve("server.js", BaseDirectory::Resource)?;
     let token = new_token();
 
     let (mut events, child) = app
         .shell()
         .sidecar("cc-auto-review-server")?
         .args([
+            "run",
+            &server_js.to_string_lossy(),
             "--desktop",
             "--port",
             "0",

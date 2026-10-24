@@ -40,7 +40,8 @@
       "binaries/cc-auto-review-server"
     ],
     "resources": {
-      "../dist/client/": "client/"
+      "../dist/client/": "client/",
+      "../dist/server/server.js": "server.js"
     },
     "macOS": {
       "minimumSystemVersion": "11.0",

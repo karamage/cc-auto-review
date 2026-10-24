@@ -55,11 +55,11 @@ test("問題が複数あればすべて報告する", async () => {
   expect(result.messages).toHaveLength(2);
 });
 
-test("使用中のポートを避けて空きを返す", () => {
+test("使用中のポートを避けて空きを返す", async () => {
   const used = new Set([4711, 4712]);
-  expect(findAvailablePort(4711, (port) => !used.has(port))).toBe(4713);
+  expect(await findAvailablePort(4711, async (port) => !used.has(port))).toBe(4713);
 });
 
-test("最初のポートが空いていればそれを使う", () => {
-  expect(findAvailablePort(4711, () => true)).toBe(4711);
+test("最初のポートが空いていればそれを使う", async () => {
+  expect(await findAvailablePort(4711, async () => true)).toBe(4711);
 });

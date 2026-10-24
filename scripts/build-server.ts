@@ -1,15 +1,67 @@
 /**
- * サーバを 1 つの実行ファイルにまとめ、Tauri の sidecar として置く。
- * Tauri は sidecar の名前の後ろにターゲットの triple が付いたファイルを探す。
+ * デスクトップアプリに同梱するサーバを用意する。
+ *
+ * - サーバのコードを 1 つの JS（dist/server/server.js）にまとめる。Tauri がリソースとして同梱する
+ * - それを動かす txiki.js（tjs）の実行ファイルを、Tauri の sidecar として置く。
+ *   Tauri は sidecar の名前の後ろにターゲットの triple が付いたファイルを探す
+ *
+ * Bun の --compile で 1 つの実行ファイルにすると、Bun 本体（約 60 MB）がまるごと入る。
+ * tjs は約 6 MB で済む。tjs compile は使わない。実行ファイルの末尾に JS を足す方式で、macOS の署名と両立しないため
  *
  *   bun scripts/build-server.ts                          このマシン向け
  *   bun scripts/build-server.ts universal-apple-darwin   Apple Silicon と Intel の両方を入れた 1 つのファイル
  */
-import { mkdir, rm } from "node:fs/promises";
+import { chmod, copyFile, mkdir, rm, stat } from "node:fs/promises";
 import { join } from "node:path";
+import type { BunPlugin } from "bun";
 
 const root = join(import.meta.dir, "..");
-const outDir = join(root, "src-tauri", "binaries");
+const binDir = join(root, "src-tauri", "binaries");
+const cacheDir = join(binDir, ".cache");
+const bundleFile = join(root, "dist", "server", "server.js");
+
+/**
+ * 同梱する txiki.js。上げるときは、リリースの各 zip の sha256 も書き換える。
+ * 26.6.0 の tjs.spawn は stdin のパイプが詰まる（saghul/txiki.js#1027）ので、TjsCommandRunner で一時ファイル経由にしている
+ */
+const TJS_VERSION = "26.6.0";
+const TJS_ASSETS: Record<string, { file: string; sha256: string }> = {
+  "aarch64-apple-darwin": {
+    file: "txiki-macos-arm64.zip",
+    sha256: "f175e921c24b26905d23ad17c2e47c37c2bf638fb0d6993cdb6e0a79dbc1b621",
+  },
+  "x86_64-apple-darwin": {
+    file: "txiki-macos-x86_64.zip",
+    sha256: "9d36d7cc20e6adb4cf132a9a2ed7ea2b449ca03a257b3a52e8fe2c6d16dd6d3b",
+  },
+};
+
+/** universal は、この 2 つを lipo で 1 つにまとめたもの */
+const UNIVERSAL = "universal-apple-darwin";
+const UNIVERSAL_PARTS = ["aarch64-apple-darwin", "x86_64-apple-darwin"] as const;
+
+/** node:* を、txiki.js の API で書いた互換モジュールに差し替える */
+const NODE_SHIMS: Record<string, string> = {
+  "node:fs/promises": "fs-promises.ts",
+  "node:os": "os.ts",
+  "node:path": "path.ts",
+  "node:crypto": "crypto.ts",
+};
+
+const tjsShims: BunPlugin = {
+  name: "tjs-shims",
+  setup(build) {
+    build.onResolve({ filter: /^node:/ }, (args) => {
+      const shim = NODE_SHIMS[args.path];
+      if (shim === undefined) {
+        throw new Error(`${args.path} has no txiki.js shim (imported from ${args.importer})`);
+      }
+      return { path: join(root, "src", "server", "runtime", "tjs-node", shim) };
+    });
+    // tjs:* は tjs に組み込まれたモジュール
+    build.onResolve({ filter: /^tjs:/ }, (args) => ({ path: args.path, external: true }));
+  },
+};
 
 /** rustc が知っている、このマシンのターゲット。Tauri はこの名前で sidecar を探す */
 async function hostTriple(): Promise<string> {
@@ -21,29 +73,6 @@ async function hostTriple(): Promise<string> {
   return triple;
 }
 
-/**
- * x64 は baseline 版を指定する。AVX の無い CPU で、起動のたびに警告が stderr に出て、
- * claude が読む remote-read の出力に混ざるのを避けたい。
- * ただし Bun 1.3.8 の darwin では通常版と同じものが届くので、Rosetta で x64 版を動かすと警告は出る。
- * macOS 11 以降が動く Intel Mac はどれも AVX を持ち、Apple Silicon では universal の arm64 側が動くので、実際には困らない
- */
-const BUN_TARGETS: Record<string, string> = {
-  "aarch64-apple-darwin": "bun-darwin-arm64",
-  "x86_64-apple-darwin": "bun-darwin-x64-baseline",
-  "x86_64-unknown-linux-gnu": "bun-linux-x64-baseline",
-  "aarch64-unknown-linux-gnu": "bun-linux-arm64",
-  "x86_64-pc-windows-msvc": "bun-windows-x64-baseline",
-};
-
-/** universal は、この 2 つを lipo で 1 つにまとめたもの */
-const UNIVERSAL = "universal-apple-darwin";
-const UNIVERSAL_PARTS = ["aarch64-apple-darwin", "x86_64-apple-darwin"] as const;
-
-function outfile(triple: string): string {
-  const ext = triple.includes("windows") ? ".exe" : "";
-  return join(outDir, `cc-auto-review-server-${triple}${ext}`);
-}
-
 async function run(cmd: string[]): Promise<void> {
   const proc = Bun.spawn(cmd, { stdout: "inherit", stderr: "inherit" });
   if ((await proc.exited) !== 0) {
@@ -51,21 +80,65 @@ async function run(cmd: string[]): Promise<void> {
   }
 }
 
-async function compile(triple: string): Promise<string> {
-  const target = BUN_TARGETS[triple];
-  if (target === undefined) throw new Error(`Unsupported target: ${triple}`);
-  const file = outfile(triple);
-  await run([
-    "bun",
-    "build",
-    "--compile",
-    "--minify",
-    `--target=${target}`,
-    join(root, "src", "server", "index.ts"),
-    "--outfile",
-    file,
-  ]);
-  return file;
+async function exists(path: string): Promise<boolean> {
+  try {
+    await stat(path);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function bundle(): Promise<void> {
+  const result = await Bun.build({
+    entrypoints: [join(root, "src", "server", "index.tjs.ts")],
+    target: "browser",
+    format: "esm",
+    minify: true,
+    plugins: [tjsShims],
+  });
+  if (!result.success) {
+    for (const log of result.logs) console.error(log);
+    throw new Error("Could not bundle the server");
+  }
+  const [output] = result.outputs;
+  if (output === undefined) throw new Error("The server bundle is empty");
+  await mkdir(join(root, "dist", "server"), { recursive: true });
+  await Bun.write(bundleFile, output);
+  console.log(`Bundled ${bundleFile} (${Math.round(output.size / 1024)} KB)`);
+}
+
+/** リリースの zip を取ってきて、sha256 を確かめてから tjs を取り出す。一度取ったものは使い回す */
+async function fetchTjs(triple: string): Promise<string> {
+  const asset = TJS_ASSETS[triple];
+  if (asset === undefined) throw new Error(`Unsupported target: ${triple}`);
+  const dir = join(cacheDir, `tjs-${TJS_VERSION}-${triple}`);
+  const exe = join(dir, "tjs");
+  if (await exists(exe)) return exe;
+
+  const url = `https://github.com/saghul/txiki.js/releases/download/v${TJS_VERSION}/${asset.file}`;
+  console.log(`Downloading ${url}`);
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`Could not download ${url}: ${response.status}`);
+  const data = new Uint8Array(await response.arrayBuffer());
+  const digest = new Bun.CryptoHasher("sha256").update(data).digest("hex");
+  if (digest !== asset.sha256) {
+    throw new Error(`Checksum mismatch for ${asset.file}: expected ${asset.sha256}, got ${digest}`);
+  }
+
+  await rm(dir, { recursive: true, force: true });
+  await mkdir(dir, { recursive: true });
+  const zip = join(dir, asset.file);
+  await Bun.write(zip, data);
+  // zip の中は txiki-macos-<arch>/tjs
+  await run(["unzip", "-q", "-j", zip, "*/tjs", "-d", dir]);
+  await rm(zip);
+  await chmod(exe, 0o755);
+  return exe;
+}
+
+function sidecar(triple: string): string {
+  return join(binDir, `cc-auto-review-server-${triple}`);
 }
 
 // 引数で指定が無ければ、tauri build --target が渡すターゲット、それも無ければこのマシン
@@ -75,18 +148,21 @@ const triple =
   process.env.TAURI_TARGET_TRIPLE ??
   (await hostTriple());
 
-await mkdir(outDir, { recursive: true });
+await bundle();
+await mkdir(binDir, { recursive: true });
 
+const file = sidecar(triple);
+await rm(file, { force: true });
 if (triple === UNIVERSAL) {
   const parts: string[] = [];
   for (const part of UNIVERSAL_PARTS) {
-    // eslint-disable-next-line no-await-in-loop -- bun build を 1 つずつ走らせる
-    parts.push(await compile(part));
+    // eslint-disable-next-line no-await-in-loop -- 1 つずつ取ってくる
+    parts.push(await fetchTjs(part));
   }
-  const file = outfile(UNIVERSAL);
-  await rm(file, { force: true });
   await run(["lipo", "-create", ...parts, "-output", file]);
-  console.log(`Built ${file}`);
 } else {
-  console.log(`Built ${await compile(triple)}`);
+  await copyFile(await fetchTjs(triple), file);
 }
+console.log(
+  `Placed ${file} (txiki.js ${TJS_VERSION}, ${((await stat(file)).size / 2 ** 20).toFixed(1)} MB)`,
+);

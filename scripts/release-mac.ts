@@ -4,9 +4,7 @@
  *   bun run release:mac              Apple Silicon 版と Intel 版の DMG を 1 つずつ
  *   bun run release:mac arm64        Apple Silicon 版だけ
  *   bun run release:mac x64          Intel 版だけ
- *   bun run release:mac universal    両方で動く 1 つの DMG（同梱の Bun が 2 つ入り、約 2 倍の大きさになる）
- *
- * 既定で CPU ごとに分けるのは、アプリの大半が同梱の Bun サーバで、universal にするとそれが 2 つ入るから。
+ *   bun run release:mac universal    両方で動く 1 つの DMG
  *
  * 前もって要るもの（どちらも一度だけ）:
  * - キーチェーンに「Developer ID Application」の証明書（Xcode > Settings > Accounts > Manage Certificates で作れる）

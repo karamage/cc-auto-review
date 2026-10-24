@@ -11,6 +11,7 @@ import { ReviewRunner, type FileReader } from "../reviewer/runner.ts";
 import { Translator } from "../reviewer/translate.ts";
 import { SnapshotManager, type SnapshotFs } from "../snapshot/manager.ts";
 import { attachComments } from "./review.ts";
+import { bunStaticFiles } from "../runtime/bun.ts";
 
 const PR_FIELDS =
   "number,title,author,headRefName,baseRefName,additions,deletions,changedFiles,updatedAt,url";
@@ -130,6 +131,7 @@ function buildApp(
       remoteReadCommand: "remote-read",
       translator: new Translator(runner, files),
       clientDir: "./dist/client",
+      staticFiles: bunStaticFiles,
       ...memoryDeps(settings),
     }),
   );
