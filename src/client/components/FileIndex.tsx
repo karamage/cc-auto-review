@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { type DiffFile, SEVERITIES } from "../../shared/types.ts";
 import { splitPath } from "../format.ts";
 import { t } from "../i18n.ts";
@@ -10,7 +11,12 @@ export function fileAnchorId(path: string): string {
 /** 変更ファイルの索引。長い diff の中で、指摘のあるファイルへ直接飛べるようにする */
 export function FileIndex({ files, draft }: { files: DiffFile[]; draft: DraftState }) {
   return (
-    <nav className="file-index" aria-labelledby="file-index-heading">
+    <nav
+      className="file-index"
+      aria-labelledby="file-index-heading"
+      // ファイルが少ないときに空白を残さないよう、最小の高さを行数に合わせる
+      style={{ "--rows": files.length } as CSSProperties}
+    >
       <h2 id="file-index-heading">
         {t().changedFiles} <span className="muted">{files.length}</span>
       </h2>
