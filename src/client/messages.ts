@@ -539,7 +539,8 @@ const ja = {
       skipLabelHint: "このラベルが付いた PR は、自動運転がレビューも投稿もしません",
       routing: "プロファイルの振り分け",
       routingIntro:
-        "ラベルか、PR の説明・コメントのメンション（@org/team など）に当たった PR を、別のプロファイルでレビューします。上の規則から順に見ます。",
+        "リポジトリ、ラベル、PR の説明・コメントのメンション（@org/team など）で、PR を別のプロファイルでレビューします。リポジトリ（owner/repo）を書いた規則はそのリポジトリの PR にだけ当たり、ラベルもメンションも空ならそのリポジトリの PR すべてに当たります。上の規則から順に見ます。",
+      routingRepo: "リポジトリ",
       routingLabel: "ラベル",
       routingMention: "メンション",
       routingProfile: "プロファイル",
@@ -1069,7 +1070,8 @@ const en: Messages = {
       skipLabelHint: "Autopilot neither reviews nor posts on PRs with this label",
       routing: "Profile routing",
       routingIntro:
-        "Review PRs that have a label, or that mention someone (e.g. @org/team) in the description or comments, with a different profile. Rules are checked from the top.",
+        "Review PRs with a different profile by repository, label, or a mention (e.g. @org/team) in the description or comments. A rule with a repository (owner/repo) only applies to that repository's PRs, and with no label or mention it applies to all of them. Rules are checked from the top.",
+      routingRepo: "Repository",
       routingLabel: "Label",
       routingMention: "Mention",
       routingProfile: "Profile",

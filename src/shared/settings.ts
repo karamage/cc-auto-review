@@ -39,8 +39,13 @@ export interface PathRule {
   reason: string;
 }
 
-/** 完全自動運転で、PR に応じて使うプロファイルを変える規則。ラベルかメンションのどちらかで当てる */
+/**
+ * 完全自動運転で、PR に応じて使うプロファイルを変える規則。ラベルかメンションのどちらかで当てる。
+ * リポジトリを書けば、そのリポジトリの PR にだけ当てる。ラベルもメンションも空なら、そのリポジトリの PR すべてに当たる
+ */
 export interface RoutingRule {
+  /** 当てるリポジトリ（owner/repo）。空ならどのリポジトリでも見る */
+  repo: string;
   /** PR に付いていれば当たる GitHub のラベル。空なら見ない */
   label: string;
   /** PR の説明かコメントに含まれていれば当たる文字列（@org/team など）。空なら見ない */
@@ -389,11 +394,12 @@ function normalizeRouting(raw: unknown, profileIds: Set<string>): RoutingRule[] 
   if (!Array.isArray(raw)) return [];
   return raw.flatMap((item) => {
     const rule = item as Partial<RoutingRule> | null;
+    const repo = str(rule?.repo, "").trim();
     const label = str(rule?.label, "").trim();
     const mention = str(rule?.mention, "").trim();
     const profileId = str(rule?.profileId, "");
-    if ((label === "" && mention === "") || !profileIds.has(profileId)) return [];
-    return [{ label, mention, profileId }];
+    if ((repo === "" && label === "" && mention === "") || !profileIds.has(profileId)) return [];
+    return [{ repo, label, mention, profileId }];
   });
 }
 

@@ -44,19 +44,24 @@ export function mentions(texts: readonly string[], mention: string): boolean {
 
 /**
  * PR に当たる最初のルーティング規則。ラベルとメンションの両方を書いた規則は、どちらかに当たれば使う。
+ * リポジトリを書いた規則は、そのリポジトリの PR にだけ当てる。ラベルもメンションも空なら、そのリポジトリの PR すべてに当たる。
  * 当たらなければ null（自動運転の既定のプロファイルを使う）
  */
 export function matchRouting(
   rules: readonly RoutingRule[],
+  repo: string,
   labels: readonly string[],
   texts: readonly string[],
 ): RoutingRule | null {
   return (
-    rules.find(
-      (rule) =>
+    rules.find((rule) => {
+      if (rule.repo !== "" && rule.repo.toLowerCase() !== repo.toLowerCase()) return false;
+      if (rule.label === "" && rule.mention === "") return rule.repo !== "";
+      return (
         (rule.label !== "" && labels.includes(rule.label)) ||
-        (rule.mention !== "" && mentions(texts, rule.mention)),
-    ) ?? null
+        (rule.mention !== "" && mentions(texts, rule.mention))
+      );
+    }) ?? null
   );
 }
 

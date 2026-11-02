@@ -40,6 +40,23 @@ test("プロファイルを全部消したら既定に戻し、存在しない i
   expect(custom.autopilot.routing).toEqual([]);
 });
 
+test("振り分けの規則はリポジトリだけでも残し、古い規則にはリポジトリの欄を空で足す", () => {
+  const settings = normalizeSettings({
+    profiles: [{ id: "a", name: "A", perspectives: [] }],
+    autopilot: {
+      routing: [
+        { repo: " acme/web ", label: "", mention: "", profileId: "a" },
+        { label: "docs", mention: "", profileId: "a" },
+        { repo: "", label: "", mention: "", profileId: "a" },
+      ],
+    },
+  });
+  expect(settings.autopilot.routing).toEqual([
+    { repo: "acme/web", label: "", mention: "", profileId: "a" },
+    { repo: "", label: "docs", mention: "", profileId: "a" },
+  ]);
+});
+
 test("名前の無いプロファイルや見出しの無い観点は捨て、同じ id には番号を足す", () => {
   const settings = normalizeSettings({
     version: 2,

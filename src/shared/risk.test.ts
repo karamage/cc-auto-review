@@ -170,10 +170,22 @@ test.each([
 
 test("ルーティングはラベルかメンションのどちらかに当たる最初の規則を使う", () => {
   const rules = [
-    { label: "docs", mention: "", profileId: "quick" },
-    { label: "", mention: "@acme/security", profileId: "security" },
+    { repo: "", label: "docs", mention: "", profileId: "quick" },
+    { repo: "", label: "", mention: "@acme/security", profileId: "security" },
   ];
-  expect(matchRouting(rules, ["docs"], [])?.profileId).toBe("quick");
-  expect(matchRouting(rules, [], ["cc @acme/security"])?.profileId).toBe("security");
-  expect(matchRouting(rules, ["bug"], ["hello"])).toBeNull();
+  expect(matchRouting(rules, "o/r", ["docs"], [])?.profileId).toBe("quick");
+  expect(matchRouting(rules, "o/r", [], ["cc @acme/security"])?.profileId).toBe("security");
+  expect(matchRouting(rules, "o/r", ["bug"], ["hello"])).toBeNull();
+});
+
+test("リポジトリを書いた規則は、そのリポジトリの PR にだけ当たる", () => {
+  const rules = [
+    { repo: "acme/web", label: "docs", mention: "", profileId: "web-docs" },
+    { repo: "Acme/API", label: "", mention: "", profileId: "api" },
+  ];
+  expect(matchRouting(rules, "acme/web", ["docs"], [])?.profileId).toBe("web-docs");
+  expect(matchRouting(rules, "acme/other", ["docs"], [])).toBeNull();
+  expect(matchRouting(rules, "acme/web", ["bug"], [])).toBeNull();
+  // ラベルもメンションも書かなければ、そのリポジトリの PR はすべて当たる。大文字小文字は区別しない
+  expect(matchRouting(rules, "acme/api", ["bug"], [])?.profileId).toBe("api");
 });

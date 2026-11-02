@@ -2504,6 +2504,7 @@ dialog.confirm { border: 1px solid var(--ink-rule); border-radius: 14px; backgro
 .rule-table { display: grid; gap: 10px; }
 .rule-row { display: grid; grid-template-columns: 1fr 1fr 1fr auto; gap: 10px; align-items: end; }
 .rule-row[data-kind="path"] { grid-template-columns: 2fr 1fr auto; }
+.rule-row[data-kind="routing"] { grid-template-columns: 1fr 1fr 1fr 1fr auto; }
 
 .settings-bar {
   position: fixed;
@@ -2534,5 +2535,5 @@ dialog.confirm { border: 1px solid var(--ink-rule); border-radius: 14px; backgro
 @media (max-width: 760px) {
   .profiles-layout { grid-template-columns: 1fr; }
   .profile-list { position: static; }
-  .rule-row, .rule-row[data-kind="path"] { grid-template-columns: 1fr; }
+  .rule-row, .rule-row[data-kind="path"], .rule-row[data-kind="routing"] { grid-template-columns: 1fr; }
 }

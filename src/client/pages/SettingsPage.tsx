@@ -580,7 +580,15 @@ function AutopilotTab({
         <div className="rule-table">
           {auto.routing.map((rule, index) => (
             // eslint-disable-next-line react/no-array-index-key -- 規則は並び順そのものが意味を持つ
-            <div className="rule-row" key={index}>
+            <div className="rule-row" data-kind="routing" key={index}>
+              <TextField
+                label={text.routingRepo}
+                value={rule.repo}
+                mono
+                onChange={(repo) =>
+                  set({ routing: replaceAt(auto.routing, index, (r) => ({ ...r, repo })) })
+                }
+              />
               <TextField
                 label={text.routingLabel}
                 value={rule.label}
@@ -616,7 +624,10 @@ function AutopilotTab({
             data-variant="text"
             onClick={() =>
               set({
-                routing: [...auto.routing, { label: "", mention: "", profileId: auto.profileId }],
+                routing: [
+                  ...auto.routing,
+                  { repo: "", label: "", mention: "", profileId: auto.profileId },
+                ],
               })
             }
           >

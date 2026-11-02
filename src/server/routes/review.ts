@@ -158,7 +158,7 @@ export function registerReviewRoutes(app: Hono, deps: AppDeps): void {
         // 人が画面から走らせたときは、人の判断を優先してレビューする
         // 完全自動運転の回は、自動運転の設定のプロファイルを使う。ルーティングの規則に当たれば、そちらを使う
         const routed = assessRisk
-          ? matchRouting(auto.routing, labels, [
+          ? matchRouting(auto.routing, pr.repo, labels, [
               description ?? "",
               ...[...comments, ...reviewBodies].map((comment) => comment.body),
             ])

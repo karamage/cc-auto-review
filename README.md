@@ -74,7 +74,7 @@ The repository's own `CLAUDE.md`, `AGENTS.md` and `REVIEW.md` are also read — 
 | Attach an LGTM image to approvals | off |
 | Label to trust autopilot | `auto-judge` |
 | Label to skip AI review | `skip-ai-review` |
-| Profile routing | Use another profile when a PR has a label or mentions someone (e.g. `@org/security`) |
+| Profile routing | Use another profile for a repository, or when a PR has a label or mentions someone (e.g. `@org/security`) |
 | Paths handed to a human without calling the AI | CI, DB migrations, infra, secrets, auth/billing/crypto, review conventions (editable regexes) |
 | Changed lines handed to a human | 1000 (lock files and `dist/` are not counted) |
 

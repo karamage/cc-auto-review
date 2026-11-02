@@ -569,7 +569,9 @@ const MENTION = {
 
 function routedSettings(): Settings {
   const settings = defaultSettings();
-  settings.autopilot.routing = [{ label: "", mention: "@acme/security", profileId: "security" }];
+  settings.autopilot.routing = [
+    { repo: "", label: "", mention: "@acme/security", profileId: "security" },
+  ];
   return settings;
 }
 
@@ -592,7 +594,9 @@ test("完全自動運転の回で、コメントがルーティングのメン�
 
 test("ラベルでもルーティングでき、手で走らせた回はルーティングしない", async () => {
   const settings = defaultSettings();
-  settings.autopilot.routing = [{ label: "security", mention: "", profileId: "security" }];
+  settings.autopilot.routing = [
+    { repo: "", label: "security", mention: "", profileId: "security" },
+  ];
   const { app, runner } = buildApp(
     JSON.stringify({ findings: [], risk: { level: "low", reasons: [] } }),
     {
