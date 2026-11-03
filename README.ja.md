@@ -26,6 +26,12 @@
   <p><a href="README.md">English README</a></p>
 </div>
 
+<p align="center">
+  <img src="assets/demo/review-ja.gif" alt="PR を開いて AI レビューを実行し、指摘に移動して採用する様子" width="880">
+  <br>
+  <sub>PR を開いて AI レビューを実行し、指摘に移動して採用する（サンプルデータ）</sub>
+</p>
+
 > [!TIP]
 > API キーの設定は要りません。レビューは手元の Claude Code のサブスクリプションや設定のまま動き、GitHub へのアクセスは `gh` のログインを使います。
 
@@ -84,6 +90,12 @@
 - **レビュー依頼を定期的に巡回**し、承認かコメントをして、作成者が push か返信をしたら再レビューします。
 - **リスクのある PR は人へ**: パス、変更行数、リスクの点数、自然言語で書いた基準のどれかに当たれば人に回します。
 - **プロファイルの振り分け**: リポジトリ、ラベル、メンション（`@org/security` など）で使うプロファイルを変えられます。
+
+<p align="center">
+  <img src="assets/demo/autopilot-ja.gif" alt="完全自動運転をオンにすると、5 件の PR をレビューして承認・コメントし、危ない 1 件を人に回す様子" width="880">
+  <br>
+  <sub>完全自動運転をオンにすると、5 件の PR をレビューして承認かコメントをし、危ない 1 件だけを人に回す（サンプルデータ）</sub>
+</p>
 
 ### 🖥 macOS のネイティブアプリ
 - **小さい**: CPU ごとの版は約 12 MB、universal 版は約 23 MB です。サーバは約 6 MB の JavaScript ランタイム [txiki.js](https://github.com/saghul/txiki.js) で動きます。
