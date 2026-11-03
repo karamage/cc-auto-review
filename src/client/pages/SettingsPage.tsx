@@ -636,6 +636,16 @@ function AutopilotTab({
         </div>
       </Section>
 
+      <Section title={text.handoff} intro={text.handoffIntro}>
+        <LinesField
+          label={text.handoffRules}
+          hint={text.handoffHint}
+          value={auto.handoffRules}
+          rows={8}
+          onChange={(handoffRules) => set({ handoffRules })}
+        />
+      </Section>
+
       <Section title={text.sensitive} intro={text.sensitiveIntro}>
         <div className="rule-table">
           {auto.sensitivePaths.map((rule, index) => (

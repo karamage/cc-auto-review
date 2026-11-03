@@ -27,6 +27,8 @@ export interface PromptInput {
   language?: Lang;
   /** 変更のリスクも判定させるか。完全自動運転のときだけ頼む */
   assessRisk?: boolean;
+  /** 人に任せる基準。自然言語で 1 項目ずつ。assessRisk のときだけ使う */
+  handoffRules?: readonly string[];
 }
 
 const LANGUAGE_NAME: Record<Lang, string> = { ja: "Japanese", en: "English" };
@@ -284,24 +286,30 @@ A difference between original and locale is also a finding under the i18n perspe
 `;
 }
 
-/** 完全自動運転で、人の判断が要る変更かを AI に決めさせる節 */
-function riskSection(assessRisk: boolean | undefined): string {
+/** 完全自動運転で、人の判断が要る変更かを AI に決めさせる節。high の基準は設定の自然言語の規則から作る */
+function riskSection(assessRisk: boolean | undefined, rules: readonly string[] = []): string {
   if (assessRisk !== true) return "";
+  const criteria =
+    rules.length === 0
+      ? ""
+      : `
+### When a human must review
+
+These are the team's rules, written in natural language. A change that matches any of them is high. A rule may instead say that some kind of change does not need a human; then do not choose high for that reason alone. When a rule conflicts with the general descriptions of the levels above, follow the rule.
+
+<handoff_rules>
+${escapeTag(rules.map((rule) => `- ${rule}`).join("\n"), "handoff_rules")}
+</handoff_rules>
+`;
   return `## Risk assessment
 
 Decide whether a human must review this change and write it to \`risk\`. Judge the nature of the change itself, not whether you found problems.
 
 - low — documentation, copy, tests, small internal changes, additions hidden behind a flag
 - medium — ordinary product changes that can go through when the automated review finds nothing
-- high — needs a human decision. Any of:
-  - authentication, authorization, permissions, billing or payments, handling of personal data or secrets
-  - database schema or data migrations, code that deletes or rewrites data
-  - CI, deployment or infrastructure configuration, large dependency upgrades
-  - changes that break compatibility of public APIs or data formats
-  - design decisions that later code will copy, or decisions on whether / how much to build
-  - the intent cannot be read from the description, so correctness cannot be judged
-
-When in doubt, choose the higher level. reasons: 1–3 short reasons for the level.
+- high — needs a human decision${rules.length === 0 ? "" : " (see the rules below)"}
+${criteria}
+When in doubt, choose the higher level. reasons: 1–3 short reasons for the level. When a rule decided the level, say which one.
 
 `;
 }
@@ -323,7 +331,7 @@ Your goal is to find the problems that would actually hurt if this change were m
 
 ${readingSection(input)}
 
-${fileListSection(input.files)}${descriptionSection(input.description)}${perspectivesSection(profile)}${methodSection(profile)}${teamSection(profile)}${exclusionSection(profile)}${agentConfigSection(input.files, input.remoteReadCommand)}${conversationSection(input.comments, input.author)}${instructionSection(input.instructions)}${i18nSection(profile)}${riskSection(input.assessRisk)}## Output
+${fileListSection(input.files)}${descriptionSection(input.description)}${perspectivesSection(profile)}${methodSection(profile)}${teamSection(profile)}${exclusionSection(profile)}${agentConfigSection(input.files, input.remoteReadCommand)}${conversationSection(input.comments, input.author)}${instructionSection(input.instructions)}${i18nSection(profile)}${riskSection(input.assessRisk, input.handoffRules)}## Output
 
 Every finding must be **tied to a changed line**. line is the line number in the new file and must be inside the ranges listed above.
 

@@ -546,6 +546,12 @@ const ja = {
       routingProfile: "プロファイル",
       addRule: "規則を追加",
       removeRule: "削除",
+      handoff: "人に任せる基準",
+      handoffIntro:
+        "AI がリスクを判定するときに読む、チームの基準です。当てはまる変更は人に回します。「ドキュメントだけの変更は人に回さなくてよい」のように緩める書き方もできます。どの言語で書いても構いません。",
+      handoffRules: "基準",
+      handoffHint:
+        "1 行に 1 つ。空にすると AI の一般的な判断に任せます。下のパスと行数の規則は、これとは別に AI を呼ばずに当てます",
       sensitive: "AI を呼ばずに人へ回すパス",
       sensitiveIntro:
         "パスの正規表現（JavaScript の書き方。先頭の (?i) で大文字小文字を区別しない）と、人に回す理由です。",
@@ -1077,6 +1083,12 @@ const en: Messages = {
       routingProfile: "Profile",
       addRule: "Add a rule",
       removeRule: "Delete",
+      handoff: "When to hand a PR to a human",
+      handoffIntro:
+        'Your team\'s criteria, read by the AI when it judges risk. Changes that match go to a human. You can also relax them, e.g. "Documentation-only changes do not need a human". Write them in any language.',
+      handoffRules: "Criteria",
+      handoffHint:
+        "One per line. Leave empty to rely on the AI's general judgment. The path and line-count rules below still apply separately, without calling the AI",
       sensitive: "Paths handed to a human without calling the AI",
       sensitiveIntro:
         "A path regular expression (JavaScript syntax; a leading (?i) makes it case-insensitive) and the reason shown to you.",

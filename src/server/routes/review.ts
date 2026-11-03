@@ -231,6 +231,7 @@ export function registerReviewRoutes(app: Hono, deps: AppDeps): void {
           author: summary.author,
           language: lang,
           assessRisk,
+          handoffRules: auto.handoffRules,
         });
 
         await send({

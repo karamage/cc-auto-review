@@ -79,6 +79,12 @@ export interface AutopilotConfig {
   maxChangedLines: number;
   /** 変更の規模に数えないパスの正規表現。ロックファイルやビルドの成果物 */
   ignoredPaths: string[];
+  /**
+   * 人に任せる基準。1 行 1 項目の自然言語で、AI がリスクを判定するときに読む。
+   * 当てはまる変更を high にさせるほか、「〜は人に回さなくてよい」と緩める書き方もできる。
+   * どの言語で書いてもよい
+   */
+  handoffRules: string[];
 }
 
 export interface Settings {
@@ -259,6 +265,19 @@ export const DEFAULT_SENSITIVE_PATHS: readonly PathRule[] = [
 ];
 
 /**
+ * 既定の人に任せる基準。AI のリスク判定で、どれかに当てはまれば high にさせる。
+ * プロンプトの本体と同じく英語で書く
+ */
+export const DEFAULT_HANDOFF_RULES: readonly string[] = [
+  "Authentication, authorization, permissions, billing or payments, handling of personal data or secrets",
+  "Database schema or data migrations, code that deletes or rewrites data",
+  "CI, deployment or infrastructure configuration, large dependency upgrades",
+  "Changes that break compatibility of public APIs or data formats",
+  "Design decisions that later code will copy, or decisions on whether / how much to build",
+  "The intent cannot be read from the description, so correctness cannot be judged",
+];
+
+/**
  * 人がレビューしないファイル。依存のロックファイルとビルドの成果物は、生成された結果でしかない。
  * 何千行になってもレビューの手間は増えないので、変更の規模に数えない
  */
@@ -288,6 +307,7 @@ export function defaultSettings(): Settings {
       sensitivePaths: DEFAULT_SENSITIVE_PATHS.map((rule) => ({ ...rule })),
       maxChangedLines: 1000,
       ignoredPaths: [...DEFAULT_IGNORED_PATHS],
+      handoffRules: [...DEFAULT_HANDOFF_RULES],
     },
   };
 }
@@ -443,6 +463,10 @@ export function normalizeSettings(raw: unknown): Settings {
       sensitivePaths: normalizePathRules(auto.sensitivePaths, DEFAULT_SENSITIVE_PATHS),
       maxChangedLines: int(auto.maxChangedLines, defaults.autopilot.maxChangedLines, 0, 1_000_000),
       ignoredPaths: strings(auto.ignoredPaths, DEFAULT_IGNORED_PATHS),
+      // 1 項目が長すぎるとプロンプトを圧迫するので、項目ごとと件数で切る
+      handoffRules: strings(auto.handoffRules, DEFAULT_HANDOFF_RULES)
+        .map((rule) => rule.slice(0, 1000))
+        .slice(0, 50),
     },
   };
 }

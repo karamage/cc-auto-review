@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test";
 import {
   compilePattern,
+  DEFAULT_HANDOFF_RULES,
   DEFAULT_PROFILE_ID,
   defaultSettings,
   findProfile,
@@ -124,4 +125,15 @@ test("version 1 の設定には i18n の観点を切った状態で足し、vers
     profiles: [{ id: "a", name: "A", perspectives: [{ id: "x", title: "X" }] }],
   });
   expect(removed.profiles[0]?.perspectives.map((p) => p.id)).toEqual(["x"]);
+});
+
+test("人に任せる基準は、無ければ既定で補い、空にしたらそのままにする", () => {
+  expect(normalizeSettings({ autopilot: {} }).autopilot.handoffRules).toEqual([
+    ...DEFAULT_HANDOFF_RULES,
+  ]);
+  expect(normalizeSettings({ autopilot: { handoffRules: [] } }).autopilot.handoffRules).toEqual([]);
+  expect(
+    normalizeSettings({ autopilot: { handoffRules: ["  決済の変更  ", "", 3] } }).autopilot
+      .handoffRules,
+  ).toEqual(["決済の変更"]);
 });

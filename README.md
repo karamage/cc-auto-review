@@ -75,6 +75,7 @@ The repository's own `CLAUDE.md`, `AGENTS.md` and `REVIEW.md` are also read — 
 | Label to trust autopilot | `auto-judge` |
 | Label to skip AI review | `skip-ai-review` |
 | Profile routing | Use another profile for a repository, or when a PR has a label or mentions someone (e.g. `@org/security`) |
+| When to hand a PR to a human | Natural-language criteria the AI reads when judging risk (auth/billing, migrations, CI/infra, breaking API changes, …). Add, edit, or relax them, e.g. "Documentation-only changes do not need a human" |
 | Paths handed to a human without calling the AI | CI, DB migrations, infra, secrets, auth/billing/crypto, review conventions (editable regexes) |
 | Changed lines handed to a human | 1000 (lock files and `dist/` are not counted) |
 
