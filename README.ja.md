@@ -1,16 +1,98 @@
-# CC Auto Review
+<div align="center">
+  <img src="assets/icon.png" alt="CC Auto Review のロゴ" width="120" height="120">
 
-GitHub の Pull Request を、**ローカルにインストールした Claude Code**（`claude -p`）でレビューする macOS のデスクトップアプリです。
-diff と AI の指摘を 1 画面で見て、指摘を採用・却下・編集し、GitHub にレビューを投稿します。完全自動運転をオンにすると、レビュー依頼を自動で処理し、リスクのある変更だけを人に回します。
+  <h1>CC Auto Review</h1>
 
-[English README](README.md)
+  <p>
+    <strong>手元の Claude Code で GitHub の Pull Request をレビューする</strong>
+  </p>
+  <p>
+    <code>claude -p</code> を使う macOS のデスクトップアプリです。diff の横に AI の指摘を並べ、変更のリスクを 0〜100 点で示し、完全自動運転ではリスクのある PR だけを人に回します。
+  </p>
 
-- **手元の Claude Code を使う。** API キーの設定は不要です。Claude Code のサブスクリプションや設定のまま動きます。
-- **clone しない。** 変更ファイルだけを GitHub から一時ディレクトリに取り寄せます。それ以外のファイル（呼び出し元、型、テスト）は、PR のリポジトリとコミットに固定した GET 専用のコマンドで Claude が必要な分だけ読みます。
-- **レビューのやり方を変えられる。** 「レビュープロファイル」で、見る観点、指摘しないこと、チームの指示、指摘の数の上限、追加で許すツール（Skill や MCP）を決められます。既定のプロファイルのままでも、確かめられた問題に絞って指摘します。
-- **完全自動運転（任意）。** レビュー依頼を定期的に確かめ、承認かコメントをして作成者の対応を待ち、再レビューします。CI・マイグレーション・認証・秘密情報・巨大な変更などは人に回します。
+  <p>
+    <a href="#-機能"><img src="https://img.shields.io/badge/Features-✨-blue?style=for-the-badge" alt="機能"></a>
+    <a href="#-インストール"><img src="https://img.shields.io/badge/Install-🚀-green?style=for-the-badge" alt="インストール"></a>
+    <a href="#-使い方"><img src="https://img.shields.io/badge/Usage-📖-purple?style=for-the-badge" alt="使い方"></a>
+    <a href="#-開発"><img src="https://img.shields.io/badge/Develop-🛠-orange?style=for-the-badge" alt="開発"></a>
+  </p>
+  <p>
+    <img src="https://img.shields.io/badge/macOS-11%2B-000000?logo=apple&logoColor=white" alt="macOS 11 以降">
+    <img src="https://img.shields.io/badge/Tauri-2-24C8DB?logo=tauri&logoColor=white" alt="Tauri 2">
+    <img src="https://img.shields.io/badge/Claude_Code-required-D97757?logo=anthropic&logoColor=white" alt="Claude Code が必要">
+    <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License"></a>
+  </p>
 
-## 必要なもの
+  <p><a href="README.md">English README</a></p>
+</div>
+
+> [!TIP]
+> API キーの設定は要りません。レビューは手元の Claude Code のサブスクリプションや設定のまま動き、GitHub へのアクセスは `gh` のログインを使います。
+
+> [!NOTE]
+> このプロジェクトは Anthropic とは関係がなく、Anthropic の承認や支援も受けていません。Claude は Anthropic, PBC の商標です。アプリが投稿するレビューは**あなたの** GitHub アカウントから出ます。
+
+## 🌟 概要
+
+**CC Auto Review** は、Pull Request の diff と Claude の指摘を 1 画面に並べます。指摘を 1 件ずつ採用・却下・編集し、GitHub にレビューを投稿します。レビューはローカルにインストールした Claude Code（`claude -p`）が行います。作業場所は、PR の変更ファイルだけを置いた一時ディレクトリです。
+
+**完全自動運転**をオンにすると、レビュー依頼をアプリが自分で処理します。承認かコメントをして作成者の対応を待ち、再レビューします。CI・マイグレーション・認証・秘密情報・巨大な変更・リスクの点数が高い PR は、投稿せずに人へ回します。
+
+## 📋 目次
+
+- [🌟 概要](#-概要)
+- [✨ 機能](#-機能)
+- [🚀 インストール](#-インストール)
+- [📖 使い方](#-使い方)
+  - [指摘の重大度](#指摘の重大度)
+  - [変更のリスクの点数](#変更のリスクの点数)
+- [⚙️ レビューのカスタマイズ](#️-レビューのカスタマイズ)
+  - [レビュープロファイル](#レビュープロファイル)
+  - [完全自動運転](#完全自動運転)
+- [🏗 仕組み](#-仕組み)
+- [🔒 セキュリティ](#-セキュリティ)
+- [🛠 開発](#-開発)
+- [🤝 コントリビュート](#-コントリビュート)
+- [📄 ライセンス](#-ライセンス)
+- [🙏 謝辞](#-謝辞)
+
+## ✨ 機能
+
+### 🔍 1 画面で AI レビュー
+- **diff と指摘を並べて表示**: 指摘は diff の行に付き、サイドパネルにも一覧で出ます。クリックするとその行に移動します。
+- **最後に決めるのは人**: 投稿の前に、すべての指摘を採用・却下・編集できます。
+- **確かめられた指摘に絞る**: blocker と should には起きる条件と影響を書かせ、書けなければ question に下げます。
+- **過去のコメントを確かめ直す**: 以前のレビューコメントが今のコードで直っているかを「修正済み / 未修正 / 確認できず」で示します。
+- **好きな言語で投稿**: 指摘と違う言語で投稿するときは、投稿の直前に訳します。
+
+### 📦 clone しない
+- **変更ファイルだけ**を一時ディレクトリに取り寄せます。
+- **読み取り専用のコマンド**（`remote-read`）: 呼び出し元・型・テストは、PR のリポジトリとコミットに固定した GET リクエストで Claude が GitHub から読みます。
+
+### 🎯 変更のリスクの点数
+- **機械的な基準点**: diff だけから、規模・広がり・影響の大きい領域・危ないパターン・テストの不足・変更の形・経緯を足します。
+- **AI の補正は ±20 点まで**: 項目ごとに `file:line` を引用させます。計算はサーバが行います。
+- **エスカレーション**: 重大な問題を確かめたら、その PR を人に回します。
+
+### 🧩 レビュープロファイル
+- **観点・チームの指示・指摘しないこと・指摘数の上限・追加のツール**（Skill、MCP）をプロファイルごとに決められます。
+- **同梱のプロファイル**: *Standard*、*Security focused*、*Quick (blockers only)*。
+- **プロンプトの確認**: Claude に渡るプロンプトをそのまま見られます。
+- **リポジトリの規約**（`CLAUDE.md`・`AGENTS.md`・`REVIEW.md`）は base ブランチのものを読みます。
+
+### 🤖 完全自動運転（任意）
+- **レビュー依頼を定期的に巡回**し、承認かコメントをして、作成者が push か返信をしたら再レビューします。
+- **リスクのある PR は人へ**: パス、変更行数、リスクの点数、自然言語で書いた基準のどれかに当たれば人に回します。
+- **プロファイルの振り分け**: リポジトリ、ラベル、メンション（`@org/security` など）で使うプロファイルを変えられます。
+
+### 🖥 macOS のネイティブアプリ
+- **小さい**: CPU ごとの版は約 12 MB、universal 版は約 23 MB です。サーバは約 6 MB の JavaScript ランタイム [txiki.js](https://github.com/saghul/txiki.js) で動きます。
+- **デスクトップ通知**: AI レビューが終わったときと失敗したときに知らせます。
+- **日本語と英語**の画面に対応しています。
+
+## 🚀 インストール
+
+### 必要なもの
 
 - macOS 11 以降
 - [GitHub CLI](https://cli.github.com)（`gh`）。`gh auth login` 済みであること
@@ -18,19 +100,38 @@ diff と AI の指摘を 1 画面で見て、指摘を採用・却下・編集�
 
 `gh` と `claude` はログインシェルの `PATH` から探すので、Finder や Dock から起動しても動きます。
 
-## インストール
+### アプリをビルドする
 
-ソースからビルドし（[開発](#開発)を参照）、できた `CC Auto Review.app` を `/Applications` に入れてください。`bun run app:build` はビルドしたマシンの CPU 向けのアプリを `src-tauri/target/release/bundle/macos/` に作ります。Apple Silicon の Mac から Intel 版を作るときは `bun run app:build:x64` を使います。`bun run app:build:universal` なら両方で動く 1 つのアプリになります。大きさは CPU ごとの版が約 12 MB、universal 版が約 23 MB です。
+```bash
+git clone https://github.com/karamage/cc-auto-review.git
+cd cc-auto-review
+bun install
+bun run app:build
+```
 
+できた `CC Auto Review.app`（`src-tauri/target/release/bundle/macos/`）を `/Applications` に入れてください。
+
+| コマンド | できるもの |
+| --- | --- |
+| `bun run app:build` | ビルドしたマシンの CPU 向けの `.app`（約 12 MB） |
+| `bun run app:build:x64` | Intel Mac 向けの `.app`（Apple Silicon の Mac からも作れる） |
+| `bun run app:build:universal` | Apple Silicon と Intel の両方で動く 1 つの `.app`（約 23 MB） |
+| `bun run app:dmg`（`:x64`、`:universal`） | 同じものを `.dmg` で |
+
+> [!IMPORTANT]
 > 手元でビルドしたアプリは署名されていません。開けないときは「システム設定 → プライバシーとセキュリティ → このまま開く」で許可してください。`bun run release:mac` で作った DMG は署名・公証済みなので、そのまま開けます。
 
-## 使い方
+## 📖 使い方
 
-1. ダッシュボードに、レビューを依頼されている PR が出ます（github.com/pulls/review-requested と同じ条件）。URL を貼れば任意の PR も開けます。
-2. PR を開き、**レビュープロファイル**と**モデル**を選び、必要なら重点的に見てほしいことを書いて **AI レビューを実行** を押します。
-3. 指摘ごとに採用・却下・編集します。diff の外を指す指摘はレビュー本文にまとめます。
-4. 「コメント / 承認 / 修正を求める」を選んで投稿します。指摘を書いた言語と違う言語で投稿するときは、投稿の直前に Claude が訳します。
-5. 必要なら **見守りを始める** を押します。作成者が push か返信をしたら AI レビューをやり直します（再投稿は人が確かめてから）。
+```
+ダッシュボード → PR を開く → プロファイルとモデルを選ぶ → AI レビューを実行 → 採用・却下・編集 → 投稿
+```
+
+1. **ダッシュボード**: レビューを依頼されている PR が出ます（github.com/pulls/review-requested と同じ条件）。URL を貼れば任意の PR も開けます。
+2. **AI レビューを実行**: PR を開き、**レビュープロファイル**と**モデル**を選び、必要なら重点的に見てほしいことを書いて **AI レビューを実行** を押します。
+3. **指摘を仕分ける**: 指摘ごとに採用・却下・編集します。diff の外を指す指摘はレビュー本文にまとめます。
+4. **投稿**: 「コメント / 承認 / 修正を求める」を選んで投稿します。指摘を書いた言語と違う言語で投稿するときは、投稿の直前に Claude が訳します。
+5. **見守り（任意）**: **見守りを始める** を押すと、作成者が push か返信をしたときに AI レビューをやり直します。再投稿は人が確かめてからです。
 
 ### 指摘の重大度
 
@@ -59,7 +160,7 @@ blocker と should には、起きる条件（trigger）と影響（impact）を
 
 完全自動運転は、点数が閾値（既定 50）を**超えた** PR とエスカレーションのある PR を、投稿せずに人へ回します。
 
-## レビューのカスタマイズ
+## ⚙️ レビューのカスタマイズ
 
 ダッシュボード右上の **設定** を開きます。
 
@@ -102,7 +203,7 @@ blocker と should には、起きる条件（trigger）と影響（impact）を
 
 設定とアプリの状態は `~/.config/cc-auto-review/` に保存します（環境変数 `CC_AUTO_REVIEW_HOME` で変えられます）。
 
-## 仕組み
+## 🏗 仕組み
 
 ```
 CC Auto Review.app
@@ -115,11 +216,41 @@ CC Auto Review.app
             └── remote-read（cat / cat-base / ls / find / grep / issue）→ GitHub。GET のみ
 ```
 
-- API は起動時に作った合言葉を持つリクエストしか受け付けないので、ほかのアプリやブラウザのページからは操作できません。
 - 投稿の直前に PR の head を確かめ直し、レビュー後に更新されていれば投稿しません。
 - AI レビューは 10 分でタイムアウトします（設定で変更可）。
 
-## 開発
+## 🔒 セキュリティ
+
+1. **ローカルだけで待ち受ける**: サーバは `127.0.0.1` で待ち受けます。デスクトップアプリでは、起動時に作った合言葉を持つリクエストしか API が受け付けないので、ほかのアプリやブラウザのページからは操作できません。
+2. **既定は読み取りだけ**: Claude に許すのは `Read`・`Grep`・`Glob`・`Write`（結果のファイルを書くため）と `remote-read` だけです。`git` や任意の `gh` コマンドは許しません。
+3. **Claude からの GitHub アクセスは GET だけ**: `remote-read` は読む先のリポジトリとコミットを環境変数で固定し、書き込みのリクエストは出しません。
+4. **PR は規約を書き換えられない**: 規約は base ブランチのものを読み、PR の `.claude/`・`.mcp.json`・`CLAUDE.local.md` は作業ディレクトリに置きません。
+5. **テレメトリなし**: 利用状況のデータは送りません。通信するのは `gh` 経由の GitHub と `claude` 経由の Claude で、画面がほかに Web フォントと（オンのときは）LGTM 画像を読み込みます。
+
+## 🛠 開発
+
+### 技術スタック
+
+- **デスクトップの殻**: [Tauri 2](https://tauri.app)（Rust）
+- **サーバ**: [Hono](https://hono.dev)。アプリでは 1 つの JS にまとめて [txiki.js](https://github.com/saghul/txiki.js) で、開発時は [Bun](https://bun.sh) で動かす
+- **画面**: React 19 + TypeScript + Vite
+- **ツール**: Bun（パッケージ管理とテスト）、Biome、oxlint
+
+### ディレクトリ構成
+
+```
+cc-auto-review/
+├── src/
+│   ├── client/        # React の画面（ページ、コンポーネント、完全自動運転の状態）
+│   ├── server/        # Hono の API、gh / claude の実行、diff の解析、作業ディレクトリ
+│   │   ├── reviewer/  # プロンプトの組み立て、claude -p の実行、remote-read、翻訳
+│   │   └── runtime/   # Bun と txiki.js の差を吸収する層
+│   └── shared/        # 画面とサーバで共有する型、設定、リスクの点数
+├── src-tauri/         # 同梱のサーバを起動する Tauri の殻
+└── scripts/           # サーバのバンドルと、署名付きリリースのビルド
+```
+
+### コマンド
 
 必要なもの: [Bun](https://bun.sh)、Rust（`rust-toolchain.toml` で `stable` を指定）、Xcode Command Line Tools
 
@@ -143,7 +274,8 @@ bun run dev:client   # Vite（localhost:5173。/api は 4711 にプロキシ）
 
 テストは実際の `gh` / `claude` / `git` を起動せず、`CommandRunner` の偽実装を使います。
 
-### 署名・公証した DMG を作る
+<details>
+<summary><strong>署名・公証した DMG を作る</strong></summary>
 
 最初に一度だけ準備します（Apple Developer Program への加入が必要です）。
 
@@ -164,6 +296,36 @@ bun run release:mac universal   # 両方で動く 1 つの DMG
 
 既定では Apple Silicon 版と Intel 版を別々に作ります。CPU ごとにアプリをビルドし、Hardened Runtime 付きで署名します。続けてアプリを公証してチケットを貼り、DMG にまとめ、DMG も公証してチケットを貼ります。証明書を選ぶときは `APPLE_SIGNING_IDENTITY`、別のプロファイルを使うときは `NOTARY_PROFILE` を指定します。
 
-## ライセンス
+</details>
 
-MIT
+## 🤝 コントリビュート
+
+Issue と Pull Request を歓迎します。PR を出す前に `bun run check` を通してください。
+
+特に助かること:
+
+- 🐛 不具合の報告と修正
+- 🧭 既定のレビュー観点・プロファイルの追加
+- 🌐 日本語と英語以外への画面の翻訳
+- 🪟 macOS 以外への対応
+- 📚 ドキュメントとスクリーンショット
+
+## 📄 ライセンス
+
+MIT License です。詳しくは [LICENSE](LICENSE) を見てください。
+
+## 🙏 謝辞
+
+- レビューを担う Anthropic の [Claude Code](https://claude.com/claude-code)
+- 小さなネイティブアプリを可能にしている [Tauri](https://tauri.app)、[txiki.js](https://github.com/saghul/txiki.js)、[Hono](https://hono.dev)
+- [GitHub CLI](https://cli.github.com)
+- LGTM 画像の [LGTMoon](https://lgtmoon.dev)
+- README の構成の参考にした [opcode](https://github.com/winfunc/opcode)
+
+---
+
+<div align="center">
+  <a href="https://github.com/karamage/cc-auto-review/issues">不具合を報告</a>
+  ·
+  <a href="https://github.com/karamage/cc-auto-review/issues">機能を提案</a>
+</div>

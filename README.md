@@ -1,16 +1,98 @@
-# CC Auto Review
+<div align="center">
+  <img src="assets/icon.png" alt="CC Auto Review logo" width="120" height="120">
 
-A macOS desktop app that reviews GitHub pull requests with **your locally installed Claude Code** (`claude -p`).
-You see the diff and the AI's findings on one screen, accept / reject / edit them, and post the review to GitHub. An optional autopilot handles your review requests on its own and hands only risky changes back to you.
+  <h1>CC Auto Review</h1>
 
-[日本語の README はこちら](README.ja.md)
+  <p>
+    <strong>Review GitHub pull requests with the Claude Code you already have installed</strong>
+  </p>
+  <p>
+    A macOS desktop app built on <code>claude -p</code>: AI findings next to the diff, a 0–100 risk score, and an optional autopilot that hands risky PRs back to you.
+  </p>
 
-- **Uses your own Claude Code.** No API key to configure; reviews run on your Claude Code subscription or settings.
-- **No clone needed.** Only the changed files are fetched from GitHub into a temporary directory. Claude reads anything else (callers, types, tests) through a read-only, GET-only helper pinned to the PR's repository and commits.
-- **Customizable review.** Define *review profiles*: which perspectives to check, what not to report, team guidelines, a finding limit, and extra tools (Skills, MCP). The default profile already focuses on verified, high-signal problems.
-- **Autopilot (optional).** Periodically reviews your requests, approves or comments, waits for the author, re-reviews — and routes anything risky (CI, migrations, auth, secrets, huge diffs, …) to a human.
+  <p>
+    <a href="#-features"><img src="https://img.shields.io/badge/Features-✨-blue?style=for-the-badge" alt="Features"></a>
+    <a href="#-installation"><img src="https://img.shields.io/badge/Install-🚀-green?style=for-the-badge" alt="Install"></a>
+    <a href="#-usage"><img src="https://img.shields.io/badge/Usage-📖-purple?style=for-the-badge" alt="Usage"></a>
+    <a href="#-development"><img src="https://img.shields.io/badge/Develop-🛠-orange?style=for-the-badge" alt="Develop"></a>
+  </p>
+  <p>
+    <img src="https://img.shields.io/badge/macOS-11%2B-000000?logo=apple&logoColor=white" alt="macOS 11+">
+    <img src="https://img.shields.io/badge/Tauri-2-24C8DB?logo=tauri&logoColor=white" alt="Tauri 2">
+    <img src="https://img.shields.io/badge/Claude_Code-required-D97757?logo=anthropic&logoColor=white" alt="Claude Code required">
+    <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License"></a>
+  </p>
 
-## Requirements
+  <p><a href="README.ja.md">日本語の README はこちら</a></p>
+</div>
+
+> [!TIP]
+> No API key to set up. Reviews run on your own Claude Code subscription or settings, and GitHub access goes through your `gh` login.
+
+> [!NOTE]
+> This project is not affiliated with, endorsed by, or sponsored by Anthropic. Claude is a trademark of Anthropic, PBC. Reviews the app posts come from **your** GitHub account.
+
+## 🌟 Overview
+
+**CC Auto Review** puts a pull request's diff and Claude's findings on one screen. You accept, reject, or edit each finding and post the review to GitHub. Every review runs through your locally installed Claude Code (`claude -p`), in a temporary directory that holds only the PR's changed files.
+
+When you turn on the **autopilot**, the app works through your review requests by itself. It approves or comments, waits for the author, reviews again, and hands anything risky (CI, migrations, auth, secrets, huge diffs, high risk scores) to a human without posting.
+
+## 📋 Table of Contents
+
+- [🌟 Overview](#-overview)
+- [✨ Features](#-features)
+- [🚀 Installation](#-installation)
+- [📖 Usage](#-usage)
+  - [Findings](#findings)
+  - [Risk score](#risk-score)
+- [⚙️ Customizing reviews](#️-customizing-reviews)
+  - [Review profiles](#review-profiles)
+  - [Autopilot](#autopilot)
+- [🏗 How it works](#-how-it-works)
+- [🔒 Security](#-security)
+- [🛠 Development](#-development)
+- [🤝 Contributing](#-contributing)
+- [📄 License](#-license)
+- [🙏 Acknowledgments](#-acknowledgments)
+
+## ✨ Features
+
+### 🔍 AI review on one screen
+- **Diff and findings side by side**: findings are anchored to diff lines and listed in a side panel; click one to jump to it.
+- **You stay in control**: accept, reject, or edit every finding before anything is posted.
+- **Verified, high-signal findings**: `blocker` and `should` must state a trigger and an impact, or they are downgraded to `question`.
+- **Prior comments re-checked**: earlier review comments are marked *fixed / unfixed / unverified* against the current code.
+- **Post in any language**: findings are translated right before posting when you post in another language.
+
+### 📦 No clone needed
+- **Only changed files** are fetched into a temporary directory.
+- **Read-only helper** (`remote-read`): Claude reads callers, types and tests from GitHub with GET requests pinned to the PR's repository and commits.
+
+### 🎯 Risk score
+- **Deterministic baseline** from the diff alone: size, spread, sensitive areas, risky patterns, test gaps, change shape, context.
+- **Bounded AI adjustment** of up to ±20, each item citing `file:line`. The server does the math.
+- **Escalations** for verified serious problems send the PR to a human.
+
+### 🧩 Customizable review profiles
+- **Perspectives, guidelines, things not to report, a finding limit, and extra tools** (Skills, MCP) per profile.
+- **Ships with** *Standard*, *Security focused* and *Quick (blockers only)*.
+- **Prompt preview** shows exactly what Claude receives.
+- **Repository conventions** (`CLAUDE.md`, `AGENTS.md`, `REVIEW.md`) are read from the base branch.
+
+### 🤖 Autopilot (optional)
+- **Sweeps your review requests** on an interval, approves or comments, and re-reviews when the author pushes or replies.
+- **Hands risky PRs to a human**: by path, by changed lines, by risk score, or by natural-language criteria you write.
+- **Profile routing** by repository, label, or mention (e.g. `@org/security`).
+
+### 🖥 Native macOS app
+- **Small**: about 12 MB per CPU (23 MB universal). The server runs on [txiki.js](https://github.com/saghul/txiki.js), a ~6 MB JavaScript runtime.
+- **Desktop notifications** when a review finishes or fails.
+- **English and Japanese** UI.
+
+## 🚀 Installation
+
+### Prerequisites
 
 - macOS 11+
 - [GitHub CLI](https://cli.github.com) (`gh`), signed in with `gh auth login`
@@ -18,19 +100,38 @@ You see the diff and the AI's findings on one screen, accept / reject / edit the
 
 The app looks for `gh` and `claude` in your login shell's `PATH`, so it works when launched from Finder or the Dock.
 
-## Install
+### Build the app
 
-Build it from source (see [Development](#development)), then drag `CC Auto Review.app` into `/Applications`. `bun run app:build` builds the app for the CPU of the machine you build on, in `src-tauri/target/release/bundle/macos/`. To build the Intel version on an Apple Silicon Mac, use `bun run app:build:x64`. `bun run app:build:universal` produces a single app for both. The per-CPU app is about 12 MB and the universal one about 23 MB.
+```bash
+git clone https://github.com/karamage/cc-auto-review.git
+cd cc-auto-review
+bun install
+bun run app:build
+```
 
+Then drag `CC Auto Review.app` from `src-tauri/target/release/bundle/macos/` into `/Applications`.
+
+| Command | Output |
+| --- | --- |
+| `bun run app:build` | `.app` for the CPU of the machine you build on (~12 MB) |
+| `bun run app:build:x64` | `.app` for Intel Macs (can be built on Apple Silicon) |
+| `bun run app:build:universal` | One `.app` for both Apple Silicon and Intel (~23 MB) |
+| `bun run app:dmg` (`:x64`, `:universal`) | The same, packed as a `.dmg` |
+
+> [!IMPORTANT]
 > A locally built app is not signed. If macOS refuses to open it, allow it in **System Settings → Privacy & Security → Open Anyway**. Release DMGs built with `bun run release:mac` are signed and notarized and open normally.
 
-## Usage
+## 📖 Usage
 
-1. The dashboard lists PRs that request your review (the same query as github.com/pulls/review-requested). You can also open any PR by URL.
-2. Open a PR, pick a **review profile** and a **model**, optionally write what to focus on, and press **Run AI review**.
-3. Accept, reject, or edit each finding. Findings outside the diff are collected into the review body.
-4. Choose *Comment / Approve / Request changes* and post. If your findings were written in another language than the one you post in, Claude translates them right before posting.
-5. Optionally **start watching**: when the author pushes or replies, the AI review is run again (nothing is re-posted without you).
+```
+Dashboard → Open a PR → Pick profile & model → Run AI review → Accept / Reject / Edit → Post
+```
+
+1. **Dashboard**: lists PRs that request your review (the same query as github.com/pulls/review-requested). You can also open any PR by URL.
+2. **Run AI review**: open a PR, pick a **review profile** and a **model**, optionally write what to focus on, and press **Run AI review**.
+3. **Triage findings**: accept, reject, or edit each finding. Findings outside the diff are collected into the review body.
+4. **Post**: choose *Comment / Approve / Request changes*. If your findings were written in another language than the one you post in, Claude translates them right before posting.
+5. **Watch (optional)**: when the author pushes or replies, the AI review runs again. Nothing is re-posted without you.
 
 ### Findings
 
@@ -41,7 +142,7 @@ Build it from source (see [Development](#development)), then drag `CC Auto Revie
 | question | The intent is unclear; says what would need to be known |
 | nit | Taste-level suggestion (hidden by default) |
 
-`blocker` and `should` must state a **trigger** (how it happens) and an **impact** (what goes wrong); otherwise they are downgraded to `question`. When a PR has earlier review comments, Claude re-checks each one against the current code and marks it *fixed / unfixed / unverified* — an author's "fixed it" or a resolved thread is never taken as evidence.
+`blocker` and `should` must state a **trigger** (how it happens) and an **impact** (what goes wrong); otherwise they are downgraded to `question`. When a PR has earlier review comments, Claude re-checks each one against the current code and marks it *fixed / unfixed / unverified*. An author's "fixed it" or a resolved thread is never taken as evidence.
 
 ### Risk score
 
@@ -59,7 +160,7 @@ The review screen shows the PR's change risk as a 0–100 score (the scoring mod
 
 Autopilot hands a PR to a human, without posting, when its score is **above** the threshold (50 by default) or it has an escalation.
 
-## Customizing reviews
+## ⚙️ Customizing reviews
 
 Open **Settings** (top right of the dashboard).
 
@@ -102,7 +203,7 @@ Autopilot runs only while the app is open. Reviews it posts come from **your** G
 
 Settings and app state live in `~/.config/cc-auto-review/` (override with `CC_AUTO_REVIEW_HOME`).
 
-## How it works
+## 🏗 How it works
 
 ```
 CC Auto Review.app
@@ -115,11 +216,41 @@ CC Auto Review.app
             └── remote-read (cat / cat-base / ls / find / grep / issue) → GitHub, GET only
 ```
 
-- The API only accepts requests that carry the token the app generated at launch, so other local apps and web pages cannot drive it.
 - Before posting, the PR head is checked again; if it moved since the review, nothing is posted.
 - A review times out after 10 minutes (configurable).
 
-## Development
+## 🔒 Security
+
+1. **Local only**: the server listens on `127.0.0.1`. In the desktop app, the API only accepts requests that carry the token generated at launch, so other local apps and web pages cannot drive it.
+2. **Read-only by default**: Claude gets `Read`, `Grep`, `Glob`, `Write` (for its output file) and the `remote-read` helper only. `git` and arbitrary `gh` commands are not allowed.
+3. **GET-only GitHub access for Claude**: `remote-read` is pinned to the PR's repository and commits through environment variables and never issues write requests.
+4. **PRs cannot rewrite the rules**: conventions are read from the base branch, and `.claude/`, `.mcp.json` and `CLAUDE.local.md` from the PR are never placed in the working directory.
+5. **No telemetry**: the app sends no usage data. It talks to GitHub through `gh` and to Claude through `claude`; the UI also loads web fonts and, if enabled, LGTM images.
+
+## 🛠 Development
+
+### Tech stack
+
+- **Desktop shell**: [Tauri 2](https://tauri.app) (Rust)
+- **Server**: [Hono](https://hono.dev), bundled and run on [txiki.js](https://github.com/saghul/txiki.js) in the app, on [Bun](https://bun.sh) in development
+- **UI**: React 19 + TypeScript + Vite
+- **Tooling**: Bun (package manager and test runner), Biome, oxlint
+
+### Project structure
+
+```
+cc-auto-review/
+├── src/
+│   ├── client/        # React UI (pages, components, autopilot state)
+│   ├── server/        # Hono API, gh / claude runners, diff parsing, snapshots
+│   │   ├── reviewer/  # prompt building, claude -p runner, remote-read, translation
+│   │   └── runtime/   # Bun and txiki.js adapters
+│   └── shared/        # types, settings, risk score shared by client and server
+├── src-tauri/         # Tauri shell that starts the bundled server
+└── scripts/           # server bundling and signed release builds
+```
+
+### Commands
 
 Requirements: [Bun](https://bun.sh), Rust (the repo pins `stable` via `rust-toolchain.toml`), Xcode Command Line Tools.
 
@@ -143,7 +274,8 @@ bun run dev:client   # Vite on localhost:5173, proxies /api to 4711
 
 Tests never start real `gh` / `claude` / `git`; they use a fake `CommandRunner`.
 
-### Releasing a signed, notarized DMG
+<details>
+<summary><strong>Releasing a signed, notarized DMG</strong></summary>
 
 One-time setup (requires an Apple Developer Program membership):
 
@@ -164,6 +296,36 @@ bun run release:mac universal   # one DMG for both
 
 By default the script builds separate Apple Silicon and Intel versions. For each architecture it builds the app, signs it with Hardened Runtime, notarizes and staples the app, packs it into a DMG, and notarizes and staples the DMG. Set `APPLE_SIGNING_IDENTITY` to pick a certificate and `NOTARY_PROFILE` to use another keychain profile.
 
-## License
+</details>
 
-MIT
+## 🤝 Contributing
+
+Issues and pull requests are welcome. Please run `bun run check` before opening a PR.
+
+Areas where help is especially welcome:
+
+- 🐛 Bug reports and fixes
+- 🧭 New default review perspectives and profiles
+- 🌐 Translations of the UI beyond English and Japanese
+- 🪟 Support for platforms other than macOS
+- 📚 Documentation and screenshots
+
+## 📄 License
+
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+
+## 🙏 Acknowledgments
+
+- [Claude Code](https://claude.com/claude-code) by Anthropic, which does the reviewing
+- [Tauri](https://tauri.app), [txiki.js](https://github.com/saghul/txiki.js) and [Hono](https://hono.dev), which make a small native app possible
+- [GitHub CLI](https://cli.github.com)
+- [LGTMoon](https://lgtmoon.dev) for the LGTM images
+- [opcode](https://github.com/winfunc/opcode) for README inspiration
+
+---
+
+<div align="center">
+  <a href="https://github.com/karamage/cc-auto-review/issues">Report Bug</a>
+  ·
+  <a href="https://github.com/karamage/cc-auto-review/issues">Request Feature</a>
+</div>
