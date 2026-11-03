@@ -26,6 +26,12 @@
   <p><a href="README.ja.md">日本語の README はこちら</a></p>
 </div>
 
+<p align="center">
+  <img src="assets/demo/review-en.gif" alt="Opening a PR, running the AI review, jumping to a finding and accepting it" width="880">
+  <br>
+  <sub>Open a PR, run the AI review, jump to a finding and accept it. (Sample data)</sub>
+</p>
+
 > [!TIP]
 > No API key to set up. Reviews run on your own Claude Code subscription or settings, and GitHub access goes through your `gh` login.
 
@@ -84,6 +90,12 @@ When you turn on the **autopilot**, the app works through your review requests b
 - **Sweeps your review requests** on an interval, approves or comments, and re-reviews when the author pushes or replies.
 - **Hands risky PRs to a human**: by path, by changed lines, by risk score, or by natural-language criteria you write.
 - **Profile routing** by repository, label, or mention (e.g. `@org/security`).
+
+<p align="center">
+  <img src="assets/demo/autopilot-en.gif" alt="Turning on the autopilot: it reviews five PRs, approves or comments, and hands the risky one to a human" width="880">
+  <br>
+  <sub>Turn on the autopilot: five PRs are reviewed, approved or commented on, and the risky one is handed to you. (Sample data)</sub>
+</p>
 
 ### 🖥 Native macOS app
 - **Small**: about 12 MB per CPU (23 MB universal). The server runs on [txiki.js](https://github.com/saghul/txiki.js), a ~6 MB JavaScript runtime.
