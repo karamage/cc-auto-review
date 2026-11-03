@@ -1,5 +1,6 @@
 import type { Hono } from "hono";
 import type { Lang } from "../../shared/i18n.ts";
+import { computeBaselineRisk } from "../../shared/risk-score.ts";
 import type { PRActivity, PRDetail, PRDigest, PRListResponse, PRRef } from "../../shared/types.ts";
 import type { AppDeps } from "../app.ts";
 import { diffDigest } from "../diff/digest.ts";
@@ -112,19 +113,35 @@ export function registerPRRoutes(app: Hono, deps: AppDeps): void {
       return c.json({ message: invalidPR(requestLang(c)), detail: null }, 400);
     }
 
-    const [{ summary, headSha }, bodyHtml, patch, comments] = await Promise.all([
-      deps.github.fetchPRMeta(pr),
-      deps.github.fetchBodyHtml(pr),
-      deps.github.fetchDiff(pr),
-      deps.github.fetchComments(pr),
-    ]);
+    const [{ summary, headSha, body, draft, authorIsBot }, bodyHtml, patch, comments, settings] =
+      await Promise.all([
+        deps.github.fetchPRMeta(pr),
+        deps.github.fetchBodyHtml(pr),
+        deps.github.fetchDiff(pr),
+        deps.github.fetchComments(pr),
+        deps.settings.get(),
+      ]);
 
+    const files = parseUnifiedDiff(patch);
     const detail: PRDetail = {
       pr: summary,
       bodyHtml,
       headSha,
-      files: parseUnifiedDiff(patch),
+      files,
       comments,
+      // AI を呼ばずに決まる基準点。PR を開いた時点でリスクを見せる
+      riskScore: computeBaselineRisk(
+        {
+          files,
+          title: summary.title,
+          body,
+          draft,
+          authorIsBot,
+          ignoredPaths: settings.autopilot.ignoredPaths,
+          threshold: settings.autopilot.riskThreshold,
+        },
+        requestLang(c),
+      ),
     };
     return c.json(detail);
   });

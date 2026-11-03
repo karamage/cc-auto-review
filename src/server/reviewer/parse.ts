@@ -164,5 +164,6 @@ export function parseReviewResult(output: string): ReviewResult {
     i18nComparisons: parseI18nComparisons(
       (parsed as { i18nComparisons?: unknown }).i18nComparisons,
     ),
+    riskScore: (parsed as { riskScore?: unknown }).riskScore ?? null,
   };
 }

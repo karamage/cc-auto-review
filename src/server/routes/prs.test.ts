@@ -173,7 +173,7 @@ test("gh が失敗したら 500 と日本語メッセージを返す", async () 
 
 test("GET /api/repos/:owner/:repo/pulls/:number は指定リポジトリの diff をパースして返す", async () => {
   const app = appWith({
-    [`gh pr view 12 --repo o/r --json ${PR_FIELDS},headRefOid,baseRefOid,body,labels`]: ok(
+    [`gh pr view 12 --repo o/r --json ${PR_FIELDS},headRefOid,baseRefOid,body,labels,isDraft`]: ok(
       JSON.stringify({ ...RAW_PR, headRefOid: "abc123", baseRefOid: "base999" }),
     ),
     "gh pr diff 12 --repo o/r": ok(PATCH),

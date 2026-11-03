@@ -705,6 +705,14 @@ function AutopilotTab({
           max={1_000_000}
           onChange={(maxChangedLines) => set({ maxChangedLines })}
         />
+        <NumberField
+          label={text.riskThreshold}
+          hint={text.riskThresholdHint}
+          value={auto.riskThreshold}
+          min={0}
+          max={100}
+          onChange={(riskThreshold) => set({ riskThreshold })}
+        />
         <LinesField
           label={text.ignored}
           hint={text.ignoredHint}

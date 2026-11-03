@@ -181,6 +181,10 @@ const ja = {
     failed: (message: string) => `AI レビューに失敗した${message === "" ? "" : `（${message}）`}`,
     noRisk: "変更のリスクを判定できなかった",
     highRisk: "AI がリスクの高い変更と判定した",
+    highRiskScore: (score: number, threshold: number) =>
+      score > threshold
+        ? `リスクの点数が ${score}/100 で、閾値の ${threshold} を超えた`
+        : `AI が人の判断の要る重大な仕組みを見つけた（リスクの点数 ${score}/100）`,
     tooManyRounds: (n: number) =>
       `${n} 回コメントしても指摘が残っている。進め方を人と話した方がよい`,
     submitFailed: (message: string) => `GitHub への投稿に失敗した（${message}）`,
@@ -327,6 +331,22 @@ const ja = {
 
   // ---------- レビュー画面（ブラウザ） ----------
   review: {
+    riskScore: {
+      heading: "変更のリスク",
+      needsHuman: "人の判断が必要",
+      aiOk: "AI レビューで十分",
+      decisionNote: (threshold: number) =>
+        `完全自動運転は ${threshold} 点を超えた PR を人に回します`,
+      baselineOnly:
+        "diff から機械的に決めた点数です。AI レビューを実行すると、変更の意味を読んで ±20 点まで補正します",
+      stale: "表示中のコミットとは違うコミットの結果です",
+      breakdown: "内訳",
+      baseline: "基準点",
+      semantic: "AI の補正",
+      escalation: "エスカレーション",
+      patterns: "当たったパターン",
+      adjustments: "上限・下限",
+    },
     back: "レビュー依頼の一覧",
     loadFailed: "PR を取得できませんでした",
     loading: "PR を GitHub から読み込んでいます",
@@ -560,6 +580,9 @@ const ja = {
       invalidPattern: "正規表現として読めません",
       maxLines: "人に回す変更行数",
       maxLinesHint: "追加と削除の合計がこれを超えたら人に回します。0 で規模では回しません",
+      riskThreshold: "人に回すリスクの点数",
+      riskThresholdHint:
+        "変更のリスクの点数（0〜100）がこれを超えたら人に回します。AI が重大な問題を引用付きで見つけたときは、点数に関わらず人に回します",
       ignored: "変更行数に数えないパス",
       ignoredHint: "1 行に 1 つの正規表現。ロックファイルやビルドの成果物",
     },
@@ -726,6 +749,10 @@ const en: Messages = {
     failed: (message) => `The AI review failed${message === "" ? "" : ` (${message})`}`,
     noRisk: "The change's risk could not be assessed",
     highRisk: "The AI rated the change as high risk",
+    highRiskScore: (score: number, threshold: number) =>
+      score > threshold
+        ? `The risk score is ${score}/100, above the threshold of ${threshold}`
+        : `The AI found a serious mechanism that needs a human decision (risk score ${score}/100)`,
     tooManyRounds: (n) =>
       `Findings remain after ${n} comment rounds; the approach is worth discussing with a person`,
     submitFailed: (message) => `Posting to GitHub failed (${message})`,
@@ -867,6 +894,22 @@ const en: Messages = {
   },
 
   review: {
+    riskScore: {
+      heading: "Change risk",
+      needsHuman: "Human review required",
+      aiOk: "AI review is sufficient",
+      decisionNote: (threshold: number) =>
+        `Autopilot hands PRs scoring above ${threshold} to a human`,
+      baselineOnly:
+        "Computed from the diff alone. Running the AI review reads what the change means and adjusts the score by up to ±20",
+      stale: "This result is for a different commit than the one shown",
+      breakdown: "Breakdown",
+      baseline: "Baseline",
+      semantic: "AI adjustment",
+      escalation: "escalation",
+      patterns: "Matched patterns",
+      adjustments: "Caps and floors",
+    },
     back: "Review requests",
     loadFailed: "Could not fetch the PR",
     loading: "Loading the PR from GitHub",
@@ -1097,6 +1140,9 @@ const en: Messages = {
       invalidPattern: "Not a valid regular expression",
       maxLines: "Changed lines handed to a human",
       maxLinesHint: "Over this many added + deleted lines, the PR goes to a human. 0 disables it",
+      riskThreshold: "Risk score handed to a human",
+      riskThresholdHint:
+        "When the change's risk score (0–100) is above this, the PR goes to a human. A serious problem the AI cites always goes to a human, whatever the score",
       ignored: "Paths not counted as changed lines",
       ignoredHint: "One regular expression per line. Lock files and build output",
     },

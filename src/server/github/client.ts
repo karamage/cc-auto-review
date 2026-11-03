@@ -306,6 +306,10 @@ export class GitHubClient {
     baseSha: string;
     body: string;
     labels: string[];
+    /** ドラフトか。リスクの点数に使う */
+    draft: boolean;
+    /** 作成者が bot か。リスクの点数に使う */
+    authorIsBot: boolean;
   }> {
     const result = await this.run(
       [
@@ -316,7 +320,7 @@ export class GitHubClient {
         "--repo",
         pr.repo,
         "--json",
-        `${PR_FIELDS},headRefOid,baseRefOid,body,labels`,
+        `${PR_FIELDS},headRefOid,baseRefOid,body,labels,isDraft`,
       ],
       {
         ja: `${pr.repo}#${pr.number} の情報を取得できませんでした`,
@@ -327,7 +331,9 @@ export class GitHubClient {
       baseRefOid: string;
       body: string | null;
       labels?: { name: string }[];
+      isDraft?: boolean;
     };
+    const author = raw.author as { login: string; is_bot?: boolean } | null;
     return {
       summary: toSummary(pr.repo, raw),
       headSha: raw.headRefOid,
@@ -335,6 +341,8 @@ export class GitHubClient {
       // AI レビューのプロンプトに載せる素の Markdown。画面表示は描画済みの fetchBodyHtml を使う
       body: raw.body ?? "",
       labels: (raw.labels ?? []).map((label) => label.name),
+      draft: raw.isDraft === true,
+      authorIsBot: author?.is_bot === true || (author?.login ?? "").endsWith("[bot]"),
     };
   }
 

@@ -1,5 +1,8 @@
 import { isReviewModel, type ReviewModel } from "./types.ts";
 
+/** リスクの点数がこれを超えたら、完全自動運転は人に回す */
+export const DEFAULT_RISK_THRESHOLD = 50;
+
 /**
  * レビューの観点 1 つ。プロンプトの「何を見るか」に、有効なものだけを順に並べる。
  * title と description は利用者が書き換えられる。どの言語で書いてもよい
@@ -77,6 +80,8 @@ export interface AutopilotConfig {
   sensitivePaths: PathRule[];
   /** 追加と削除の合計がこれを超えると人に回す。0 なら規模では回さない */
   maxChangedLines: number;
+  /** リスクの点数（0〜100）がこれを超えると人に回す */
+  riskThreshold: number;
   /** 変更の規模に数えないパスの正規表現。ロックファイルやビルドの成果物 */
   ignoredPaths: string[];
   /**
@@ -306,6 +311,7 @@ export function defaultSettings(): Settings {
       routing: [],
       sensitivePaths: DEFAULT_SENSITIVE_PATHS.map((rule) => ({ ...rule })),
       maxChangedLines: 1000,
+      riskThreshold: DEFAULT_RISK_THRESHOLD,
       ignoredPaths: [...DEFAULT_IGNORED_PATHS],
       handoffRules: [...DEFAULT_HANDOFF_RULES],
     },
@@ -462,6 +468,7 @@ export function normalizeSettings(raw: unknown): Settings {
       routing: normalizeRouting(auto.routing, ids),
       sensitivePaths: normalizePathRules(auto.sensitivePaths, DEFAULT_SENSITIVE_PATHS),
       maxChangedLines: int(auto.maxChangedLines, defaults.autopilot.maxChangedLines, 0, 1_000_000),
+      riskThreshold: int(auto.riskThreshold, defaults.autopilot.riskThreshold, 0, 100),
       ignoredPaths: strings(auto.ignoredPaths, DEFAULT_IGNORED_PATHS),
       // 1 項目が長すぎるとプロンプトを圧迫するので、項目ごとと件数で切る
       handoffRules: strings(auto.handoffRules, DEFAULT_HANDOFF_RULES)
