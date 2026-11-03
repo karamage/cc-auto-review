@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from "react";
 import type { Lang } from "../../shared/i18n.ts";
+import type { RiskScore } from "../../shared/risk-score.ts";
 import type { AutopilotConfig } from "../../shared/settings.ts";
 import {
   type DraftComment,
@@ -117,6 +118,19 @@ export type AutopilotDecision =
   | { kind: "skip" }
   | { kind: "human"; reasons: string[] };
 
+/** 人に回すときに添える、点数の主な理由。エスカレーション、下限、点の大きい要因の順に 3 つまで */
+function riskScoreReasons(score: RiskScore): string[] {
+  const escalations = (score.semantic?.items ?? [])
+    .filter((item) => item.escalation)
+    .map((item) => `${item.file}${item.line === "" ? "" : `:${item.line}`} — ${item.reason}`);
+  const floors = score.adjustments.filter((a) => a.type === "floor").map((a) => a.reason);
+  const factors = [...score.factors]
+    .filter((f) => f.points > 0)
+    .sort((a, b) => b.points - a.points)
+    .map((f) => `${f.label} +${f.points}: ${f.reasons[0] ?? ""}`);
+  return [...escalations, ...floors, ...factors].slice(0, 3);
+}
+
 /**
  * AI レビューの結果から、自動で承認するか、指摘をコメントするか、人に回すかを決める。
  * rounds はこれまでに指摘をコメントした回数。maxRounds を超えて指摘が残れば人に回す。
@@ -145,6 +159,14 @@ export function decideAutopilot(
     return {
       kind: "human",
       reasons: session.risk.reasons.length > 0 ? session.risk.reasons : [text.highRisk],
+    };
+  }
+  // リスクの点数が閾値を超えた変更と、AI が重大な仕組みを見つけた変更は人に回す
+  const score = session.riskScore;
+  if (score?.needsHuman === true && !trusted) {
+    return {
+      kind: "human",
+      reasons: [text.highRiskScore(score.score, score.threshold), ...riskScoreReasons(score)],
     };
   }
 

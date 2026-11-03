@@ -10,6 +10,7 @@ import type {
 } from "../../shared/types.ts";
 import type { Lang } from "../../shared/i18n.ts";
 import type { RiskAssessment } from "../../shared/risk.ts";
+import type { RiskScore } from "../../shared/risk-score.ts";
 import { ApiError, type ApiClient } from "../api.ts";
 import { getLang, t } from "../i18n.ts";
 import { type DraftState, initDraft } from "./draft.ts";
@@ -115,6 +116,8 @@ export interface ReviewSession {
   watch: WatchState | null;
   /** 変更のリスク。完全自動運転で判定を頼んだ回のものだけが入る */
   risk: RiskAssessment | null;
+  /** 変更のリスクの点数。draft と同じ回の AI レビューのもの。まだ無ければ null */
+  riskScore: RiskScore | null;
   /** PR の説明文の言語。draft と同じ回の AI レビューのもの。読み取れなければ null */
   descriptionLang: Lang | null;
   /** draft と同じ回の AI レビューの時点で、PR に自動判断のラベルが付いていたか */
@@ -154,6 +157,7 @@ export function emptySession(lang: Lang = getLang()): ReviewSession {
       posted: null,
       watch: null,
       risk: null,
+      riskScore: null,
       descriptionLang: null,
       autoJudge: false,
       skipped: false,
@@ -398,6 +402,7 @@ async function execute(
           priorChecks: event.priorChecks,
           i18nComparisons: event.i18nComparisons ?? null,
           risk: event.risk ?? null,
+          riskScore: event.riskScore ?? null,
           descriptionLang: event.descriptionLang ?? null,
           autoJudge: event.autoJudge === true,
           skipped: event.skipped === true,

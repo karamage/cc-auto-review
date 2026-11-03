@@ -21,6 +21,7 @@ import { FindingCard } from "../components/FindingCard.tsx";
 import { FindingIndex } from "../components/FindingIndex.tsx";
 import { LanguageSwitch } from "../components/LanguageSwitch.tsx";
 import { ReviewingSheet } from "../components/ReviewingSheet.tsx";
+import { RiskScoreCard } from "../components/RiskScoreCard.tsx";
 import { SeverityFilter } from "../components/SeverityFilter.tsx";
 import { PostedNotice } from "../components/PostedNotice.tsx";
 import { SubmitBar } from "../components/SubmitBar.tsx";
@@ -319,6 +320,13 @@ export function ReviewPage({
               </div>
             )}
           </section>
+
+          {/* AI レビューの結果があればその点数を、無ければ diff だけから決めた基準点を出す */}
+          {phase === "done" && session.riskScore !== null ? (
+            <RiskScoreCard risk={session.riskScore} stale={session.headSha !== detail.headSha} />
+          ) : (
+            <RiskScoreCard risk={detail.riskScore} stale={false} />
+          )}
 
           {phase !== "done" || draft.items.length === 0 ? null : (
             <FindingIndex items={draft.items.filter(visible)} numberOf={numberOf} />

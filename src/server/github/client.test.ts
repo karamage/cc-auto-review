@@ -270,7 +270,7 @@ test("レビュー本文は、本文のある提出済みのものだけを PR �
 
 test("PR のメタ情報と head SHA を取得する", async () => {
   const runner = new FakeCommandRunner({
-    "gh pr view 12 --repo o/r --json number,title,author,headRefName,baseRefName,additions,deletions,changedFiles,updatedAt,url,headRefOid,baseRefOid,body,labels":
+    "gh pr view 12 --repo o/r --json number,title,author,headRefName,baseRefName,additions,deletions,changedFiles,updatedAt,url,headRefOid,baseRefOid,body,labels,isDraft":
       ok(
         JSON.stringify({
           number: 12,

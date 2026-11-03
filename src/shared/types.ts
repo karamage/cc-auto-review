@@ -1,6 +1,7 @@
 import type { Lang } from "./i18n.ts";
 import type { LgtmChoice } from "./lgtm.ts";
 import type { RiskAssessment } from "./risk.ts";
+import type { RiskScore } from "./risk-score.ts";
 
 /**
  * question は、意図が分からず結論を出せないときの確認。推測を blocker / should にしないための逃げ道。
@@ -175,6 +176,11 @@ export interface ReviewResult {
   risk: RiskAssessment | null;
   /** 元の日本語と locale の日本語の比較。i18n の観点が無効なら null */
   i18nComparisons: I18nComparison[] | null;
+  /**
+   * AI が書いたリスクの点数の補正（素のまま）。点の計算はサーバが applySemanticRisk でする。
+   * 書かれていなければ null
+   */
+  riskScore?: unknown;
 }
 
 /**
@@ -238,6 +244,8 @@ export interface PRDetail {
   headSha: string;
   files: DiffFile[];
   comments: ExistingComment[];
+  /** diff だけから決めたリスクの点数（AI の補正の前） */
+  riskScore: RiskScore;
 }
 
 /**
@@ -279,6 +287,8 @@ export type ReviewStreamEvent =
       priorChecks: PriorFindingCheck[];
       /** 変更のリスク。パスと規模の規則と AI の判定を合わせたもの。判定を頼んでいなければ無い */
       risk?: RiskAssessment | null;
+      /** 変更のリスクの点数。基準点に AI の補正を足したもの。AI を呼ばずに終わった回は基準点だけ */
+      riskScore?: RiskScore | null;
       /** 元の日本語と locale の日本語の比較。i18n の観点で AI レビューした回だけある */
       i18nComparisons?: I18nComparison[] | null;
       /** PR の説明文（無ければタイトル）の言語。読み取れなければ無い */

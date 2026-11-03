@@ -43,6 +43,22 @@ Build it from source (see [Development](#development)), then drag `CC Auto Revie
 
 `blocker` and `should` must state a **trigger** (how it happens) and an **impact** (what goes wrong); otherwise they are downgraded to `question`. When a PR has earlier review comments, Claude re-checks each one against the current code and marks it *fixed / unfixed / unverified* — an author's "fixed it" or a resolved thread is never taken as evidence.
 
+### Risk score
+
+The review screen shows the PR's change risk as a 0–100 score (the scoring model is ported from [pr-risk-score](https://github.com/karamage/pr-risk-score)).
+
+- **Baseline**: computed from the diff alone as soon as the PR opens. It adds seven factors: size, spread, sensitive areas (auth, payments, migrations, CI, …), risky patterns on added lines (secrets, eval, XSS sinks, destructive SQL, …), test gaps, change shape, and context. Some findings set a floor: a leaked secret (90), a destructive migration (75), text that tries to steer an AI reviewer (60).
+- **AI adjustment**: when the AI review runs, Claude reads what the change means and proposes items citing `file:line` that move the score by up to ±20. A verified serious mechanism (authorization bypass, irreversible data loss at scale, …) is an *escalation*: the score is raised to at least 60 and the PR goes to a human. The server does the arithmetic; the AI cannot move caps or floors.
+
+| Score | Level |
+| --- | --- |
+| 0–24 | LOW |
+| 25–50 | MEDIUM |
+| 51–75 | HIGH |
+| 76–100 | CRITICAL |
+
+Autopilot hands a PR to a human, without posting, when its score is **above** the threshold (50 by default) or it has an escalation.
+
 ## Customizing reviews
 
 Open **Settings** (top right of the dashboard).
@@ -78,6 +94,7 @@ The repository's own `CLAUDE.md`, `AGENTS.md` and `REVIEW.md` are also read — 
 | When to hand a PR to a human | Natural-language criteria the AI reads when judging risk (auth/billing, migrations, CI/infra, breaking API changes, …). Add, edit, or relax them, e.g. "Documentation-only changes do not need a human" |
 | Paths handed to a human without calling the AI | CI, DB migrations, infra, secrets, auth/billing/crypto, review conventions (editable regexes) |
 | Changed lines handed to a human | 1000 (lock files and `dist/` are not counted) |
+| Risk score handed to a human | 50 (above this goes to a human) |
 
 Autopilot runs only while the app is open. Reviews it posts come from **your** GitHub account and say they are automated.
 

@@ -118,6 +118,37 @@ test("リスクが高い変更は、指摘が無くても人に回す", () => {
   expect(decision).toEqual({ kind: "human", reasons: ["CI の設定を変えている"] });
 });
 
+test("リスクの点数が閾値を超えたら人に回す。自動判断のラベルがあれば回さない", () => {
+  const riskScore = {
+    score: 64,
+    baseline: 52,
+    level: "HIGH" as const,
+    threshold: 50,
+    needsHuman: true,
+    factors: [
+      {
+        key: "sensitive" as const,
+        label: "影響の大きい領域",
+        points: 20,
+        max: 40,
+        reasons: ["認証"],
+      },
+    ],
+    findings: [],
+    adjustments: [],
+    hotspots: [],
+    semantic: null,
+  };
+  const decision = decideAutopilot(reviewed({ riskScore }), 0);
+  expect(decision.kind).toBe("human");
+  expect(decision.kind === "human" ? decision.reasons[0] : "").toContain("64/100");
+  expect(decideAutopilot(reviewed({ riskScore, autoJudge: true }), 0).kind).toBe("approve");
+  expect(
+    decideAutopilot(reviewed({ riskScore: { ...riskScore, score: 50, needsHuman: false } }), 0)
+      .kind,
+  ).toBe("approve");
+});
+
 test("リスクを判定していない結果や、失敗した AI レビューでは投稿しない", () => {
   expect(decideAutopilot(reviewed({ risk: null }), 0).kind).toBe("human");
   expect(

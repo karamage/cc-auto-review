@@ -107,7 +107,7 @@ function buildApp(
   settings: Settings = defaultSettings(),
 ) {
   const runner = new FakeCommandRunner({
-    [`gh pr view 12 --repo o/r --json ${PR_FIELDS},headRefOid,baseRefOid,body,labels`]: ok(
+    [`gh pr view 12 --repo o/r --json ${PR_FIELDS},headRefOid,baseRefOid,body,labels,isDraft`]: ok(
       JSON.stringify(RAW_PR),
     ),
     "gh pr diff 12 --repo o/r": ok(PATCH),
@@ -462,7 +462,7 @@ test("リスクの判定を頼まれ、CI の設定を変える PR なら、AI �
 
 test("自動判断のラベルが付いた PR は、CI の設定を変えていても AI レビューまで進め、そのことを返す", async () => {
   const { app, runner } = buildApp(JSON.stringify({ findings: [] }), {
-    [`gh pr view 12 --repo o/r --json ${PR_FIELDS},headRefOid,baseRefOid,body,labels`]: ok(
+    [`gh pr view 12 --repo o/r --json ${PR_FIELDS},headRefOid,baseRefOid,body,labels,isDraft`]: ok(
       JSON.stringify({ ...RAW_PR, labels: [{ name: "auto-judge" }] }),
     ),
     "gh pr diff 12 --repo o/r": ok(WORKFLOW_PATCH),
@@ -481,7 +481,7 @@ test("自動判断のラベルが付いた PR は、CI の設定を変えてい�
 
 test("skip-ai-review ラベルが付いた PR は、完全自動運転の回なら AI を呼ばずに見送ったと返す", async () => {
   const { app, runner } = buildApp(JSON.stringify({ findings: [] }), {
-    [`gh pr view 12 --repo o/r --json ${PR_FIELDS},headRefOid,baseRefOid,body,labels`]: ok(
+    [`gh pr view 12 --repo o/r --json ${PR_FIELDS},headRefOid,baseRefOid,body,labels,isDraft`]: ok(
       JSON.stringify({ ...RAW_PR, labels: [{ name: "skip-ai-review" }, { name: "auto-judge" }] }),
     ),
   });
@@ -498,7 +498,7 @@ test("skip-ai-review ラベルが付いた PR は、完全自動運転の回な�
 
 test("skip-ai-review ラベルが付いていても、人が画面から走らせたならレビューする", async () => {
   const { app, runner } = buildApp(JSON.stringify({ findings: [] }), {
-    [`gh pr view 12 --repo o/r --json ${PR_FIELDS},headRefOid,baseRefOid,body,labels`]: ok(
+    [`gh pr view 12 --repo o/r --json ${PR_FIELDS},headRefOid,baseRefOid,body,labels,isDraft`]: ok(
       JSON.stringify({ ...RAW_PR, labels: [{ name: "skip-ai-review" }] }),
     ),
   });
@@ -600,9 +600,8 @@ test("ラベルでもルーティングでき、手で走らせた回はルー�
   const { app, runner } = buildApp(
     JSON.stringify({ findings: [], risk: { level: "low", reasons: [] } }),
     {
-      [`gh pr view 12 --repo o/r --json ${PR_FIELDS},headRefOid,baseRefOid,body,labels`]: ok(
-        JSON.stringify({ ...RAW_PR, labels: [{ name: "security" }] }),
-      ),
+      [`gh pr view 12 --repo o/r --json ${PR_FIELDS},headRefOid,baseRefOid,body,labels,isDraft`]:
+        ok(JSON.stringify({ ...RAW_PR, labels: [{ name: "security" }] })),
     },
     settings,
   );
@@ -645,4 +644,54 @@ ${added}
   const last = events.at(-1) as Extract<ReviewStreamEvent, { type: "findings" }>;
   expect(claude).toHaveLength(1);
   expect(last.risk?.level).toBe("low");
+});
+
+test("AI が書いたリスクの点数の補正を基準点に足して返す。補正の節をプロンプトに入れる", async () => {
+  const { app, runner } = buildApp(
+    JSON.stringify({
+      findings: [],
+      riskScore: {
+        summary: "誰でも他人の権限を消せる",
+        items: [
+          {
+            points: 12,
+            file: "src/a.ts",
+            line: "2",
+            reason: "認可の確認が消えた",
+            escalation: true,
+          },
+        ],
+      },
+    }),
+  );
+  let prompt = "";
+  stubClaude(runner, (cmd) => {
+    prompt = cmd.join("\n");
+  });
+
+  const events = await readEvents(await startReview(app));
+  const last = events.at(-1) as Extract<ReviewStreamEvent, { type: "findings" }>;
+  expect(prompt).toContain("## Risk score adjustment");
+  expect(prompt).toContain("<risk_baseline>");
+  expect(last.riskScore?.semantic?.adjustment).toBe(12);
+  // エスカレーションなので 60 点以上にして人に回す
+  expect(last.riskScore?.score).toBeGreaterThanOrEqual(60);
+  expect(last.riskScore?.needsHuman).toBe(true);
+});
+
+test("AI を呼ばずに人へ回す回も、基準点を返す", async () => {
+  const { app } = buildApp(JSON.stringify({ findings: [] }), {
+    "gh pr diff 12 --repo o/r": ok(`diff --git a/.github/workflows/ci.yml b/.github/workflows/ci.yml
+index 1111111..2222222 100644
+--- a/.github/workflows/ci.yml
++++ b/.github/workflows/ci.yml
+@@ -1,1 +1,2 @@
+ on: push
++on: pull_request_target
+`),
+  });
+  const events = await readEvents(await startReview(app, "abc123", { assessRisk: true }));
+  const last = events.at(-1) as Extract<ReviewStreamEvent, { type: "findings" }>;
+  expect(last.riskScore?.semantic).toBeNull();
+  expect(last.riskScore?.score).toBeGreaterThanOrEqual(60);
 });

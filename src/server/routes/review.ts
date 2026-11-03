@@ -16,6 +16,11 @@ import {
   reviewedChangedLines,
   ruleRisk,
 } from "../../shared/risk.ts";
+import {
+  applySemanticRisk,
+  computeBaselineRisk,
+  describeBaselineForPrompt,
+} from "../../shared/risk-score.ts";
 import { findProfile, hasI18nPerspective } from "../../shared/settings.ts";
 import type { AppDeps } from "../app.ts";
 import { anchorFindings } from "../diff/anchor.ts";
@@ -129,7 +134,7 @@ export function registerReviewRoutes(app: Hono, deps: AppDeps): void {
       let snapshot: Snapshot | null = null;
       try {
         const [
-          { summary, headSha, baseSha, body: description, labels },
+          { summary, headSha, baseSha, body: description, labels, draft, authorIsBot },
           patch,
           comments,
           reviewBodies,
@@ -153,6 +158,19 @@ export function registerReviewRoutes(app: Hono, deps: AppDeps): void {
         // 次の回で、レビューし直す意味のある変更があったかを見るための要約
         const digest = diffDigest(files, auto.ignoredPaths);
         const descriptionLang = detectTextLang(description ?? "") ?? detectTextLang(summary.title);
+        // diff から機械的に決まるリスクの点数。AI の補正はレビューの結果を受けてから足す
+        const baselineRisk = computeBaselineRisk(
+          {
+            files,
+            title: summary.title,
+            body: description ?? "",
+            draft,
+            authorIsBot,
+            ignoredPaths: auto.ignoredPaths,
+            threshold: auto.riskThreshold,
+          },
+          lang,
+        );
 
         // AI にレビューさせないと決められた PR。完全自動運転の回では、AI を呼ばずに見送ったと返す。
         // 人が画面から走らせたときは、人の判断を優先してレビューする
@@ -202,6 +220,7 @@ export function registerReviewRoutes(app: Hono, deps: AppDeps): void {
             findings: [],
             priorChecks: [],
             risk: rules,
+            riskScore: baselineRisk,
             descriptionLang,
             autoJudge,
             profileId: profile.id,
@@ -232,6 +251,7 @@ export function registerReviewRoutes(app: Hono, deps: AppDeps): void {
           language: lang,
           assessRisk,
           handoffRules: auto.handoffRules,
+          riskBaseline: describeBaselineForPrompt(baselineRisk),
         });
 
         await send({
@@ -273,6 +293,8 @@ export function registerReviewRoutes(app: Hono, deps: AppDeps): void {
                 },
               )
             : null,
+          // AI が補正を書かなければ基準点のまま。上限や下限はここで決め、AI には計算させない
+          riskScore: applySemanticRisk(baselineRisk, result.riskScore ?? null, lang),
           descriptionLang,
           autoJudge,
           profileId: profile.id,
