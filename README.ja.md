@@ -30,6 +30,12 @@
 </div>
 
 <p align="center">
+  <a href="https://karamage.github.io/cc-auto-review/ja/"><img src="assets/demo/film-poster-ja.jpg" alt="CC Auto Review: 読むのは、あなたが必要な PR だけ。37 秒の紹介動画を再生する" width="880"></a>
+  <br>
+  <sub><a href="https://karamage.github.io/cc-auto-review/ja/">37 秒の紹介動画をサイトで見る</a></sub>
+</p>
+
+<p align="center">
   <img src="assets/demo/review-ja.gif" alt="PR を開いて AI レビューを実行し、指摘に移動して採用する様子" width="880">
   <br>
   <sub>PR を開いて AI レビューを実行し、指摘に移動して採用する（サンプルデータ）</sub>

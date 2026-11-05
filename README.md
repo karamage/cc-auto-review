@@ -30,6 +30,12 @@
 </div>
 
 <p align="center">
+  <a href="https://youtu.be/uI--YpLHfpQ"><img src="assets/demo/film-poster-en.jpg" alt="CC Auto Review: read only the pull requests that need you. Play the 37-second film." width="880"></a>
+  <br>
+  <sub><a href="https://youtu.be/uI--YpLHfpQ">Watch the 37-second film on YouTube.</a></sub>
+</p>
+
+<p align="center">
   <img src="assets/demo/review-en.gif" alt="Opening a PR, running the AI review, jumping to a finding and accepting it" width="880">
   <br>
   <sub>Open a PR, run the AI review, jump to a finding and accept it. (Sample data)</sub>
