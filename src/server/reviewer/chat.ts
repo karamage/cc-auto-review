@@ -106,7 +106,7 @@ ${escapeTag(input.question, "user_question")}
 Write JSON in the following shape to \`${input.outputPath}\` with the Write tool. Only this file is used.
 
 {
-  "answer": "Your answer in Markdown",
+  "answer": "Your answer",
   "proposedFindings": [
     {
       "path": "src/auth.ts",
@@ -120,6 +120,7 @@ Write JSON in the following shape to \`${input.outputPath}\` with the Write tool
   ]
 }
 
+The screen shows answer as plain text with line breaks. Only \`inline code\` and fenced code blocks are rendered, so do not use headings, bold, tables, or other Markdown.
 Write answer, title, body, trigger and impact in ${language}. Keep code, identifiers, and file paths as they are.
 severity is one of blocker / should / question / nit. line is the line number in the new file and should be a changed line.
 Add a proposed finding only when this conversation establishes a new problem that you verified in the code and that is not already in the findings above. Otherwise make \`proposedFindings\` an empty array.

@@ -29,6 +29,7 @@ test("質問、出力先、読み方、言語をプロンプトに含める", ()
   expect(prompt).toContain("remote-read cat <path>");
   expect(prompt).toContain("Japanese");
   expect(prompt).toContain("proposedFindings");
+  expect(prompt).toContain("do not use headings, bold");
 });
 
 test("指摘と引用した指摘を番号付きで含める", () => {
