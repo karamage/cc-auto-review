@@ -3,7 +3,7 @@ import type { ReviewModel, ReviewResult } from "../../shared/types.ts";
 import type { LocalizedText } from "../../shared/i18n.ts";
 import { AppError } from "../errors.ts";
 import type { CommandRunner } from "../exec.ts";
-import { FindingParseError, parseReviewResult } from "./parse.ts";
+import { type ChatResult, FindingParseError, parseChatResult, parseReviewResult } from "./parse.ts";
 import { ENV_BASE, ENV_HEAD, ENV_REPO, type ReadTarget } from "./remote-read.ts";
 import { UsageRecorder } from "./usage.ts";
 
@@ -80,23 +80,44 @@ export class ReviewRunner {
     outputPath: string,
     options: ReviewRunOptions = {},
   ): Promise<ReviewResult> {
+    return await this.runWithRetry(target, prompt, outputPath, options, parseReviewResult);
+  }
+
+  /** チャットの 1 回の質問。実行の条件と再実行の扱いはレビューと同じ */
+  async ask(
+    target: ReviewTarget,
+    prompt: string,
+    outputPath: string,
+    options: ReviewRunOptions = {},
+  ): Promise<ChatResult> {
+    return await this.runWithRetry(target, prompt, outputPath, options, parseChatResult);
+  }
+
+  private async runWithRetry<T>(
+    target: ReviewTarget,
+    prompt: string,
+    outputPath: string,
+    options: ReviewRunOptions,
+    parse: (raw: string) => T,
+  ): Promise<T> {
     try {
-      return await this.attempt(target, prompt, outputPath, options);
+      return await this.attempt(target, prompt, outputPath, options, parse);
     } catch (error) {
       // 再実行して直る見込みがあるのは「出力の形が崩れた」ときだけ
       if (!(error instanceof FindingParseError)) throw error;
-      return await this.attempt(target, prompt, outputPath, options);
+      return await this.attempt(target, prompt, outputPath, options, parse);
     } finally {
       await this.files.remove(outputPath);
     }
   }
 
-  private async attempt(
+  private async attempt<T>(
     target: ReviewTarget,
     prompt: string,
     outputPath: string,
     { model = null, tools = [], timeoutMs = 600_000 }: ReviewRunOptions,
-  ): Promise<ReviewResult> {
+    parse: (raw: string) => T,
+  ): Promise<T> {
     const result = await this.runner.run(
       [
         "claude",
@@ -155,6 +176,6 @@ export class ReviewRunner {
       );
     }
 
-    return parseReviewResult(raw);
+    return parse(raw);
   }
 }

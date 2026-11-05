@@ -115,6 +115,31 @@ function parseI18nComparisons(raw: unknown): I18nComparison[] | null {
   });
 }
 
+function parseFindings(raw: RawFinding[]): Finding[] {
+  const findings: Finding[] = [];
+  for (const item of raw) {
+    if (typeof item?.path !== "string" || item.path.length === 0) continue;
+
+    const body = typeof item.body === "string" ? item.body : "";
+    const title =
+      typeof item.title === "string" && item.title.length > 0 ? item.title : body.slice(0, 40);
+    const trigger = text(item.trigger);
+    const impact = text(item.impact);
+
+    findings.push({
+      id: `finding-${findings.length + 1}`,
+      path: item.path,
+      line: typeof item.line === "number" && Number.isInteger(item.line) ? item.line : null,
+      severity: settleSeverity(toSeverity(item.severity), trigger, impact),
+      title,
+      body,
+      trigger,
+      impact,
+    });
+  }
+  return findings;
+}
+
 export function parseReviewResult(output: string): ReviewResult {
   let parsed: unknown;
   try {
@@ -135,27 +160,7 @@ export function parseReviewResult(output: string): ReviewResult {
     );
   }
 
-  const findings: Finding[] = [];
-  for (const item of raw as RawFinding[]) {
-    if (typeof item?.path !== "string" || item.path.length === 0) continue;
-
-    const body = typeof item.body === "string" ? item.body : "";
-    const title =
-      typeof item.title === "string" && item.title.length > 0 ? item.title : body.slice(0, 40);
-    const trigger = text(item.trigger);
-    const impact = text(item.impact);
-
-    findings.push({
-      id: `finding-${findings.length + 1}`,
-      path: item.path,
-      line: typeof item.line === "number" && Number.isInteger(item.line) ? item.line : null,
-      severity: settleSeverity(toSeverity(item.severity), trigger, impact),
-      title,
-      body,
-      trigger,
-      impact,
-    });
-  }
+  const findings = parseFindings(raw as RawFinding[]);
 
   return {
     findings,
@@ -165,5 +170,37 @@ export function parseReviewResult(output: string): ReviewResult {
       (parsed as { i18nComparisons?: unknown }).i18nComparisons,
     ),
     riskScore: (parsed as { riskScore?: unknown }).riskScore ?? null,
+  };
+}
+
+/** チャットの 1 回の結果 */
+export interface ChatResult {
+  answer: string;
+  findings: Finding[];
+}
+
+/** 回答を読めなければ、形が崩れたものとして呼び出し側に 1 回だけ再実行させる */
+export function parseChatResult(output: string): ChatResult {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(extractJsonObject(output));
+  } catch (error) {
+    if (error instanceof FindingParseError) throw error;
+    throw new FindingParseError(UNREADABLE, output.slice(0, 2000));
+  }
+
+  const item = parsed as { answer?: unknown; proposedFindings?: unknown };
+  const answer = text(item.answer);
+  if (answer === "") {
+    throw new FindingParseError(
+      { ja: "チャットの結果に回答が含まれていません", en: "The chat result has no answer" },
+      output.slice(0, 2000),
+    );
+  }
+  return {
+    answer,
+    findings: Array.isArray(item.proposedFindings)
+      ? parseFindings(item.proposedFindings as RawFinding[])
+      : [],
   };
 }

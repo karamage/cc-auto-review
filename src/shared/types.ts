@@ -278,6 +278,46 @@ export interface ClaudeUsage {
   recordedAt: string;
 }
 
+/** チャットで引用する箇所 */
+export type ChatReference =
+  | { kind: "finding"; findingId: string }
+  | { kind: "line"; path: string; line: number; side: "LEFT" | "RIGHT" };
+
+/** チャットのこれまでの発言 */
+export interface ChatTurn {
+  role: "user" | "assistant";
+  text: string;
+}
+
+/** チャットの AI に渡す、下書きの指摘。number は画面の通し番号 */
+export interface ChatFinding {
+  id: string;
+  number: number;
+  path: string;
+  line: number | null;
+  severity: Severity;
+  title: string;
+  body: string;
+  status: "pending" | "accepted" | "rejected";
+}
+
+export interface ChatRequest {
+  /** 表示中の diff の head。ずれていればサーバが拒否する */
+  headSha: string;
+  question: string;
+  reference: ChatReference | null;
+  history: ChatTurn[];
+  findings: ChatFinding[];
+  model: ReviewModel | null | "default";
+  profileId: string | null;
+}
+
+export type ChatStreamEvent =
+  | { type: "snapshot_ready" }
+  | { type: "answering" }
+  | { type: "answer"; answer: string; proposals: AnchoredFinding[] }
+  | { type: "error"; message: string; raw: string | null };
+
 export type ReviewStreamEvent =
   | { type: "snapshot_ready" }
   | { type: "reviewing"; message: string }

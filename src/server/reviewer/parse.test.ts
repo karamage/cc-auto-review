@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { FindingParseError, parseReviewResult } from "./parse.ts";
+import { FindingParseError, parseChatResult, parseReviewResult } from "./parse.ts";
 
 const parseFindings = (output: string) => parseReviewResult(output).findings;
 const GROUNDS = { trigger: "空配列を渡したとき", impact: "例外で画面が落ちる" };
@@ -180,4 +180,35 @@ test("元の日本語と locale の日本語は、AI の判定ではなく文字
 
 test("i18nComparisons が書かれていなければ null", () => {
   expect(parseReviewResult('{"findings": []}').i18nComparisons).toBeNull();
+});
+
+test("チャットの結果から回答と指摘案を読む", () => {
+  const result = parseChatResult(
+    JSON.stringify({
+      answer: "はい、問題があります",
+      proposedFindings: [
+        {
+          path: "a.ts",
+          line: 3,
+          severity: "should",
+          title: "題",
+          body: "本文",
+          trigger: "条件",
+          impact: "影響",
+        },
+      ],
+    }),
+  );
+  expect(result.answer).toBe("はい、問題があります");
+  expect(result.findings[0]?.path).toBe("a.ts");
+  expect(result.findings[0]?.severity).toBe("should");
+});
+
+test("チャットの指摘案が無ければ空にする", () => {
+  expect(parseChatResult('{"answer":"回答"}').findings).toEqual([]);
+});
+
+test("チャットの回答が無ければ読み取りエラーにする", () => {
+  expect(() => parseChatResult('{"answer":"  "}')).toThrow(FindingParseError);
+  expect(() => parseChatResult("not json")).toThrow(FindingParseError);
 });
