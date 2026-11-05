@@ -6,6 +6,7 @@ import { AppError } from "./errors.ts";
 import type { GitHubClient } from "./github/client.ts";
 import type { ReviewRunner } from "./reviewer/runner.ts";
 import type { Translator } from "./reviewer/translate.ts";
+import { registerChatRoutes } from "./routes/chat.ts";
 import { registerPRRoutes } from "./routes/prs.ts";
 import { registerReviewRoutes } from "./routes/review.ts";
 import { registerSettingsRoutes } from "./routes/settings.ts";
@@ -76,6 +77,7 @@ export function createApp(deps: AppDeps): Hono {
 
   registerPRRoutes(app, deps);
   registerReviewRoutes(app, deps);
+  registerChatRoutes(app, deps);
   registerSubmitRoutes(app, deps);
   registerSettingsRoutes(app, deps);
   registerSystemRoutes(app, deps);
