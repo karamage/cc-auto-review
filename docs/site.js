@@ -128,32 +128,81 @@
     }
   }
 
-  // ---- 録画の切り替え ----
-  const filmButtons = [...document.querySelectorAll("[data-film]")];
+  // ---- 動画: 見えたら無音で再生し、音は操作で出す ----
   const film = document.querySelector(".film video");
-  const caption = document.querySelector("[data-film-caption]");
-  for (const button of filmButtons) {
-    button.addEventListener("click", () => {
-      for (const b of filmButtons) b.setAttribute("aria-pressed", String(b === button));
+  if (film) {
+    const buttons = [...document.querySelectorAll("[data-film]")];
+    const caption = document.querySelector("[data-film-caption]");
+    const playBtn = document.querySelector("[data-film-play]");
+    const soundBtn = document.querySelector("[data-film-sound]");
+    const L = {
+      en: { play: "Play", pause: "Pause", replay: "Replay", sound: "Play with sound", mute: "Mute" },
+      ja: { play: "再生", pause: "一時停止", replay: "もう一度見る", sound: "音ありで再生", mute: "消音" },
+    }[lang];
+    const saveData = Boolean(navigator.connection?.saveData);
+    // 見えているか、利用者が止めたか。止めた動画はスクロールで勝手に再開しない
+    let inView = false;
+    let userPaused = reduced || saveData;
+    let kind = "film";
+    // 狭い画面と通信節約の設定では軽い版を使う
+    const srcOf = (base) =>
+      kind === "film" && (innerWidth < 900 || saveData) ? `${base}-720.mp4` : `${base}.mp4`;
+    const refresh = () => {
+      playBtn.hidden = false;
+      soundBtn.hidden = kind !== "film";
+      playBtn.textContent = film.ended ? L.replay : film.paused ? L.play : L.pause;
+      soundBtn.textContent = film.muted ? L.sound : L.mute;
+    };
+    const tryPlay = () => film.play().catch(() => {}).finally(refresh);
+    const select = (button) => {
+      for (const b of buttons) b.setAttribute("aria-pressed", String(b === button));
+      kind = button.dataset.film;
+      film.loop = kind !== "film";
+      film.muted = true;
+      film.width = Number(button.dataset.w);
+      film.height = Number(button.dataset.h);
       film.poster = `${button.dataset.src}.jpg`;
-      film.src = `${button.dataset.src}.mp4`;
+      film.src = srcOf(button.dataset.src);
       film.setAttribute("aria-label", button.dataset.alt);
       caption.textContent = button.dataset.caption;
-      if (!reduced) film.play().catch(() => {});
+    };
+    for (const button of buttons) {
+      button.addEventListener("click", () => {
+        select(button);
+        userPaused = false;
+        tryPlay();
+      });
+    }
+    playBtn.addEventListener("click", () => {
+      if (film.paused || film.ended) {
+        userPaused = false;
+        if (film.ended) film.currentTime = 0;
+        tryPlay();
+      } else {
+        userPaused = true;
+        film.pause();
+      }
     });
-  }
-  // 見えていない間は再生を止める
-  if (film && !reduced) {
-    new IntersectionObserver(([e]) => {
-      if (e.isIntersecting) film.play().catch(() => {});
-      else film.pause();
-    }).observe(film);
-  }
-  // 動きを減らす設定では自動再生しない
-  if (reduced && film) {
-    film.removeAttribute("autoplay");
-    film.pause();
-    film.controls = true;
+    soundBtn.addEventListener("click", () => {
+      // 音は物語に合わせてあるので、初めて音を出すときは頭から見せる
+      if (film.muted) film.currentTime = 0;
+      film.muted = !film.muted;
+      userPaused = false;
+      tryPlay();
+    });
+    for (const event of ["play", "pause", "ended", "volumechange"]) {
+      film.addEventListener(event, refresh);
+    }
+    select(buttons[0]);
+    refresh();
+    new IntersectionObserver(
+      ([e]) => {
+        inView = e.isIntersecting;
+        if (!inView) film.pause();
+        else if (!userPaused && !film.ended) tryPlay();
+      },
+      { threshold: 0.35 },
+    ).observe(film);
   }
 
   // ---- 行番号: 本文の高さまで続ける ----

@@ -22,10 +22,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Martian+Mono:wdth,wght@75..112.5,300..800&family=M+PLUS+1+Code:wght@400;500;700&family=IBM+Plex+Sans+JP:wght@400;600&display=swap">
-<link rel="stylesheet" href="../style.css?v=1">
+<link rel="stylesheet" href="../style.css?v=2">
 <script src="../engine.js?v=1" defer></script>
 <script src="../risk.js?v=1" defer></script>
-<script src="../site.js?v=1" defer></script>
+<script src="../site.js?v=2" defer></script>
 <script src="../download.js?v=1" defer></script>
 </head>
 <body>
@@ -89,14 +89,21 @@
 
   <div class="gutter" aria-hidden="true"></div>
 
-  <section class="sec film" aria-label="アプリの画面">
+  <section class="sec film" aria-label="紹介動画とアプリの画面">
     <figure>
-      <div class="film-tabs" role="group" aria-label="アプリの画面">
-        <button type="button" aria-pressed="true" data-film="review" data-src="../media/review-ja" data-caption="PR を開いてレビューを実行し、指摘を採用します。データは見本です。" data-alt="PR を開き、AI レビューを実行し、指摘へ移動して採用する様子。">レビュー</button>
-        <button type="button" aria-pressed="false" data-film="autopilot" data-src="../media/autopilot-ja" data-caption="完全自動運転をオンにします。5 件をレビューし、リスクのある 1 件をあなたに回します。データは見本です。" data-alt="完全自動運転をオンにすると、5 件の PR をレビューし、承認かコメントをして、リスクのある 1 件を人に回す様子。">完全自動運転</button>
+      <div class="film-bar">
+        <div class="film-tabs" role="group" aria-label="紹介動画とアプリの画面">
+          <button type="button" aria-pressed="true" data-film="film" data-src="../media/film-ja" data-w="1920" data-h="1080" data-caption="CC Auto Review のできることを 37 秒で紹介します。画面のデータは見本です。" data-alt="37 秒の紹介動画。PR の山を見上げる人。アプリが PR を採点し、Claude が SQL インジェクションを見つけ、点数が 50 を超え、完全自動運転がリスクのある PR を人に回す。山が消え、その人が読むべき PR だけが残る。">紹介動画（37 秒）</button>
+          <button type="button" aria-pressed="false" data-film="review" data-w="1320" data-h="825" data-src="../media/review-ja" data-caption="PR を開いてレビューを実行し、指摘を採用します。データは見本です。" data-alt="PR を開き、AI レビューを実行し、指摘へ移動して採用する様子。">レビュー</button>
+          <button type="button" aria-pressed="false" data-film="autopilot" data-w="1320" data-h="825" data-src="../media/autopilot-ja" data-caption="完全自動運転をオンにします。5 件をレビューし、リスクのある 1 件をあなたに回します。データは見本です。" data-alt="完全自動運転をオンにすると、5 件の PR をレビューし、承認かコメントをして、リスクのある 1 件を人に回す様子。">完全自動運転</button>
+        </div>
+        <div class="film-ctrl">
+          <button type="button" data-film-play hidden></button>
+          <button type="button" data-film-sound hidden></button>
+        </div>
       </div>
-      <video src="../media/review-ja.mp4" poster="../media/review-ja.jpg" width="1320" height="825" autoplay muted loop playsinline preload="metadata" aria-label="PR を開き、AI レビューを実行し、指摘へ移動して採用する様子。"></video>
-      <figcaption data-film-caption>PR を開いてレビューを実行し、指摘を採用します。データは見本です。</figcaption>
+      <video src="../media/film-ja.mp4" poster="../media/film-ja.jpg" width="1920" height="1080" muted playsinline preload="none" aria-label="37 秒の紹介動画。PR の山を見上げる人。アプリが PR を採点し、Claude が SQL インジェクションを見つけ、点数が 50 を超え、完全自動運転がリスクのある PR を人に回す。山が消え、その人が読むべき PR だけが残る。"></video>
+      <figcaption data-film-caption>CC Auto Review のできることを 37 秒で紹介します。画面のデータは見本です。</figcaption>
     </figure>
   </section>
 

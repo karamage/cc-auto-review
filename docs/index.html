@@ -22,10 +22,10 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Martian+Mono:wdth,wght@75..112.5,300..800&family=Schibsted+Grotesk:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="style.css?v=1">
+<link rel="stylesheet" href="style.css?v=2">
 <script src="engine.js?v=1" defer></script>
 <script src="risk.js?v=1" defer></script>
-<script src="site.js?v=1" defer></script>
+<script src="site.js?v=2" defer></script>
 <script src="download.js?v=1" defer></script>
 </head>
 <body>
@@ -89,14 +89,21 @@
 
   <div class="gutter" aria-hidden="true"></div>
 
-  <section class="sec film" aria-label="The app">
+  <section class="sec film" aria-label="The film and the app">
     <figure>
-      <div class="film-tabs" role="group" aria-label="The app">
-        <button type="button" aria-pressed="true" data-film="review" data-src="media/review-en" data-caption="Open a PR, run the review, accept a finding. Sample data." data-alt="Opening a pull request, running the AI review, jumping to a finding and accepting it.">A review</button>
-        <button type="button" aria-pressed="false" data-film="autopilot" data-src="media/autopilot-en" data-caption="Turn on the autopilot. Five PRs are reviewed, and the risky one is handed to you. Sample data." data-alt="Turning on the autopilot: it reviews five PRs, approves or comments, and hands the risky one to a human.">The autopilot</button>
+      <div class="film-bar">
+        <div class="film-tabs" role="group" aria-label="The film and the app">
+          <button type="button" aria-pressed="true" data-film="film" data-src="media/film-en" data-w="1920" data-h="1080" data-caption="What CC Auto Review does, in 37 seconds. Screens use sample data." data-alt="A 37-second film. A person faces a mountain of pull requests. The app scores a PR, Claude finds a SQL injection, the score rises above 50, and the autopilot hands risky PRs to a human. The mountain clears, leaving only the PRs that need the person.">The film, 37 s</button>
+          <button type="button" aria-pressed="false" data-film="review" data-w="1320" data-h="825" data-src="media/review-en" data-caption="Open a PR, run the review, accept a finding. Sample data." data-alt="Opening a pull request, running the AI review, jumping to a finding and accepting it.">A review</button>
+          <button type="button" aria-pressed="false" data-film="autopilot" data-w="1320" data-h="825" data-src="media/autopilot-en" data-caption="Turn on the autopilot. Five PRs are reviewed, and the risky one is handed to you. Sample data." data-alt="Turning on the autopilot: it reviews five PRs, approves or comments, and hands the risky one to a human.">The autopilot</button>
+        </div>
+        <div class="film-ctrl">
+          <button type="button" data-film-play hidden></button>
+          <button type="button" data-film-sound hidden></button>
+        </div>
       </div>
-      <video src="media/review-en.mp4" poster="media/review-en.jpg" width="1320" height="825" autoplay muted loop playsinline preload="metadata" aria-label="Opening a pull request, running the AI review, jumping to a finding and accepting it."></video>
-      <figcaption data-film-caption>Open a PR, run the review, accept a finding. Sample data.</figcaption>
+      <video src="media/film-en.mp4" poster="media/film-en.jpg" width="1920" height="1080" muted playsinline preload="none" aria-label="A 37-second film. A person faces a mountain of pull requests. The app scores a PR, Claude finds a SQL injection, the score rises above 50, and the autopilot hands risky PRs to a human. The mountain clears, leaving only the PRs that need the person."></video>
+      <figcaption data-film-caption>What CC Auto Review does, in 37 seconds. Screens use sample data.</figcaption>
     </figure>
   </section>
 
