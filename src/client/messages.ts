@@ -539,6 +539,9 @@ const ja = {
     general: {
       defaultModel: "手動の AI レビューの既定のモデル",
       timeout: "AI レビュー 1 回の制限時間（分）",
+      lgtmImageIds: "LGTM 画像の ID",
+      lgtmImageIdsHint:
+        "1 行に 1 つ、LGTMoon の画像の ID を書きます（image.lgtmoon.dev/ の後ろの数字）。数字以外の行は保存時に捨て、空にすると既定の一覧に戻ります。",
     },
     autopilot: {
       intro:
@@ -1098,6 +1101,9 @@ const en: Messages = {
     general: {
       defaultModel: "Default model for manual AI reviews",
       timeout: "Time limit for one AI review (minutes)",
+      lgtmImageIds: "LGTM image IDs",
+      lgtmImageIdsHint:
+        "One LGTMoon image ID per line (the number after image.lgtmoon.dev/). Lines that aren't numbers are dropped on save, and an empty list restores the defaults.",
     },
     autopilot: {
       intro:

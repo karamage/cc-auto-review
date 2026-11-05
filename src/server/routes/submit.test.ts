@@ -306,16 +306,50 @@ test("lgtm の指定が無ければ画像を添えない", () => {
   expect(request.lgtm).toBe("none");
 });
 
-test("lgtm に一覧にない画像を指定したら弾く", () => {
+test("lgtm に一覧にない画像を指定しても受け付ける", () => {
+  const request = parseSubmitRequest({
+    event: "APPROVE",
+    body: "",
+    commitId: "abc123",
+    comments: [],
+    lgtm: 1,
+  });
+  expect(request.lgtm).toBe(1);
+});
+
+test("lgtm に正の整数以外を指定したら弾く", () => {
   expect(() =>
     parseSubmitRequest({
       event: "APPROVE",
       body: "",
       commitId: "abc123",
       comments: [],
-      lgtm: 1,
+      lgtm: "https://example.com/x.png",
     }),
   ).toThrow("LGTM 画像（lgtm）の指定が不正です");
+});
+
+test("lgtm が random なら設定の一覧から選んで投稿する", async () => {
+  const { app, runner } = appWith({ [SUBMIT_CMD]: ok("{}") });
+  const saved = await app.request("/api/settings", {
+    method: "PUT",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ lgtmImageIds: [42] }),
+  });
+  expect(saved.status).toBe(200);
+
+  const res = await post(app, {
+    event: "APPROVE",
+    body: "",
+    commitId: "abc123",
+    comments: [],
+    lgtm: "random",
+  });
+
+  expect(res.status).toBe(200);
+  expect(JSON.parse(runner.stdins.at(-1) as string).body).toBe(
+    "![LGTM](https://image.lgtmoon.dev/42)",
+  );
 });
 
 test("レビューした後に head が変わっていたら 409 を返し、投稿しない", async () => {

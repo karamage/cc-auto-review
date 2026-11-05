@@ -1,3 +1,4 @@
+import { DEFAULT_LGTM_IMAGE_IDS, normalizeLgtmImageIds } from "./lgtm.ts";
 import { isReviewModel, type ReviewModel } from "./types.ts";
 
 /** リスクの点数がこれを超えたら、完全自動運転は人に回す */
@@ -101,6 +102,8 @@ export interface Settings {
   defaultModel: ReviewModel | null;
   /** AI レビュー 1 回の制限時間（分） */
   timeoutMinutes: number;
+  /** 承認に添える LGTM 画像の ID。手動のレビューと完全自動運転の両方で使う */
+  lgtmImageIds: number[];
   autopilot: AutopilotConfig;
 }
 
@@ -298,6 +301,7 @@ export function defaultSettings(): Settings {
     defaultProfileId: DEFAULT_PROFILE_ID,
     defaultModel: null,
     timeoutMinutes: 10,
+    lgtmImageIds: [...DEFAULT_LGTM_IMAGE_IDS],
     autopilot: {
       model: "haiku",
       profileId: DEFAULT_PROFILE_ID,
@@ -455,6 +459,7 @@ export function normalizeSettings(raw: unknown): Settings {
     defaultProfileId: pick(value.defaultProfileId),
     defaultModel: model(value.defaultModel, defaults.defaultModel),
     timeoutMinutes: int(value.timeoutMinutes, defaults.timeoutMinutes, 1, 60),
+    lgtmImageIds: normalizeLgtmImageIds(value.lgtmImageIds),
     autopilot: {
       model: model(auto.model, defaults.autopilot.model),
       profileId: pick(auto.profileId),

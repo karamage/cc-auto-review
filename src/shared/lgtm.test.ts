@@ -1,15 +1,17 @@
 import { expect, test } from "bun:test";
 import {
-  cycleLgtm,
+  DEFAULT_LGTM_IMAGE_IDS,
   isLgtmChoice,
-  LGTM_IMAGE_IDS,
   lgtmImageUrl,
+  normalizeLgtmImageIds,
+  parseLgtmImageIds,
   resolveLgtmImage,
+  settleLgtmChoice,
   withLgtmImage,
 } from "./lgtm.ts";
 
-const first = `![LGTM](${lgtmImageUrl(LGTM_IMAGE_IDS[0] as number)})`;
-const last = `![LGTM](${lgtmImageUrl(LGTM_IMAGE_IDS.at(-1) as number)})`;
+const first = `![LGTM](${lgtmImageUrl(DEFAULT_LGTM_IMAGE_IDS[0] as number)})`;
+const last = `![LGTM](${lgtmImageUrl(DEFAULT_LGTM_IMAGE_IDS.at(-1) as number)})`;
 
 test("random は乱数に応じて一覧から画像を選ぶ", () => {
   expect(resolveLgtmImage("random", () => 0)).toBe(first);
@@ -38,13 +40,44 @@ test("一覧にない ID は選択として認めない", () => {
   expect(isLgtmChoice("random")).toBe(true);
   expect(isLgtmChoice("none")).toBe(true);
   expect(isLgtmChoice(16343)).toBe(true);
-  expect(isLgtmChoice(1)).toBe(false);
+  // 設定で一覧を編集できるので、一覧にない ID でも正の整数なら受け付ける
+  expect(isLgtmChoice(1)).toBe(true);
+  expect(isLgtmChoice(0)).toBe(false);
+  expect(isLgtmChoice(-1)).toBe(false);
+  expect(isLgtmChoice(1.5)).toBe(false);
   expect(isLgtmChoice("16343")).toBe(false);
 });
 
-test("cycleLgtm は自動、付けない、各画像の順に回り、端で反対側に戻る", () => {
-  expect(cycleLgtm("random", 1)).toBe("none");
-  expect(cycleLgtm("none", 1)).toBe(LGTM_IMAGE_IDS[0] as number);
-  expect(cycleLgtm(LGTM_IMAGE_IDS.at(-1) as number, 1)).toBe("random");
-  expect(cycleLgtm("random", -1)).toBe(LGTM_IMAGE_IDS.at(-1) as number);
+test("既定の一覧は指定された 16 枚", () => {
+  expect(DEFAULT_LGTM_IMAGE_IDS).toEqual([
+    81571, 117501, 97687, 251379, 572085, 35685, 262994, 514370, 622569, 5157, 248931, 98383,
+    262299, 3020, 131777, 174729,
+  ]);
+});
+
+test("settleLgtmChoice は random だけを一覧の 1 枚に確定する", () => {
+  expect(settleLgtmChoice("random", [10, 20], () => 0)).toBe(10);
+  expect(settleLgtmChoice("random", [10, 20], () => 0.9999)).toBe(20);
+  expect(settleLgtmChoice("none", [10, 20])).toBe("none");
+  expect(settleLgtmChoice(5, [10, 20])).toBe(5);
+});
+
+test("normalizeLgtmImageIds は不正な値と重複を捨てる", () => {
+  expect(normalizeLgtmImageIds([3, 3, "4", 0, -1, 1.5, null, 5])).toEqual([3, 5]);
+});
+
+test("normalizeLgtmImageIds は配列でないときと空になったときに既定へ戻す", () => {
+  expect(normalizeLgtmImageIds(undefined)).toEqual([...DEFAULT_LGTM_IMAGE_IDS]);
+  expect(normalizeLgtmImageIds([])).toEqual([...DEFAULT_LGTM_IMAGE_IDS]);
+  expect(normalizeLgtmImageIds(["x", 0])).toEqual([...DEFAULT_LGTM_IMAGE_IDS]);
+});
+
+test("normalizeLgtmImageIds は多すぎる分を切る", () => {
+  const many = Array.from({ length: 300 }, (_, i) => i + 1);
+  expect(normalizeLgtmImageIds(many)).toHaveLength(200);
+});
+
+test("parseLgtmImageIds は数字だけの行を ID にする", () => {
+  expect(parseLgtmImageIds(["12", "abc", "0", "1e3", "0x10", "34"])).toEqual([12, 34]);
+  expect(parseLgtmImageIds(["99999999999999999999"])).toEqual([]);
 });

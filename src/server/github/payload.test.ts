@@ -90,12 +90,12 @@ test("REQUEST_CHANGES で本文が空でも既定の本文を作る", () => {
 
 test("APPROVE は本文が空なら LGTM 画像だけを本文にする", () => {
   const payload = buildReviewPayload(request({ event: "APPROVE", body: "" }), () => 0);
-  expect(payload.body).toBe("![LGTM](https://image.lgtmoon.dev/185580)");
+  expect(payload.body).toBe("![LGTM](https://image.lgtmoon.dev/81571)");
 });
 
 test("APPROVE は本文の末尾に LGTM 画像を添える", () => {
   const payload = buildReviewPayload(request({ event: "APPROVE", body: "総評" }), () => 0);
-  expect(payload.body).toBe("総評\n\n![LGTM](https://image.lgtmoon.dev/185580)");
+  expect(payload.body).toBe("総評\n\n![LGTM](https://image.lgtmoon.dev/81571)");
 });
 
 test("APPROVE 以外には LGTM 画像を添えない", () => {

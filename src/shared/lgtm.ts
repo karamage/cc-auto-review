@@ -1,21 +1,31 @@
-// Approve のときに本文へ添える LGTM 画像（lgtmoon）
-export const LGTM_IMAGE_IDS: readonly number[] = [
-  185580, 210197, 648813, 648816, 108614, 198363, 157366, 157737, 118742, 114232, 141276, 163478,
-  16343, 214434, 76333, 180650, 170892, 582278, 621603, 568897, 563366, 166624, 519225, 213227,
-  218679, 121758, 512437, 228213,
+// Approve のときに本文へ添える LGTM 画像（lgtmoon）。一覧は設定画面で編集できる
+export const DEFAULT_LGTM_IMAGE_IDS: readonly number[] = [
+  81571, 117501, 97687, 251379, 572085, 35685, 262994, 514370, 622569, 5157, 248931, 98383, 262299,
+  3020, 131777, 174729,
 ];
+
+/** 設定に残せる画像の数の上限 */
+const MAX_LGTM_IMAGE_IDS = 200;
 
 /** "random" は投稿のときに一覧から選ぶ。数値は人が選んだ画像の ID */
 export type LgtmChoice = "random" | "none" | number;
 
-/** 画像を表示できない TUI で、キーを押すたびに順に切り替える並び */
-export const LGTM_CHOICES: readonly LgtmChoice[] = ["random", "none", ...LGTM_IMAGE_IDS];
+function isLgtmImageId(value: unknown): value is number {
+  return Number.isSafeInteger(value) && (value as number) > 0;
+}
 
-/** choice から step 個先の選択肢。端まで来たら反対側に回る */
-export function cycleLgtm(choice: LgtmChoice, step: 1 | -1): LgtmChoice {
-  const index = Math.max(0, LGTM_CHOICES.indexOf(choice));
-  const next = (index + step + LGTM_CHOICES.length) % LGTM_CHOICES.length;
-  return LGTM_CHOICES[next] as LgtmChoice;
+/** 保存する一覧を整える。1 枚も残らなければ既定に戻す。付けたくないときは「付けない」を選ぶ */
+export function normalizeLgtmImageIds(raw: unknown): number[] {
+  const ids = Array.isArray(raw) ? [...new Set(raw.filter(isLgtmImageId))] : [];
+  return ids.length > 0 ? ids.slice(0, MAX_LGTM_IMAGE_IDS) : [...DEFAULT_LGTM_IMAGE_IDS];
+}
+
+/** 設定画面の入力行を ID にする。数字だけの行を使い、それ以外は捨てる */
+export function parseLgtmImageIds(lines: readonly string[]): number[] {
+  return lines
+    .filter((line) => /^\d+$/.test(line))
+    .map(Number)
+    .filter(isLgtmImageId);
 }
 
 export function lgtmImageUrl(id: number): string {
@@ -23,21 +33,29 @@ export function lgtmImageUrl(id: number): string {
 }
 
 export function isLgtmChoice(value: unknown): value is LgtmChoice {
-  return value === "random" || value === "none" || LGTM_IMAGE_IDS.includes(value as number);
+  return value === "random" || value === "none" || isLgtmImageId(value);
 }
 
 /** random は [0, 1) を返す関数。テストで固定できるよう差し替えられるようにしている */
+function pickLgtmImageId(ids: readonly number[], random: () => number): number {
+  return ids[Math.min(Math.floor(random() * ids.length), ids.length - 1)] as number;
+}
+
+/** "random" を一覧の 1 枚に確定する。それ以外の指定はそのまま返す */
+export function settleLgtmChoice(
+  choice: LgtmChoice,
+  ids: readonly number[],
+  random: () => number = Math.random,
+): LgtmChoice {
+  return choice === "random" ? pickLgtmImageId(ids, random) : choice;
+}
+
 export function resolveLgtmImage(
   choice: LgtmChoice,
   random: () => number = Math.random,
 ): string | null {
   if (choice === "none") return null;
-  const id =
-    choice === "random"
-      ? LGTM_IMAGE_IDS[
-          Math.min(Math.floor(random() * LGTM_IMAGE_IDS.length), LGTM_IMAGE_IDS.length - 1)
-        ]
-      : choice;
+  const id = settleLgtmChoice(choice, DEFAULT_LGTM_IMAGE_IDS, random);
   return `![LGTM](${lgtmImageUrl(id as number)})`;
 }
 
