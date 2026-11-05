@@ -307,6 +307,7 @@ function fakeApi(result: {
       if (result.current === undefined) throw new Error("unused");
       return result.current;
     },
+    streamChat: () => Promise.reject(new Error("unused")),
     async streamReview(_pr, headSha, options, onEvent: (e: ReviewStreamEvent) => void) {
       reviews.push({ headSha, options });
       onEvent({

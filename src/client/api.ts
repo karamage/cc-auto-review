@@ -1,4 +1,6 @@
 import type {
+  ChatRequest,
+  ChatStreamEvent,
   ClaudeUsage,
   PostedReview,
   PRActivity,
@@ -66,11 +68,41 @@ export interface ApiClient {
     options: ReviewOptions,
     onEvent: (event: ReviewStreamEvent) => void,
   ): Promise<void>;
+  streamChat(
+    pr: PRRef,
+    request: ChatRequest,
+    onEvent: (event: ChatStreamEvent) => void,
+  ): Promise<void>;
 }
 
 /** repo は owner/repo なので、そのまま 2 セグメントになる */
 function prPath(pr: PRRef): string {
   return `/api/repos/${pr.repo}/pulls/${pr.number}`;
+}
+
+/** SSE を読む。EventSource は POST を送れないので fetch のストリームを自前で読む */
+async function readSse<T>(
+  body: NonNullable<Response["body"]>,
+  onEvent: (event: T) => void,
+): Promise<void> {
+  const reader = body.pipeThrough(new TextDecoderStream()).getReader();
+  let buffer = "";
+
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buffer += value;
+
+    // SSE のイベントは空行で区切られる
+    const chunks = buffer.split("\n\n");
+    buffer = chunks.pop() ?? "";
+    for (const chunk of chunks) {
+      for (const line of chunk.split("\n")) {
+        if (!line.startsWith("data: ")) continue;
+        onEvent(JSON.parse(line.slice("data: ".length)) as T);
+      }
+    }
+  }
 }
 
 export function createApiClient(base: Fetcher): ApiClient {
@@ -158,9 +190,6 @@ export function createApiClient(base: Fetcher): ApiClient {
 
     post: (path, body) => sendJson<unknown>(path, body),
 
-    /**
-     * SSE を受け取る。EventSource は POST を送れないので fetch のストリームを自前で読む。
-     */
     async streamReview(
       pr,
       headSha,
@@ -178,24 +207,20 @@ export function createApiClient(base: Fetcher): ApiClient {
         throw new ApiError(body?.message ?? t().api.reviewStartFailed, null);
       }
 
-      const reader = res.body.pipeThrough(new TextDecoderStream()).getReader();
-      let buffer = "";
+      await readSse<ReviewStreamEvent>(res.body, onEvent);
+    },
 
-      for (;;) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += value;
-
-        // SSE のイベントは空行で区切られる
-        const chunks = buffer.split("\n\n");
-        buffer = chunks.pop() ?? "";
-        for (const chunk of chunks) {
-          for (const line of chunk.split("\n")) {
-            if (!line.startsWith("data: ")) continue;
-            onEvent(JSON.parse(line.slice("data: ".length)) as ReviewStreamEvent);
-          }
-        }
+    async streamChat(pr, request, onEvent) {
+      const res = await fetcher(`${prPath(pr)}/chat`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(request),
+      });
+      if (!res.ok || res.body === null) {
+        const body = (await res.json().catch(() => null)) as { message?: string } | null;
+        throw new ApiError(body?.message ?? t().chat.failed, null);
       }
+      await readSse<ChatStreamEvent>(res.body, onEvent);
     },
   };
 }
