@@ -19,6 +19,7 @@
  * そのアプリを入れた DMG をもう一度公証する
  */
 import { mkdir, readFile, rm, symlink } from "node:fs/promises";
+import { homedir } from "node:os";
 import { join } from "node:path";
 
 const root = join(import.meta.dir, "..");
@@ -113,6 +114,10 @@ async function release(
       APPLE_API_KEY: undefined,
       APPLE_API_ISSUER: undefined,
       APPLE_API_KEY_PATH: undefined,
+      // 実行ファイルにビルドした人のホームディレクトリのパス（ユーザー名）を残さない
+      RUSTFLAGS: [process.env.RUSTFLAGS, `--remap-path-prefix=${homedir()}=~`]
+        .filter(Boolean)
+        .join(" "),
     },
   });
   await run(["codesign", "--verify", "--deep", "--strict", "--verbose=2", appPath]);
