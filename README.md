@@ -67,6 +67,7 @@ When you turn on the **autopilot**, the app works through your review requests b
 ### 🔍 AI review on one screen
 - **Diff and findings side by side**: findings are anchored to diff lines and listed in a side panel; click one to jump to it.
 - **You stay in control**: accept, reject, or edit every finding before anything is posted.
+- **Ask after the review**: ask about findings, have code explained, and add problems you find together to the draft.
 - **Verified, high-signal findings**: `blocker` and `should` must state a trigger and an impact, or they are downgraded to `question`.
 - **Prior comments re-checked**: earlier review comments are marked *fixed / unfixed / unverified* against the current code.
 - **Post in any language**: findings are translated right before posting when you post in another language.

@@ -33,7 +33,7 @@ import type { Snapshot } from "../snapshot/manager.ts";
 import { invalidPR, PR_PATH, parsePRRef } from "./prs.ts";
 
 /** クライアントが見ている diff の head SHA。これとサーバの現在値がずれていたら拒否する */
-function parseHeadSha(value: unknown): string | null {
+export function parseHeadSha(value: unknown): string | null {
   const raw = (value as { headSha?: unknown } | null)?.headSha;
   return typeof raw === "string" && raw.length > 0 ? raw : null;
 }
@@ -50,7 +50,7 @@ function parseInstructions(value: unknown): string {
  * 画面で選んだモデル。"default" なら設定の既定、null なら claude の設定に任せる、知らない値なら undefined。
  * 値は claude の引数になるので、決めた別名だけを通す
  */
-function parseModel(value: unknown): ReviewModel | null | "default" | undefined {
+export function parseModel(value: unknown): ReviewModel | null | "default" | undefined {
   const raw = (value as { model?: unknown } | null)?.model;
   if (raw === undefined || raw === "default") return "default";
   if (raw === null) return null;
@@ -58,7 +58,7 @@ function parseModel(value: unknown): ReviewModel | null | "default" | undefined 
 }
 
 /** 画面で選んだプロファイル。無ければ null（設定の既定を使う） */
-function parseProfileId(value: unknown): string | null {
+export function parseProfileId(value: unknown): string | null {
   const raw = (value as { profileId?: unknown } | null)?.profileId;
   return typeof raw === "string" && raw !== "" ? raw : null;
 }

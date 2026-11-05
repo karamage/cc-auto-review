@@ -66,6 +66,21 @@ export function initDraft(findings: AnchoredFinding[], lang: Lang = getLang()): 
   };
 }
 
+/** チャットで見つかった問題を未判定の指摘として足す。通し番号は末尾の次になる */
+export function addFinding(state: DraftState, anchored: AnchoredFinding): DraftState {
+  return {
+    ...state,
+    items: [
+      ...state.items,
+      {
+        anchored,
+        status: "pending",
+        body: composeBody(anchored.finding, state.source ?? "ja"),
+      },
+    ],
+  };
+}
+
 function updateItem(
   state: DraftState,
   findingId: string,

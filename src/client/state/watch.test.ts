@@ -73,6 +73,7 @@ function fakeApi(
     markAutoJudge: () => Promise.reject(new Error("unused")),
     fetchActivity: onActivity,
     fetchDigest: onDigest,
+    streamChat: () => Promise.reject(new Error("unused")),
     async streamReview(_pr, headSha, _options, onEvent: (e: ReviewStreamEvent) => void) {
       reviews.push({ headSha });
       onEvent({ type: "findings", findings: [], priorChecks: [] });

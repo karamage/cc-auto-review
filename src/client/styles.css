@@ -2610,3 +2610,96 @@ dialog.confirm { border: 1px solid var(--ink-rule); border-radius: 14px; backgro
 .risk-score-details li ul { margin-top: 2px; gap: 0; color: var(--muted); }
 .risk-score-details code { font-family: var(--font-mono); font-size: 11.5px; overflow-wrap: anywhere; }
 .risk-points { font-family: var(--font-mono); color: var(--risk); }
+
+/* ---------- AI レビュー後のチャット ---------- */
+.chat-open { width: 100%; margin-top: 12px; }
+
+.chat-panel {
+  position: fixed;
+  inset: 0 0 0 auto;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  width: min(460px, 100vw);
+  background: var(--sheet);
+  border-left: 1px solid var(--ink-rule);
+}
+.chat-panel[hidden] { display: none; }
+
+.chat-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+.chat-head h2 { margin: 0; font-size: 15px; }
+
+.chat-log {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.chat-message header { margin-bottom: 4px; font-size: 12px; font-weight: 600; color: var(--muted); }
+.chat-message[data-role="user"] { padding: 10px 12px; background: var(--tint); border-radius: 6px; }
+.chat-message p { margin: 0 0 8px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.chat-message pre { margin: 0 0 8px; padding: 10px; overflow: auto; background: var(--bg); border-radius: 4px; }
+
+.chat-reference {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 0 0 8px;
+  font-size: 12px;
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+
+.chat-proposal {
+  margin-top: 8px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 4px;
+}
+.chat-proposal[data-severity="blocker"] { border-left-color: var(--blocker); }
+.chat-proposal[data-severity="should"] { border-left-color: var(--should); }
+.chat-proposal[data-severity="question"] { border-left-color: var(--question); }
+.chat-proposal[data-severity="nit"] { border-left-color: var(--nit); }
+.chat-proposal-where { font-size: 12px; color: var(--muted); }
+
+.chat-progress { margin: 0; color: var(--muted); }
+
+.chat-input {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+}
+.chat-input p { margin: 0; }
+.chat-input button[type="submit"] { align-self: flex-end; }
+
+.diff-code { position: relative; }
+.diff-ask {
+  position: absolute;
+  top: 0;
+  right: 4px;
+  width: 20px;
+  height: 20px;
+  padding: 0;
+  font-size: 12px;
+  line-height: 1;
+  opacity: 0;
+  user-select: none;
+}
+tr:hover > .diff-code > .diff-ask,
+.diff-ask:focus-visible { opacity: 1; }

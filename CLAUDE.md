@@ -49,6 +49,9 @@ The server runs on **Bun in dev/tests** (`src/server/index.ts`) and on **txiki.j
 3. `reviewer/runner.ts` runs `claude -p --output-format stream-json --verbose --allowedTools ...` in the workDir. Allowed tools are only `Read,Grep,Glob,Write,Bash(remote-read:*)` plus profile extras. Claude writes its JSON result to a file; `reviewer/parse.ts` validates it (one retry only on `FindingParseError`). `remote-read` gets repo/head/base via env vars, not arguments, so Claude can't redirect it.
 4. `diff/anchor.ts` maps findings onto diff lines; `routes/submit.ts` re-checks the PR head SHA before posting and translates findings (`reviewer/translate.ts`) if the post language differs.
 
+### Review chat (`routes/chat.ts`, SSE stream)
+After a review, the client sends the question, history and current findings to `POST .../chat`. Each question builds a new snapshot and runs `claude -p` through `ReviewRunner.ask` with the same tool restrictions as a review; `--resume` is not used because the workDir does not outlive a run. The conversation lives in `ReviewSession.chat` (`client/state/chat.ts`) and is cleared when a re-review starts. Proposed findings only enter the draft when the user adds them.
+
 ### Risk: two separate models in `src/shared/`
 - `risk.ts` — rule-based `low/medium/high` level (path regexes, changed-line limits, profile routing) used by autopilot handoff.
 - `risk-score.ts` — 0–100 score ported from pr-risk-score: deterministic baseline from the diff + AI adjustment bounded to ±20, with floors and escalations. The server does the arithmetic; the AI output only proposes items. Autopilot hands a PR to a human when score > threshold (default 50) or on escalation.

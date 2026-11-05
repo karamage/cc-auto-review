@@ -56,6 +56,7 @@ function fakeApi(events: ReviewStreamEvent[]): ApiClient {
     markAutoJudge: () => Promise.reject(new Error("unused")),
     fetchActivity: () => Promise.reject(new Error("unused")),
     fetchDigest: () => Promise.reject(new Error("unused")),
+    streamChat: () => Promise.reject(new Error("unused")),
     async streamReview(_pr, _sha, _options, onEvent) {
       for (const event of events) onEvent(event);
     },

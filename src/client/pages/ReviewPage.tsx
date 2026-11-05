@@ -1,4 +1,4 @@
-import { type MouseEvent, useEffect, useState } from "react";
+import { type MouseEvent, useCallback, useEffect, useState } from "react";
 import {
   DEFAULT_VISIBLE_SEVERITIES,
   type PRDetail,
@@ -10,11 +10,13 @@ import {
   type Severity,
 } from "../../shared/types.ts";
 import { ApiError, browserClient, fetchPRDetail, submitReview } from "../api.ts";
+import { ChatPanel } from "../components/ChatPanel.tsx";
 import { ConfirmButton } from "../components/ConfirmButton.tsx";
 import { DiffFileView } from "../components/DiffFileView.tsx";
 import { ExistingCommentCard } from "../components/ExistingCommentCard.tsx";
 import { I18nComparisons } from "../components/I18nComparisons.tsx";
 import { PriorChecks } from "../components/PriorChecks.tsx";
+import { canChat, setChatReference } from "../state/chat.ts";
 import { priorCheckLookup } from "../state/prior.ts";
 import { FileIndex } from "../components/FileIndex.tsx";
 import { FindingCard } from "../components/FindingCard.tsx";
@@ -86,6 +88,22 @@ export function ReviewPage({
     sessions.update(pr, (s) => ({ ...s, profileId: value === "" ? null : value }));
   };
   const [descriptionExpanded, setDescriptionExpanded] = useState(false);
+  const [chatOpen, setChatOpen] = useState(false);
+  // diff の行は memo されるので、描画のたびに変わらない関数を渡す
+  const askAboutLine = useCallback(
+    (path: string, line: number, side: "LEFT" | "RIGHT"): void => {
+      setChatReference(sessions, pr, { kind: "line", path, line, side });
+      setChatOpen(true);
+    },
+    [sessions, pr],
+  );
+  const askAboutFinding = useCallback(
+    (findingId: string): void => {
+      setChatReference(sessions, pr, { kind: "finding", findingId });
+      setChatOpen(true);
+    },
+    [sessions, pr],
+  );
   const [severities, setSeverities] = useState<Set<Severity>>(new Set(DEFAULT_VISIBLE_SEVERITIES));
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<{ message: string; detail: string | null } | null>(
@@ -96,6 +114,7 @@ export function ReviewPage({
     setDetail(null);
     setLoadError(null);
     setDescriptionExpanded(false);
+    setChatOpen(false);
     setSubmitError(null);
     fetchPRDetail(pr)
       .then(setDetail)
@@ -156,6 +175,7 @@ export function ReviewPage({
   }
 
   const text = t().review;
+  const chatAvailable = canChat(session, detail.headSha);
   const visible = (item: DraftItem): boolean => severities.has(item.anchored.finding.severity);
   const unanchored = summaryItems(draft).filter(visible);
   const unanchoredCount = summaryItems(draft).length;
@@ -286,6 +306,9 @@ export function ReviewPage({
                     <SeverityFilter value={severities} onChange={setSeverities} counts={counts} />
                   </>
                 )}
+                <button type="button" className="chat-open" onClick={() => setChatOpen(true)}>
+                  {t().chat.open}
+                </button>
               </div>
             ) : null}
 
@@ -413,6 +436,9 @@ export function ReviewPage({
                   number={numberOf(item.anchored.finding.id)}
                   onStatus={(status) => handleStatus(item.anchored.finding.id, status)}
                   onBody={(body) => handleBody(item.anchored.finding.id, body)}
+                  onAsk={
+                    chatAvailable ? () => askAboutFinding(item.anchored.finding.id) : undefined
+                  }
                 />
               ))}
             </section>
@@ -437,10 +463,22 @@ export function ReviewPage({
               checkOf={checkOf}
               onStatus={handleStatus}
               onBody={handleBody}
+              onAskFinding={chatAvailable ? askAboutFinding : undefined}
+              onAskLine={chatAvailable ? askAboutLine : undefined}
             />
           ))}
         </div>
       </div>
+
+      <ChatPanel
+        key={`${pr.repo}#${pr.number}`}
+        sessions={sessions}
+        pr={pr}
+        session={session}
+        headSha={detail.headSha}
+        open={chatOpen}
+        onClose={() => setChatOpen(false)}
+      />
     </main>
   );
 }

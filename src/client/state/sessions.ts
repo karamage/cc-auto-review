@@ -13,6 +13,7 @@ import type { RiskAssessment } from "../../shared/risk.ts";
 import type { RiskScore } from "../../shared/risk-score.ts";
 import { ApiError, type ApiClient } from "../api.ts";
 import { getLang, t } from "../i18n.ts";
+import { type ChatState, EMPTY_CHAT, restoreChat } from "./chat.ts";
 import { type DraftState, initDraft } from "./draft.ts";
 
 export type ReviewPhase = "idle" | "running" | "done" | "failed";
@@ -131,6 +132,8 @@ export interface ReviewSession {
   digest: string | null;
   /** 完全自動運転がこの PR を扱っていれば、その状態。扱っていなければ null */
   autopilot: AutopilotState | null;
+  /** AI レビュー後の会話。draft と同じ回の AI レビューについてのもの */
+  chat: ChatState;
 }
 
 const emptySessions = new Map<Lang, ReviewSession>();
@@ -163,6 +166,7 @@ export function emptySession(lang: Lang = getLang()): ReviewSession {
       skipped: false,
       digest: null,
       autopilot: null,
+      chat: EMPTY_CHAT,
     };
     emptySessions.set(lang, session);
   }
@@ -203,7 +207,8 @@ function restore(data: string | null): Record<string, ReviewSession> {
     return Object.fromEntries(
       Object.entries(parsed).map(([key, stored]) => {
         // 投稿の記録が無かった頃に保存したものは、足りない項目を空で補う
-        const session: ReviewSession = { ...emptySession(), ...stored };
+        const merged: ReviewSession = { ...emptySession(), ...stored };
+        const session: ReviewSession = { ...merged, chat: restoreChat(merged.chat) };
         return [
           key,
           session.phase === "running"
@@ -381,7 +386,8 @@ async function execute(
     patch({ phase: "failed", progress: "", error: { message, raw } });
   };
 
-  patch({ progress: t().session.fetching });
+  // 指摘の番号が変わるので、走り始めた時点で会話を消す
+  patch({ progress: t().session.fetching, chat: EMPTY_CHAT });
   // 指摘はリクエストを送ったときの言語で返ってくる。途中で画面の言語を変えても、下書きはその言語で作る
   const lang = getLang();
   // findings か error のどちらかが来ないまま接続が閉じたら、黙って終わらせずに失敗として出す
