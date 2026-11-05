@@ -17,6 +17,7 @@
     <a href="#-development"><img src="https://img.shields.io/badge/Develop-🛠-orange?style=for-the-badge" alt="Develop"></a>
   </p>
   <p>
+    <a href="https://github.com/karamage/cc-auto-review/actions/workflows/ci.yml"><img src="https://github.com/karamage/cc-auto-review/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI"></a>
     <img src="https://img.shields.io/badge/macOS-11%2B-000000?logo=apple&logoColor=white" alt="macOS 11+">
     <img src="https://img.shields.io/badge/Tauri-2-24C8DB?logo=tauri&logoColor=white" alt="Tauri 2">
     <img src="https://img.shields.io/badge/Claude_Code-required-555555" alt="Claude Code required">
