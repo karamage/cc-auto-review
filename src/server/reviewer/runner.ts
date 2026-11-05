@@ -41,14 +41,45 @@ export class BunFileReader implements FileReader {
 }
 
 /**
+ * PR に紛れた指示で手元のファイルを読み書きさせないための引数。
+ * dontAsk で利用者の defaultMode（auto など）を引き継がず、許可リストに無い操作を拒否する。
+ * settings の 2 つのキーは、許可の有無によらず作業ディレクトリの外を拒否する
+ */
+export const CLAUDE_LOCKDOWN_ARGS: readonly string[] = [
+  "--permission-mode",
+  "dontAsk",
+  "--settings",
+  JSON.stringify({
+    permissions: {
+      blockReadsOutsideWorkingDirectories: true,
+      blockWritesOutsideWorkingDirectories: true,
+    },
+  }),
+];
+
+/**
+ * 1 つのファイルにだけ書かせる許可ルール。Write にも Edit のルールが効く。
+ * path はプロンプトで渡す文字列のまま使う。実パスに直すと、macOS の $TMPDIR のように
+ * シンボリックリンクを通るパスでは一致せず、出力ファイルにも書けなくなる
+ */
+export function writeOnlyRule(path: string): string {
+  return `Edit(/${path})`;
+}
+
+/**
  * 作業ディレクトリに無いファイルは remote-read だけで読ませる。git も任意の gh も許可しない。
- * Skill や MCP、WebFetch などは、プロファイルで利用者が明示したものだけを足す
+ * 書けるのは出力ファイルだけにする。Skill や MCP、WebFetch などは、
+ * プロファイルで利用者が明示したものだけを足す
  */
 export function allowedTools(
   remoteReadCommand: string,
+  outputPath: string,
   extraTools: readonly string[] = [],
 ): string {
-  return [`Read,Grep,Glob,Write,Bash(${remoteReadCommand}:*)`, ...extraTools].join(",");
+  return [
+    `Read,Grep,Glob,${writeOnlyRule(outputPath)},Bash(${remoteReadCommand}:*)`,
+    ...extraTools,
+  ].join(",");
 }
 
 /** 1 回の AI レビューの実行条件 */
@@ -63,6 +94,8 @@ export interface ReviewRunOptions {
 export interface ReviewTarget extends ReadTarget {
   /** claude の cwd */
   workDir: string;
+  /** workDir の親。diff と出力ファイルを置く場所で、claude が読めるのはこの中だけ */
+  root: string;
 }
 
 export class ReviewRunner {
@@ -127,8 +160,11 @@ export class ReviewRunner {
         "--output-format",
         "stream-json",
         "--verbose",
+        ...CLAUDE_LOCKDOWN_ARGS,
+        "--add-dir",
+        target.root,
         "--allowedTools",
-        allowedTools(this.remoteReadCommand, tools),
+        allowedTools(this.remoteReadCommand, outputPath, tools),
         ...(model === null ? [] : ["--model", model]),
       ],
       {

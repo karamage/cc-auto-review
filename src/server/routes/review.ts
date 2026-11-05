@@ -262,7 +262,7 @@ export function registerReviewRoutes(app: Hono, deps: AppDeps): void {
         });
 
         const result = await deps.reviewer.review(
-          { workDir: snapshot.workDir, repo: pr.repo, headSha, baseSha },
+          { workDir: snapshot.workDir, root: snapshot.root, repo: pr.repo, headSha, baseSha },
           prompt,
           outputPath,
           {

@@ -5,7 +5,7 @@ import { findAvailablePort, runPreflight } from "./preflight.ts";
 const ALL_OK = {
   "gh --version": ok("gh version 2.60.0\n"),
   "gh auth status": ok("Logged in to github.com\n"),
-  "claude --version": ok("2.0.0\n"),
+  "claude --version": ok("2.1.318 (Claude Code)\n"),
 };
 
 test("すべて揃っていれば ok を返す（git リポジトリの中でなくてよい）", async () => {
@@ -44,6 +44,25 @@ test("claude が無ければインストール方法を案内する", async () =
   expect(result.ok).toBe(false);
   expect(result.messages[0]).toContain("claude コマンドが見つかりません");
 });
+
+test.each(["2.1.313 (Claude Code)", "2.0.999", "1.9.0", "unknown"])(
+  "権限の制限が効かない恐れのある claude（%s）では起動させない",
+  async (version) => {
+    const runner = new FakeCommandRunner({ ...ALL_OK, "claude --version": ok(`${version}\n`) });
+    const result = await runPreflight(runner, "ja");
+    expect(result.ok).toBe(false);
+    expect(result.messages[0]).toContain("2.1.314");
+    expect(result.messages[0]).toContain("claude update");
+  },
+);
+
+test.each(["2.1.314 (Claude Code)", "2.2.0", "3.0.0"])(
+  "権限の制限が効く claude（%s）なら起動できる",
+  async (version) => {
+    const runner = new FakeCommandRunner({ ...ALL_OK, "claude --version": ok(`${version}\n`) });
+    expect((await runPreflight(runner)).ok).toBe(true);
+  },
+);
 
 test("問題が複数あればすべて報告する", async () => {
   const runner = new FakeCommandRunner({

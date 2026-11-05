@@ -16,11 +16,24 @@ const CLAUDE_CMD = [
   "--output-format",
   "stream-json",
   "--verbose",
+  "--permission-mode",
+  "dontAsk",
+  "--settings",
+  '{"permissions":{"blockReadsOutsideWorkingDirectories":true,"blockWritesOutsideWorkingDirectories":true}}',
+  "--add-dir",
+  "/snap",
   "--allowedTools",
-  "Read,Grep,Glob,Write,Bash(remote-read:*)",
+  "Read,Grep,Glob,Edit(//snap/o.json),Bash(remote-read:*)",
 ].join(" ");
 
-const TARGET = { workDir: "/wt", repo: "o/r", headSha: "abc123", baseSha: "base999" };
+const OUTPUT = "/snap/o.json";
+const TARGET = {
+  workDir: "/snap/repo",
+  root: "/snap",
+  repo: "o/r",
+  headSha: "abc123",
+  baseSha: "base999",
+};
 
 /** remote-read のコマンドを固定して、argv を比較しやすくする */
 function reviewRunner(runner: FakeCommandRunner, files: FileReader): ReviewRunner {
@@ -49,17 +62,13 @@ const VALID = JSON.stringify({
 test("claude を作業ディレクトリ内で実行し、出力ファイルから Finding を読む", async () => {
   const runner = new FakeCommandRunner({ [CLAUDE_CMD]: ok('{"result":"done"}') });
   const files = new FakeFileReader([VALID]);
-  const { findings } = await reviewRunner(runner, files).review(
-    TARGET,
-    "プロンプト本文",
-    "/tmp/o.json",
-  );
+  const { findings } = await reviewRunner(runner, files).review(TARGET, "プロンプト本文", OUTPUT);
 
   expect(findings).toHaveLength(1);
   expect(findings[0]!.path).toBe("src/a.ts");
   expect(runner.calls[0]!.join(" ")).toBe(CLAUDE_CMD);
   // cwd を落とすと起動したディレクトリを読んでしまう。argv だけ見ても気付けない
-  expect(runner.cwds).toEqual(["/wt"]);
+  expect(runner.cwds).toEqual(["/snap/repo"]);
   // remote-read が読む先は環境変数で固定する
   expect(runner.envs).toEqual([
     {
@@ -71,23 +80,30 @@ test("claude を作業ディレクトリ内で実行し、出力ファイルか�
 });
 
 test("git や任意の gh は許可せず、remote-read だけを Bash で許可する", () => {
-  const tools = allowedTools("bun /app/remote-read.ts");
-  expect(tools).toBe("Read,Grep,Glob,Write,Bash(bun /app/remote-read.ts:*)");
+  const tools = allowedTools("bun /app/remote-read.ts", OUTPUT);
+  expect(tools).toBe("Read,Grep,Glob,Edit(//snap/o.json),Bash(bun /app/remote-read.ts:*)");
   expect(tools).not.toContain("git");
   expect(tools).not.toContain("Bash(gh");
 });
 
 test("プロファイルで許したツールだけを追加で許可する", () => {
-  expect(allowedTools("remote-read", ["Skill", "mcp__docs"])).toBe(
-    "Read,Grep,Glob,Write,Bash(remote-read:*),Skill,mcp__docs",
+  expect(allowedTools("remote-read", OUTPUT, ["Skill", "mcp__docs"])).toBe(
+    "Read,Grep,Glob,Edit(//snap/o.json),Bash(remote-read:*),Skill,mcp__docs",
   );
+});
+
+test("書き込みは出力ファイルだけを許し、Write や Edit を丸ごとは許さない", () => {
+  const tools = allowedTools("remote-read", OUTPUT).split(",");
+  expect(tools).not.toContain("Write");
+  expect(tools).not.toContain("Edit");
+  expect(tools).toContain("Edit(//snap/o.json)");
 });
 
 test("指定したツールを claude の --allowedTools に渡す", async () => {
   const cmd = `${CLAUDE_CMD},mcp__docs`;
   const runner = new FakeCommandRunner({ [cmd]: ok("") });
   const files = new FakeFileReader([VALID]);
-  await reviewRunner(runner, files).review(TARGET, "プロンプト本文", "/tmp/o.json", {
+  await reviewRunner(runner, files).review(TARGET, "プロンプト本文", OUTPUT, {
     tools: ["mcp__docs"],
   });
   expect(runner.calls[0]!.join(" ")).toBe(cmd);
@@ -97,7 +113,7 @@ test("モデルを指定したら claude に --model を付けて渡す", async 
   const cmd = `${CLAUDE_CMD} --model haiku`;
   const runner = new FakeCommandRunner({ [cmd]: ok("") });
   const files = new FakeFileReader([VALID]);
-  await reviewRunner(runner, files).review(TARGET, "プロンプト本文", "/tmp/o.json", {
+  await reviewRunner(runner, files).review(TARGET, "プロンプト本文", OUTPUT, {
     model: "haiku",
   });
   expect(runner.calls[0]!.join(" ")).toBe(cmd);
@@ -106,18 +122,14 @@ test("モデルを指定したら claude に --model を付けて渡す", async 
 test("処理後に出力ファイルを削除する", async () => {
   const runner = new FakeCommandRunner({ [CLAUDE_CMD]: ok("") });
   const files = new FakeFileReader([VALID]);
-  await reviewRunner(runner, files).review(TARGET, "プロンプト本文", "/tmp/o.json");
-  expect(files.removed).toEqual(["/tmp/o.json"]);
+  await reviewRunner(runner, files).review(TARGET, "プロンプト本文", OUTPUT);
+  expect(files.removed).toEqual([OUTPUT]);
 });
 
 test("パースに失敗したら 1 回だけ再実行する", async () => {
   const runner = new FakeCommandRunner({ [CLAUDE_CMD]: ok("") });
   const files = new FakeFileReader(["壊れた出力", VALID]);
-  const { findings } = await reviewRunner(runner, files).review(
-    TARGET,
-    "プロンプト本文",
-    "/tmp/o.json",
-  );
+  const { findings } = await reviewRunner(runner, files).review(TARGET, "プロンプト本文", OUTPUT);
 
   expect(findings).toHaveLength(1);
   expect(runner.calls).toHaveLength(2);
@@ -127,7 +139,7 @@ test("再実行しても壊れていれば FindingParseError を投げる", asyn
   const runner = new FakeCommandRunner({ [CLAUDE_CMD]: ok("") });
   const files = new FakeFileReader(["壊れた出力", "やはり壊れた出力"]);
   await expect(
-    reviewRunner(runner, files).review(TARGET, "プロンプト本文", "/tmp/o.json"),
+    reviewRunner(runner, files).review(TARGET, "プロンプト本文", OUTPUT),
   ).rejects.toThrow(FindingParseError);
   expect(runner.calls).toHaveLength(2);
 });
@@ -136,7 +148,7 @@ test("出力ファイルが存在しない場合もパース失敗として扱�
   const runner = new FakeCommandRunner({ [CLAUDE_CMD]: ok("stdout の中身") });
   const files = new FakeFileReader([new Error("ENOENT"), new Error("ENOENT")]);
   await expect(
-    reviewRunner(runner, files).review(TARGET, "プロンプト本文", "/tmp/o.json"),
+    reviewRunner(runner, files).review(TARGET, "プロンプト本文", OUTPUT),
   ).rejects.toThrow("レビュー結果のファイルが作成されませんでした");
 });
 
@@ -146,7 +158,7 @@ test("タイムアウトしたら ReviewTimeoutError を投げ、再実行しな
   });
   const files = new FakeFileReader([]);
   await expect(
-    reviewRunner(runner, files).review(TARGET, "プロンプト本文", "/tmp/o.json"),
+    reviewRunner(runner, files).review(TARGET, "プロンプト本文", OUTPUT),
   ).rejects.toThrow(ReviewTimeoutError);
   expect(runner.calls).toHaveLength(1);
 });
@@ -157,7 +169,7 @@ test("claude が異常終了したら再実行せず、原因を伝えるエラ�
   });
   const files = new FakeFileReader([]);
   await expect(
-    reviewRunner(runner, files).review(TARGET, "プロンプト本文", "/tmp/o.json"),
+    reviewRunner(runner, files).review(TARGET, "プロンプト本文", OUTPUT),
   ).rejects.toThrow(ReviewCommandError);
   // 再実行しても同じ結果になるので 1 回で止める
   expect(runner.calls).toHaveLength(1);
@@ -169,7 +181,7 @@ test("claude が異常終了したときのエラーに stderr を含める", as
   });
   const files = new FakeFileReader([]);
   const error = (await reviewRunner(runner, files)
-    .review(TARGET, "プロンプト本文", "/tmp/o.json")
+    .review(TARGET, "プロンプト本文", OUTPUT)
     .catch((e: unknown) => e as ReviewCommandError)) as ReviewCommandError;
   expect(error.message).toBe("AI レビューの実行に失敗しました（終了コード 1）");
   expect(error.detail).toContain("Invalid API key");
@@ -182,7 +194,7 @@ test("失敗した回も、出力から Claude Code の使用量を記録する"
   });
   const runner = new FakeCommandRunner({ [CLAUDE_CMD]: { stdout, exitCode: 1 } });
   const reviewer = reviewRunner(runner, new FakeFileReader([]));
-  await expect(reviewer.review(TARGET, "プロンプト本文", "/tmp/o.json")).rejects.toThrow(
+  await expect(reviewer.review(TARGET, "プロンプト本文", OUTPUT)).rejects.toThrow(
     ReviewCommandError,
   );
   expect(reviewer.usage.latest()?.limit?.status).toBe("rejected");

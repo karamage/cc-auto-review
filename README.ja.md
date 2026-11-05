@@ -109,7 +109,7 @@
 
 - macOS 11 以降
 - [GitHub CLI](https://cli.github.com)（`gh`）。`gh auth login` 済みであること
-- [Claude Code](https://claude.com/claude-code)（`claude`）
+- [Claude Code](https://claude.com/claude-code)（`claude`）2.1.314 以降
 
 `gh` と `claude` はログインシェルの `PATH` から探すので、Finder や Dock から起動しても動きます。
 
@@ -235,7 +235,7 @@ CC Auto Review.app
 ## 🔒 セキュリティ
 
 1. **ローカルだけで待ち受ける**: サーバは `127.0.0.1` で待ち受けます。デスクトップアプリでは、起動時に作った合言葉を持つリクエストしか API が受け付けないので、ほかのアプリやブラウザのページからは操作できません。
-2. **既定は読み取りだけ**: Claude に許すのは `Read`・`Grep`・`Glob`・`Write`（結果のファイルを書くため）と `remote-read` だけです。`git` や任意の `gh` コマンドは許しません。
+2. **ファイルへのアクセスを限定**: Claude が読めるのは、PR の変更ファイルと diff を置いた一時ディレクトリの中だけで、書けるのは結果のファイルだけです。ほかに使えるのは `Grep`・`Glob` と `remote-read` です。`git`、任意の `gh`、その他のシェルコマンドは、既定の権限モードによらず拒否します。Claude Code の設定に自分で書いた allow ルールとプロファイルの追加ツールは有効なままなので、範囲を絞ってください。PR の文面でレビューの内容そのものを誘導される可能性は残るので、投稿内容は確認してください。
 3. **Claude からの GitHub アクセスは GET だけ**: `remote-read` は読む先のリポジトリとコミットを環境変数で固定し、書き込みのリクエストは出しません。
 4. **PR は規約を書き換えられない**: 規約は base ブランチのものを読み、PR の `.claude/`・`.mcp.json`・`CLAUDE.local.md` は作業ディレクトリに置きません。
 5. **テレメトリなし**: 利用状況のデータは送りません。通信するのは `gh` 経由の GitHub と `claude` 経由の Claude で、画面がほかに Web フォントと（オンのときは）LGTM 画像を読み込みます。

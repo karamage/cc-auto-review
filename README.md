@@ -109,7 +109,7 @@ When you turn on the **autopilot**, the app works through your review requests b
 
 - macOS 11+
 - [GitHub CLI](https://cli.github.com) (`gh`), signed in with `gh auth login`
-- [Claude Code](https://claude.com/claude-code) (`claude`)
+- [Claude Code](https://claude.com/claude-code) (`claude`) 2.1.314 or later
 
 The app looks for `gh` and `claude` in your login shell's `PATH`, so it works when launched from Finder or the Dock.
 
@@ -235,7 +235,7 @@ CC Auto Review.app
 ## 🔒 Security
 
 1. **Local only**: the server listens on `127.0.0.1`. In the desktop app, the API only accepts requests that carry the token generated at launch, so other local apps and web pages cannot drive it.
-2. **Read-only by default**: Claude gets `Read`, `Grep`, `Glob`, `Write` (for its output file) and the `remote-read` helper only. `git` and arbitrary `gh` commands are not allowed.
+2. **Confined file access**: Claude can read only the temporary directory that holds the PR's changed files and diff, and can write only its result file. Beyond that it gets `Grep`, `Glob` and the `remote-read` helper. `git`, arbitrary `gh` commands and other shell commands are denied, whatever your default permission mode is. Allow rules in your own Claude Code settings and a profile's extra tools still apply, so keep them narrow. Text in a PR can still try to influence the review itself, so read what the app posts.
 3. **GET-only GitHub access for Claude**: `remote-read` is pinned to the PR's repository and commits through environment variables and never issues write requests.
 4. **PRs cannot rewrite the rules**: conventions are read from the base branch, and `.claude/`, `.mcp.json` and `CLAUDE.local.md` from the PR are never placed in the working directory.
 5. **No telemetry**: the app sends no usage data. It talks to GitHub through `gh` and to Claude through `claude`; the UI also loads web fonts and, if enabled, LGTM images.

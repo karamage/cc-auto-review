@@ -7,6 +7,20 @@ export interface PreflightResult {
   messages: string[];
 }
 
+/** 作業ディレクトリの外を拒否する設定（CLAUDE_LOCKDOWN_ARGS）が使える最初の版 */
+const MIN_CLAUDE_VERSION = [2, 1, 314] as const;
+
+/** 読めない版は、制限が効くと確かめられないので false にする */
+function supportsLockdown(versionOutput: string): boolean {
+  const match = /(\d+)\.(\d+)\.(\d+)/.exec(versionOutput);
+  if (match === null) return false;
+  for (const [i, min] of MIN_CLAUDE_VERSION.entries()) {
+    const part = Number(match[i + 1]);
+    if (part !== min) return part > min;
+  }
+  return true;
+}
+
 /** ローカルの clone には依存しないので、どのディレクトリから起動してもよい */
 export async function runPreflight(
   runner: CommandRunner,
@@ -34,11 +48,19 @@ export async function runPreflight(
     }
   }
 
-  if ((await run(["claude", "--version"])).exitCode !== 0) {
+  const claude = await run(["claude", "--version"]);
+  if (claude.exitCode !== 0) {
     messages.push(
       say(
         "claude コマンドが見つかりません。Claude Code をインストールしてください（https://claude.com/claude-code）。",
         "The claude command was not found. Install Claude Code (https://claude.com/claude-code).",
+      ),
+    );
+  } else if (!supportsLockdown(claude.stdout)) {
+    messages.push(
+      say(
+        `Claude Code ${MIN_CLAUDE_VERSION.join(".")} 以降が必要です（今の版: ${claude.stdout.trim()}）。古い版ではファイルへのアクセスを制限できません。claude update を実行してください。`,
+        `Claude Code ${MIN_CLAUDE_VERSION.join(".")} or later is required (found: ${claude.stdout.trim()}). Older versions cannot restrict file access. Run claude update.`,
       ),
     );
   }
