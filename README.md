@@ -30,9 +30,7 @@
 </div>
 
 <p align="center">
-  <a href="https://youtu.be/uI--YpLHfpQ"><img src="assets/demo/film-poster-en.jpg" alt="CC Auto Review: read only the pull requests that need you. Play the 37-second film." width="880"></a>
-  <br>
-  <sub><a href="https://youtu.be/uI--YpLHfpQ">Watch the 37-second film on YouTube.</a></sub>
+  <a href="https://karamage.github.io/cc-auto-review/"><img src="assets/demo/film-en.gif" alt="The 37-second CC Auto Review film: a person faces a mountain of pull requests, the app scores a PR, Claude finds a SQL injection, and the autopilot hands risky PRs back. The mountain clears, leaving only the PRs that need the person. (Sample data)" width="880"></a>
 </p>
 
 <p align="center">

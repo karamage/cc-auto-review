@@ -30,9 +30,7 @@
 </div>
 
 <p align="center">
-  <a href="https://karamage.github.io/cc-auto-review/ja/"><img src="assets/demo/film-poster-ja.jpg" alt="CC Auto Review: 読むのは、あなたが必要な PR だけ。37 秒の紹介動画を再生する" width="880"></a>
-  <br>
-  <sub><a href="https://karamage.github.io/cc-auto-review/ja/">37 秒の紹介動画をサイトで見る</a></sub>
+  <a href="https://karamage.github.io/cc-auto-review/ja/"><img src="assets/demo/film-ja.gif" alt="CC Auto Review の 37 秒の紹介動画。PR の山を見上げる人。アプリが PR を採点し、Claude が SQL インジェクションを見つけ、完全自動運転がリスクのある PR を人に回す。山が消え、読むべき PR だけが残る。（データは見本）" width="880"></a>
 </p>
 
 <p align="center">
