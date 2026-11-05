@@ -19,7 +19,7 @@
   <p>
     <img src="https://img.shields.io/badge/macOS-11%2B-000000?logo=apple&logoColor=white" alt="macOS 11+">
     <img src="https://img.shields.io/badge/Tauri-2-24C8DB?logo=tauri&logoColor=white" alt="Tauri 2">
-    <img src="https://img.shields.io/badge/Claude_Code-required-D97757?logo=anthropic&logoColor=white" alt="Claude Code required">
+    <img src="https://img.shields.io/badge/Claude_Code-required-555555" alt="Claude Code required">
     <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License"></a>
   </p>
 
@@ -33,7 +33,7 @@
 </p>
 
 > [!TIP]
-> No API key to set up. Reviews run on your own Claude Code subscription or settings, and GitHub access goes through your `gh` login.
+> CC Auto Review stores no Claude credentials. It runs your locally installed, unmodified Claude Code as you have configured it, and GitHub access goes through your `gh` login. Your use is subject to [Anthropic's terms](https://code.claude.com/docs/en/legal-and-compliance). Check them before using the autopilot, or use an API key.
 
 > [!NOTE]
 > This project is not affiliated with, endorsed by, or sponsored by Anthropic. Claude is a trademark of Anthropic, PBC. Reviews the app posts come from **your** GitHub account.
@@ -210,7 +210,7 @@ The repository's own `CLAUDE.md`, `AGENTS.md` and `REVIEW.md` are also read — 
 | Changed lines handed to a human | 1000 (lock files and `dist/` are not counted) |
 | Risk score handed to a human | 50 (above this goes to a human) |
 
-Autopilot runs only while the app is open. Reviews it posts come from **your** GitHub account and say they are automated.
+Autopilot runs only while the app is open. Reviews it posts come from **your** GitHub account and say they are automated. Autopilot runs Claude Code automatically, so check [Anthropic's terms](https://code.claude.com/docs/en/legal-and-compliance) before turning it on, or use an API key.
 
 ### Files
 

@@ -19,7 +19,7 @@
   <p>
     <img src="https://img.shields.io/badge/macOS-11%2B-000000?logo=apple&logoColor=white" alt="macOS 11 以降">
     <img src="https://img.shields.io/badge/Tauri-2-24C8DB?logo=tauri&logoColor=white" alt="Tauri 2">
-    <img src="https://img.shields.io/badge/Claude_Code-required-D97757?logo=anthropic&logoColor=white" alt="Claude Code が必要">
+    <img src="https://img.shields.io/badge/Claude_Code-required-555555" alt="Claude Code が必要">
     <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License"></a>
   </p>
 
@@ -33,7 +33,7 @@
 </p>
 
 > [!TIP]
-> API キーの設定は要りません。レビューは手元の Claude Code のサブスクリプションや設定のまま動き、GitHub へのアクセスは `gh` のログインを使います。
+> CC Auto Review は Claude の認証情報を保存しません。手元にインストールした未改変の Claude Code を、あなたの設定のまま実行します。GitHub へのアクセスは `gh` のログインを使います。利用には [Anthropic の規約](https://code.claude.com/docs/en/legal-and-compliance)が適用されます。完全自動運転を使う前に規約を確認するか、API キーを使ってください。
 
 > [!NOTE]
 > このプロジェクトは Anthropic とは関係がなく、Anthropic の承認や支援も受けていません。Claude は Anthropic, PBC の商標です。アプリが投稿するレビューは**あなたの** GitHub アカウントから出ます。
@@ -210,7 +210,7 @@ blocker と should には、起きる条件（trigger）と影響（impact）を
 | 人に回す変更行数 | 1000（ロックファイルと `dist/` は数えない） |
 | 人に回すリスクの点数 | 50（これを超えたら人に回す） |
 
-完全自動運転はアプリを開いている間だけ動きます。投稿は**あなたの** GitHub アカウントから行われ、本文に自動レビューであることを書きます。
+完全自動運転はアプリを開いている間だけ動きます。投稿は**あなたの** GitHub アカウントから行われ、本文に自動レビューであることを書きます。完全自動運転は Claude Code を自動で実行するので、オンにする前に [Anthropic の規約](https://code.claude.com/docs/en/legal-and-compliance)を確認するか、API キーを使ってください。
 
 ### 保存先
 
