@@ -1,4 +1,5 @@
 import { type ReactNode, useEffect, useState } from "react";
+import { parseLgtmImageIds } from "../../shared/lgtm.ts";
 import {
   compilePattern,
   type Perspective,
@@ -748,6 +749,13 @@ function GeneralTab({
           max={60}
           onChange={(timeoutMinutes) => onChange({ ...draft, timeoutMinutes })}
         />
+        <LinesField
+          label={text.lgtmImageIds}
+          hint={text.lgtmImageIdsHint}
+          value={draft.lgtmImageIds.map(String)}
+          mono
+          onChange={(lines) => onChange({ ...draft, lgtmImageIds: parseLgtmImageIds(lines) })}
+        />
       </Section>
       <p className="muted">{t().settings.storedAt}</p>
     </div>
@@ -796,6 +804,8 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
   const [preview, setPreview] = useState<{ title: string; prompt: string | null } | null>(null);
   // 既定に戻す・破棄するときに増やし、手元に文字列を持つ入力欄を読み直させる
   const [resetCount, setResetCount] = useState(0);
+  // 保存すると LGTM 画像の一覧は整えられる。捨てた行が欄に残らないよう、一般タブを読み直させる
+  const [savedCount, setSavedCount] = useState(0);
   const dirty = JSON.stringify(draft) !== JSON.stringify(saved);
 
   const change = (next: Settings): void => {
@@ -809,6 +819,7 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
       const result = await browserClient.saveSettings(draft);
       setSettings(result);
       setDraft(result);
+      setSavedCount((n) => n + 1);
       setStatus({ kind: "saved" });
     } catch (e: unknown) {
       setStatus({ kind: "error", message: e instanceof ApiError ? e.message : String(e) });
@@ -866,7 +877,7 @@ export function SettingsPage({ onBack }: { onBack: () => void }) {
         ) : tab === "autopilot" ? (
           <AutopilotTab draft={draft} onChange={change} />
         ) : (
-          <GeneralTab draft={draft} onChange={change} />
+          <GeneralTab key={savedCount} draft={draft} onChange={change} />
         )}
       </div>
 

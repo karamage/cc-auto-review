@@ -6,7 +6,7 @@ import type {
   SubmitRequest,
   SubmitResponse,
 } from "../../shared/types.ts";
-import { isLgtmChoice } from "../../shared/lgtm.ts";
+import { isLgtmChoice, settleLgtmChoice } from "../../shared/lgtm.ts";
 import { SKIP_REVIEW_CODE } from "../../shared/types.ts";
 import type { AppDeps } from "../app.ts";
 import { AppError } from "../errors.ts";
@@ -95,7 +95,7 @@ export function parseSubmitRequest(value: unknown): SubmitRequest {
     language: toLanguage(raw.language),
     // 指定が無ければ、投稿する言語で書いたものとみなす（訳さない）
     sourceLanguage: toLanguage(raw.sourceLanguage ?? raw.language),
-    // 指定が無ければ画像を添えない。一覧にない ID は受け付けない
+    // 指定が無ければ画像を添えない。選んだ後に設定の一覧から消された画像でも投稿できるよう、一覧とは照合しない
     lgtm: raw.lgtm === undefined ? "none" : parseLgtm(raw.lgtm),
     autopilot: raw.autopilot === true,
   };
@@ -164,7 +164,8 @@ export function registerSubmitRoutes(app: Hono, deps: AppDeps): void {
     // 翻訳は時間がかかるので、その後で投稿する直前に確かめる
     const { headSha, labels } = await deps.github.fetchPRState(pr);
     // 完全自動運転がレビューしている間に、AI にレビューさせないと決められた PR には投稿しない
-    const skipLabel = (await deps.settings.get()).autopilot.skipLabel;
+    const settings = await deps.settings.get();
+    const skipLabel = settings.autopilot.skipLabel;
     if (request.autopilot === true && labels.includes(skipLabel)) {
       return c.json(
         {
@@ -194,7 +195,12 @@ export function registerSubmitRoutes(app: Hono, deps: AppDeps): void {
       );
     }
 
-    const response: SubmitResponse = { review: await deps.github.submitReview(pr, posted) };
+    const response: SubmitResponse = {
+      review: await deps.github.submitReview(pr, {
+        ...posted,
+        lgtm: settleLgtmChoice(posted.lgtm, settings.lgtmImageIds),
+      }),
+    };
     return c.json(response);
   });
 }

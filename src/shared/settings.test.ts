@@ -137,3 +137,11 @@ test("人に任せる基準は、無ければ既定で補い、空にしたら�
       .handoffRules,
   ).toEqual(["決済の変更"]);
 });
+
+test("LGTM 画像の一覧は保存した値を使い、無ければ既定にする", () => {
+  expect(normalizeSettings({ lgtmImageIds: [1, 2] }).lgtmImageIds).toEqual([1, 2]);
+  expect(normalizeSettings({}).lgtmImageIds).toEqual(defaultSettings().lgtmImageIds);
+  expect(normalizeSettings({ lgtmImageIds: [] }).lgtmImageIds).toEqual(
+    defaultSettings().lgtmImageIds,
+  );
+});

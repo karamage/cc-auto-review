@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from "react";
-import { LGTM_IMAGE_IDS, type LgtmChoice, lgtmImageUrl } from "../../shared/lgtm.ts";
+import { type LgtmChoice, lgtmImageUrl } from "../../shared/lgtm.ts";
 import { t } from "../i18n.ts";
+import { useSettings } from "../settings.ts";
 
 /** シャッフルで止まるまでに見せるコマの間隔。後ろほど間を空けて、減速して止まるように見せる */
 const REEL_DELAYS_MS = [50, 50, 55, 60, 70, 80, 95, 115, 140, 175, 220];
 
-function randomId(except?: number): number {
-  const pool = LGTM_IMAGE_IDS.filter((id) => id !== except);
+function randomId(ids: readonly number[], except?: number): number {
+  const others = ids.filter((id) => id !== except);
+  // 一覧が 1 枚だけなら、同じ画像を引き直すしかない
+  const pool = others.length > 0 ? others : ids;
   return pool[Math.floor(Math.random() * pool.length)] as number;
 }
 
@@ -31,6 +34,7 @@ export function LgtmPicker({
   value: LgtmChoice;
   onChange: (lgtm: LgtmChoice) => void;
 }) {
+  const ids = useSettings().lgtmImageIds;
   const [reel, setReel] = useState<number | null>(null);
   // 値が変わるたびに印を押し直すための key
   const [pressed, setPressed] = useState(0);
@@ -51,7 +55,7 @@ export function LgtmPicker({
   const shuffle = (): void => {
     stopReel();
     const current = typeof value === "number" ? value : undefined;
-    const final = randomId(current);
+    const final = randomId(ids, current);
     if (prefersReducedMotion()) {
       land(final);
       return;
@@ -60,7 +64,7 @@ export function LgtmPicker({
     let shown = current;
     for (const delay of REEL_DELAYS_MS) {
       at += delay;
-      const frame = randomId(shown);
+      const frame = randomId(ids, shown);
       shown = frame;
       timers.current.push(window.setTimeout(() => setReel(frame), at));
     }
@@ -91,7 +95,7 @@ export function LgtmPicker({
     });
   }, [shown, reel]);
 
-  const index = shown === null ? -1 : LGTM_IMAGE_IDS.indexOf(shown);
+  const index = shown === null ? -1 : ids.indexOf(shown);
   const text = t().lgtm;
 
   return (
@@ -136,7 +140,7 @@ export function LgtmPicker({
           </span>
           <span>
             <small>{text.sheet}</small>
-            {index < 0 || !attached ? "—" : `${index + 1} / ${LGTM_IMAGE_IDS.length}`}
+            {index < 0 || !attached ? "—" : `${index + 1} / ${ids.length}`}
           </span>
         </figcaption>
       </figure>
@@ -158,7 +162,7 @@ export function LgtmPicker({
           </button>
 
           <div className="lgtm-strip" ref={stripRef} role="radiogroup" aria-label={text.pick}>
-            {LGTM_IMAGE_IDS.map((id) => (
+            {ids.map((id) => (
               <label key={id} data-id={id}>
                 <input
                   type="radio"
