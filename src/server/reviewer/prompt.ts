@@ -36,7 +36,7 @@ export interface PromptInput {
   riskBaseline?: string | null;
 }
 
-const LANGUAGE_NAME: Record<Lang, string> = { ja: "Japanese", en: "English" };
+export const LANGUAGE_NAME: Record<Lang, string> = { ja: "Japanese", en: "English" };
 
 /** 変更後ファイル側の変更行を、連続した区間にまとめて "2-3, 22" のように表す */
 export function summarizeChangedLines(file: DiffFile): string {
@@ -71,11 +71,11 @@ export function summarizeChangedLines(file: DiffFile): string {
 export const MAX_DESCRIPTION_LENGTH = 8000;
 
 /** 区切りのタグを本文の中で閉じられないよう、タグとして読めない形に変える */
-function escapeTag(text: string, tag: string): string {
+export function escapeTag(text: string, tag: string): string {
   return text.replaceAll(`</${tag}>`, `&lt;/${tag}&gt;`);
 }
 
-function descriptionSection(raw: string | null | undefined): string {
+export function descriptionSection(raw: string | null | undefined): string {
   const text = (raw ?? "").trim();
   if (text === "") return "";
   const truncated = text.length > MAX_DESCRIPTION_LENGTH;
@@ -164,7 +164,7 @@ ${omitted === 0 ? "" : `(${omitted} older comment(s) omitted for length)\n`}${bo
  * PR が CLAUDE.md や .claude/ などの規約・設定を変えている場合の注意書き。
  * head 側の内容は作業ディレクトリに置いていないので、読み方も添える
  */
-function agentConfigSection(files: DiffFile[], remoteReadCommand: string): string {
+export function agentConfigSection(files: DiffFile[], remoteReadCommand: string): string {
   const paths = files.map((f) => f.path).filter(isAgentConfig);
   if (paths.length === 0) return "";
 
@@ -178,7 +178,7 @@ Their head versions are not in the current directory. Read them from the diff or
 `;
 }
 
-function perspectivesSection(profile: ReviewProfile): string {
+export function perspectivesSection(profile: ReviewProfile): string {
   const enabled = profile.perspectives.filter((p) => p.enabled);
   const list =
     enabled.length === 0
@@ -216,7 +216,7 @@ function methodSection(profile: ReviewProfile): string {
 `;
 }
 
-function teamSection(profile: ReviewProfile): string {
+export function teamSection(profile: ReviewProfile): string {
   const text = profile.instructions.trim();
   if (text === "") return "";
   return `## Team review guidelines
@@ -230,7 +230,7 @@ ${escapeTag(text, "team_guidelines")}
 `;
 }
 
-function exclusionSection(profile: ReviewProfile): string {
+export function exclusionSection(profile: ReviewProfile): string {
   if (profile.exclusions.length === 0) return "";
   return `## Do not report
 
@@ -252,7 +252,9 @@ ${instructions}
 }
 
 /** clone が無い前提での、コードの読み方 */
-function readingSection(input: PromptInput): string {
+export function readingSection(
+  input: Pick<PromptInput, "diffPath" | "baseRef" | "remoteReadCommand">,
+): string {
   return `There is no local clone of the repository. Read code in these ways:
 
 - The whole PR diff: read \`${input.diffPath}\` with the Read tool
@@ -358,7 +360,7 @@ Plausible but unverified: use the low end. Speculation: no item. A typical well-
 `;
 }
 
-function fileListSection(files: DiffFile[]): string {
+export function fileListSection(files: DiffFile[]): string {
   return `## Changed files and lines (line numbers in the new file)
 
 ${files.map((f) => `- ${summarizeChangedLines(f)}`).join("\n")}
