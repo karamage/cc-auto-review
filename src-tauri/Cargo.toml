@@ -1,6 +1,6 @@
 [package]
 name = "cc-auto-review"
-version = "0.1.0"
+version = "0.1.1"
 description = "A desktop app that reviews GitHub pull requests with your local Claude Code"
 license = "MIT"
 edition = "2021"
