@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="1024" height="1024">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0b2142"/>
+      <stop offset="1" stop-color="#030a16"/>
+    </linearGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="18"/>
+    </filter>
+  </defs>
+  <rect x="64" y="64" width="896" height="896" rx="200" fill="url(#bg)"/>
+  <circle cx="512" cy="512" r="266" fill="none" stroke="#2ee9ff" stroke-width="44" opacity="0.7" filter="url(#glow)"/>
+  <circle cx="512" cy="512" r="266" fill="none" stroke="#2ee9ff" stroke-width="30"/>
+  <rect x="380" y="398" width="132" height="34" rx="14" fill="#3dffb0"/>
+  <rect x="429" y="349" width="34" height="132" rx="14" fill="#3dffb0"/>
+  <rect x="380" y="566" width="132" height="34" rx="14" fill="#ff7b9c"/>
+  <polyline points="552,512 616,584 708,436" fill="none" stroke="#8b7bff" stroke-width="40" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

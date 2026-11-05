@@ -63,5 +63,8 @@ After a review, the client sends the question, history and current findings to `
 ### i18n
 UI strings live in `client/messages.ts`: `ja` is the source of truth and `en` must match its shape (enforced by types). User-facing server errors are `AppError` with `{ ja, en }` text, localized per request (`lang.ts`). Code comments are written in Japanese.
 
+## Website
+`docs/` is the GitHub Pages site, plain HTML with no build: `docs/index.html` (EN) and `docs/ja/index.html` (JA) share `style.css`, `site.js`, `risk.js` and `download.js`. `download.js` looks up the latest release, so a new release needs no site change. `docs/engine.js` is generated from the real scoring code with `bun run build:site`; CI fails if it is stale, so rebuild it after changing `risk-score.ts` or `diff/parse.ts`.
+
 ## Settings / data
 App settings and state: `~/.config/cc-auto-review/` (override with `CC_AUTO_REVIEW_HOME`). Snapshots go under `$TMPDIR/cc-auto-review-snapshots` and orphans are pruned on startup.

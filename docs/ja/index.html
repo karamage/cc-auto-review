@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CC Auto Review: 手元の Claude Code で GitHub の PR をレビューする</title>
+<meta name="description" content="手元の Claude Code で GitHub の Pull Request をレビューする macOS アプリ。diff の横に AI の指摘を並べ、リスクを 0〜100 点で示し、完全自動運転ではリスクのある PR だけを人に回します。">
+<meta name="theme-color" content="#0b2142">
+<link rel="canonical" href="https://karamage.github.io/cc-auto-review/ja/">
+<link rel="alternate" hreflang="en" href="https://karamage.github.io/cc-auto-review/">
+<link rel="alternate" hreflang="ja" href="https://karamage.github.io/cc-auto-review/ja/">
+<link rel="alternate" hreflang="x-default" href="https://karamage.github.io/cc-auto-review/">
+<meta property="og:title" content="CC Auto Review: 読むのは、あなたが必要な PR だけ。">
+<meta property="og:description" content="手元の Claude Code で GitHub の Pull Request をレビューする macOS アプリ。diff の横に AI の指摘を並べ、リスクを 0〜100 点で示し、完全自動運転ではリスクのある PR だけを人に回します。">
+<meta property="og:image" content="https://karamage.github.io/cc-auto-review/media/og-ja.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://karamage.github.io/cc-auto-review/ja/">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="../icon.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Martian+Mono:wdth,wght@75..112.5,300..800&family=M+PLUS+1+Code:wght@400;500;700&family=IBM+Plex+Sans+JP:wght@400;600&display=swap">
+<link rel="stylesheet" href="../style.css?v=1">
+<script src="../engine.js?v=1" defer></script>
+<script src="../risk.js?v=1" defer></script>
+<script src="../site.js?v=1" defer></script>
+<script src="../download.js?v=1" defer></script>
+</head>
+<body>
+<a class="skip" href="#main">本文へ移動</a>
+<header class="top">
+  <a class="logo" href="./"><img src="../icon.svg" alt="" width="34" height="34"><span>CC Auto Review</span></a>
+  <nav aria-label="メイン">
+    <a class="opt" href="#flow">仕組み</a>
+    <a class="opt" href="#risk">リスクの点数</a>
+    <a class="opt" href="#autopilot">完全自動運転</a>
+    <a class="opt" href="#boundary">安全性</a>
+    <a class="opt" href="https://github.com/karamage/cc-auto-review">GitHub</a>
+    <a class="opt2" href="../" hreflang="en" lang="en">English</a>
+    <a class="get" href="#download">ダウンロード</a>
+  </nav>
+</header>
+
+<main id="main">
+  <div class="hero">
+    <script>if(!matchMedia("(prefers-reduced-motion: reduce)").matches)document.currentScript.parentNode.dataset.stage="read"</script>
+    <canvas class="hero-map" aria-hidden="true"></canvas>
+    <p class="hunk mono" aria-hidden="true">@@ -41 +41 @@ PR の読み方</p>
+    <div class="line del">
+      <span class="scan" aria-hidden="true"></span>
+      <span class="no" aria-hidden="true">41</span>
+      <span class="sign" aria-hidden="true">−</span>
+      <span class="text"><span class="strike">PR を、<wbr>全部自分で<wbr>読む。</span></span>
+    </div>
+    <div class="comment-wrap">
+      <aside class="comment" aria-label="見出しに付いたレビューコメントの見本">
+        <div class="comment-head"><span class="sev">should</span><p class="comment-title">注意を向ける先がずれています</p></div>
+        <dl>
+          <dt>起きる条件</dt><dd>認証に触れる PR の手前に、小さな PR が 20 件並んでいる。</dd>
+          <dt>影響</dt><dd>危ない PR の順番が最後になり、疲れた頭で読むことになる。</dd>
+        </dl>
+        <div class="comment-actions">
+          <button type="button" class="mini" data-act="accept" aria-pressed="true">採用</button>
+          <button type="button" class="mini" data-act="reject" aria-pressed="false">却下</button>
+          <span class="comment-status" role="status">採用しました</span>
+        </div>
+      </aside>
+    </div>
+    <div class="line add">
+      <span class="no" aria-hidden="true">41</span>
+      <span class="sign" aria-hidden="true">+</span>
+      <h1 class="text">読むのは、<br class=wide>あなたが必要な PR&nbsp;だけ。</h1>
+    </div>
+    <div class="hero-foot">
+      <div>
+        <p class="lede"><strong>CC Auto Review</strong> は、手元の Claude Code で GitHub の Pull Request をレビューする macOS アプリです。diff の横に指摘を並べ、PR ごとにリスクを 0〜100 点で示します。何を投稿するかは、あなたが決めます。</p>
+      </div>
+      <div>
+        <div class="cta">
+          <a class="btn btn-primary" data-arch="arm64" href="https://github.com/karamage/cc-auto-review/releases/latest">Apple シリコン版をダウンロード<small>M1 以降、<span data-size>DMG</span></small></a>
+          <a class="btn btn-ghost" data-arch="x64" href="https://github.com/karamage/cc-auto-review/releases/latest">Intel 版をダウンロード<small><span data-size>DMG</span></small></a>
+        </div>
+        <p class="meta"><span data-version>最新版</span>、macOS 11 以降。署名と公証済み。無料のオープンソース（MIT）。</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="gutter" aria-hidden="true"></div>
+
+  <section class="sec film" aria-label="アプリの画面">
+    <figure>
+      <div class="film-tabs" role="group" aria-label="アプリの画面">
+        <button type="button" aria-pressed="true" data-film="review" data-src="../media/review-ja" data-caption="PR を開いてレビューを実行し、指摘を採用します。データは見本です。" data-alt="PR を開き、AI レビューを実行し、指摘へ移動して採用する様子。">レビュー</button>
+        <button type="button" aria-pressed="false" data-film="autopilot" data-src="../media/autopilot-ja" data-caption="完全自動運転をオンにします。5 件をレビューし、リスクのある 1 件をあなたに回します。データは見本です。" data-alt="完全自動運転をオンにすると、5 件の PR をレビューし、承認かコメントをして、リスクのある 1 件を人に回す様子。">完全自動運転</button>
+      </div>
+      <video src="../media/review-ja.mp4" poster="../media/review-ja.jpg" width="1320" height="825" autoplay muted loop playsinline preload="metadata" aria-label="PR を開き、AI レビューを実行し、指摘へ移動して採用する様子。"></video>
+      <figcaption data-film-caption>PR を開いてレビューを実行し、指摘を採用します。データは見本です。</figcaption>
+    </figure>
+  </section>
+
+  <section class="sec" id="flow">
+    <a class="hunk" href="#flow">@@ レビューの流れ @@</a>
+    <h2>PR を開いてから<wbr>投稿するまで。</h2>
+    <div class="flow-grid">
+      <ol class="steps">
+          <li class="step" data-step="1" data-score="42" data-score-label="MEDIUM（diff のみ）" data-state-text="AI はまだ動いていません">
+            <h3>PR を開いた時点で、<wbr>点数が出ています。</h3>
+            <p>規模、広がり、影響の大きいパス、危ないコードのパターン、テストの不足を diff だけから数えます。同じ diff なら必ず同じ点になり、PR の説明文で下げることはできません。</p>
+          </li>
+          <li class="step" data-step="2" data-score="42" data-score-label="MEDIUM（diff のみ）" data-state-text="Claude が読んでいます">
+            <h3>Claude が読むのは、<wbr>変更されたファイルだけです。</h3>
+            <p>変更ファイルを一時ディレクトリに置くので、clone も API キーの設定も要りません。呼び出し元や型が必要になったら、読み取り専用のヘルパーがこの PR のコミットから取ってきます。</p>
+          </li>
+          <li class="step" data-step="3" data-score="42" data-score-label="MEDIUM（diff のみ）" data-state-text="このファイルに blocker が 1 件">
+            <h3>指摘は、<wbr>該当する行に付きます。</h3>
+            <p><code>blocker</code> と <code>should</code> は、どう起きて何が困るのかを書く決まりです。書けない指摘は <code>question</code> に下がります。</p>
+          </li>
+          <li class="step" data-step="4" data-score="60" data-score-label="HIGH（人のレビューが必要）" data-state-text="エスカレーション: 入力値が SQL に届く">
+            <h3>点数は、<wbr>根拠とともに動きます。</h3>
+            <p>Claude は <code>ファイル:行</code> を示して、点数を最大 ±20 動かせます。裏付けのある重大な問題はエスカレーションになり、最低 60 点まで上がります。計算はサーバーが行います。</p>
+          </li>
+          <li class="step" data-step="5" data-score="60" data-score-label="HIGH（人のレビューが必要）" data-state-text="1 件採用">
+            <h3>1 件ずつ、<wbr>採用、却下、編集します。</h3>
+            <p>この時点では何も投稿されません。指摘について Claude に質問したり、コードを説明させたりして、見つけた問題を下書きに足すこともできます。</p>
+          </li>
+          <li class="step" data-step="6" data-score="60" data-score-label="HIGH（人のレビューが必要）" data-state-text="HEAD を再確認。あなたのアカウントで投稿">
+            <h3>あなたのアカウントで<wbr>投稿します。</h3>
+            <p>投稿の直前に PR の HEAD を確かめ直し、レビュー後に動いていたら何も投稿しません。投稿先の言語が違えば、投稿の直前に翻訳します。</p>
+          </li>
+      </ol>
+      <div class="stage" data-step="1">
+        <div class="stage-top">
+          <p class="stage-title">チェックアウトにクーポンを追加<small>acme/storefront #482 / 見本のデータ</small></p>
+          <p class="gauge"><b data-gauge>42</b><span data-gauge-label>MEDIUM（diff のみ）</span></p>
+        </div>
+        <div class="stage-meter" aria-hidden="true"><i data-meter style="width:42%"></i></div>
+        <p class="stage-file">src/checkout/coupon.ts</p>
+        <div class="code read" aria-hidden="true">
+          <span class="stage-sweep"></span>
+          <div class="l a"><i>18</i><u>+</u><span>export function applyCoupon(c: Coupon, total: number) {</span></div>
+          <div class="l a"><i>19</i><u>+</u><span>  return c.kind === "percent" ? total * c.rate : c.value;</span></div>
+          <div class="l a"><i>20</i><u>+</u><span>}</span></div>
+          <div class="l a"><i>21</i><u>+</u><span>export async function findCoupon(db: Db, code: string) {</span></div>
+          <div class="l a hot"><i>22</i><u>+</u><span>  const rows = await db.query(`SELECT * FROM coupons WHERE code = '${code}'`);</span></div>
+          <div class="stage-finding"><div>
+            <div class="comment">
+              <div class="comment-head"><span class="sev blocker">blocker</span><p class="comment-title">クーポンコードから SQL インジェクションができる</p></div>
+              <dl>
+                <dt>起きる条件</dt><dd>お客さんがコードに <code>x' OR '1'='1</code> と入力する。</dd>
+                <dt>影響</dt><dd>テーブルの任意のクーポンが返り、適用される。</dd>
+              </dl>
+              <div class="comment-actions"><span class="mini accept">採用</span><span class="mini">却下</span><span class="mini">編集</span></div>
+            </div>
+          </div></div>
+          <div class="l a"><i>23</i><u>+</u><span>  return rows[0] ?? null;</span></div>
+          <div class="l a"><i>24</i><u>+</u><span>}</span></div>
+        </div>
+        <div class="stage-foot">
+          <span class="stage-state" data-state-text>AI はまだ動いていません</span>
+          <span class="stage-post">GitHub に投稿</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec risk" id="risk">
+    <a class="hunk" href="#risk">@@ リスクの点数 @@</a>
+    <h2>本物の PR で、<wbr>点数を試してください。</h2>
+    <p class="intro">公開 PR の URL を貼るだけです。動いているのはアプリと同じ基準点の採点コードで、計算はブラウザの中で完結します。diff は GitHub の公開 API から直接取得し、ほかには送りません。</p>
+    <form class="risk-form" data-risk-form>
+      <input type="text" inputmode="url" autocomplete="off" spellcheck="false" aria-label="Pull Request の URL" placeholder="https://github.com/owner/repo/pull/123">
+      <button type="submit">採点する</button>
+    </form>
+    <div class="presets" role="group" aria-label="見本の PR"><span>見本で試す:</span><button type="button" data-preset="typo" aria-pressed="false">README の誤字</button><button type="button" data-preset="feature" aria-pressed="false">クーポンの追加</button><button type="button" data-preset="migration" aria-pressed="false">テーブルの削除</button><button type="button" data-preset="secret" aria-pressed="false">鍵の混入</button></div>
+    <details class="paste">
+      <summary>diff を貼って採点する</summary>
+      <textarea data-paste aria-label="diff を貼って採点する" spellcheck="false" placeholder="diff --git a/..."></textarea>
+      <button type="button" data-paste-score>採点する</button>
+    </details>
+    <p class="risk-error" data-risk-error role="alert"></p>
+    <div class="board">
+      <div>
+        <span class="score-num" data-score-num>0</span>
+        <p class="score-line"><span class="score-level" data-score-level></span><span class="score-source" data-score-source></span></p>
+        <p class="verdict" role="status" data-verdict></p>
+        <div class="scale" aria-hidden="true"><i></i><i></i><i></i><i></i><span class="scale-mark" data-scale-mark style="left:0"></span><span class="scale-threshold">50 を超えたら人へ</span></div>
+        <ul class="hits" data-hits></ul>
+      </div>
+      <ul class="factors" data-factors></ul>
+    </div>
+    <p class="risk-note">これは AI を動かす前の基準点です。アプリでは、このあと Claude が最大 ±20 の補正を加え、エスカレーションすることもあります。点数は誰が先に読むかを決める目安で、コードの正しさを保証するものではありません。</p>
+  </section>
+
+  <section class="sec" id="autopilot">
+    <a class="hunk" href="#autopilot">@@ 完全自動運転（任意） @@</a>
+    <h2>依頼の山はアプリが片付け、<wbr>危ない PR&nbsp;だけを<wbr>あなたに回します。</h2>
+    <p class="intro">オンにすると、レビュー依頼を一定の間隔で処理します。承認かコメントをして作成者の対応を待ち、再レビューします。リスクのある PR は、何も投稿せずにあなたへ回します。</p>
+    <div class="pilot-grid">
+      <div>
+        <div class="queue-head">
+          <button type="button" class="knob" role="switch" aria-checked="false"><span class="knob-track"></span><span data-knob-label data-on="完全自動運転 オン" data-off="完全自動運転 オフ">完全自動運転 オフ</span></button>
+          <span class="queue-count" role="status" data-idle="レビュー依頼 5 件" data-template="あなたへ {h} 件、コメント {c} 件、承認 {o} 件">レビュー依頼 5 件</span>
+        </div>
+        <ul class="queue" data-busy="レビュー中">
+          <li data-state="queued" data-queued="待機中" data-result="ok" data-out="承認" data-why="4 点、指摘なし">
+            <span class="tick"></span>
+            <span class="pr"><small>acme/mobile-app #231</small>オンボーディングの誤字を直す<span class="why">4 点、指摘なし</span></span>
+            <span class="out">承認</span>
+          </li>
+          <li data-state="queued" data-queued="待機中" data-result="comment" data-out="コメント" data-why="18 点、指摘 2 件。作成者の対応待ち">
+            <span class="tick"></span>
+            <span class="pr"><small>acme/storefront #474</small>商品画像をキャッシュする<span class="why">18 点、指摘 2 件。作成者の対応待ち</span></span>
+            <span class="out">コメント</span>
+          </li>
+          <li data-state="queued" data-queued="待機中" data-result="human" data-out="あなたへ" data-why="CI のパスに該当。AI を呼ばず、投稿なし">
+            <span class="tick"></span>
+            <span class="pr"><small>acme/infra #77</small>デプロイのワークフローを変更<span class="why">CI のパスに該当。AI を呼ばず、投稿なし</span></span>
+            <span class="out">あなたへ</span>
+          </li>
+          <li data-state="queued" data-queued="待機中" data-result="comment" data-out="コメント" data-why="27 点、指摘 1 件。作成者の対応待ち">
+            <span class="tick"></span>
+            <span class="pr"><small>acme/api #309</small>注文履歴をページ分割する<span class="why">27 点、指摘 1 件。作成者の対応待ち</span></span>
+            <span class="out">コメント</span>
+          </li>
+          <li data-state="queued" data-queued="待機中" data-result="human" data-out="あなたへ" data-why="60 点、エスカレーション。投稿なし">
+            <span class="tick"></span>
+            <span class="pr"><small>acme/storefront #482</small>チェックアウトにクーポンを追加<span class="why">60 点、エスカレーション。投稿なし</span></span>
+            <span class="out">あなたへ</span>
+          </li>
+        </ul>
+        <p class="meta">データは見本です。</p>
+      </div>
+      <div class="rules">
+        <h3>あなたに回ってくる PR</h3>
+        <ul><li>指定したパスに触れるもの。既定は CI、マイグレーション、インフラ、秘密情報、認証、課金、暗号。AI を呼ばずに回します。</li><li>変更が 1,000 行を超えるもの。ロックファイルと <code>dist/</code> は数えません。</li><li>リスクの点数が 50 を超えるもの、エスカレーションがあるもの。</li><li>「API の破壊的変更」のように、自然な文章で書いた基準に当てはまるもの。</li><li>コメントを 3 往復しても終わらないもの。</li></ul>
+        <p>完全自動運転はアプリを開いている間だけ動きます。投稿するレビューはあなたの GitHub アカウントから出て、自動投稿であることを明記します。Claude Code を自動で実行するので、オンにする前に <a href="https://code.claude.com/docs/en/legal-and-compliance">Anthropic の規約</a>を確認するか、API キーを使ってください。</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="sec" id="boundary">
+    <a class="hunk" href="#boundary">@@ Claude が触れる範囲 @@</a>
+    <h2>PR は、自分を審査する<wbr>ルールを変えられません。</h2>
+    <p class="intro">PR の文章にはレビュアーを誘導する指示を仕込めます。だからレビューは毎回、短い許可リストの中で動きます。</p>
+    <ul class="perm">
+        <li class="y"><span class="s" aria-label="許可">+</span><span class="v">読む</span><span class="d">一時ディレクトリに置いた、PR の変更ファイルと diff</span></li>
+        <li class="y"><span class="s" aria-label="許可">+</span><span class="v">読む</span><span class="d">CLAUDE.md、AGENTS.md、REVIEW.md（ベースブランチのもの）</span></li>
+        <li class="y"><span class="s" aria-label="許可">+</span><span class="v">取得</span><span class="d">remote-read 経由のほかのファイル。GET のみで、この PR のリポジトリとコミットに固定</span></li>
+        <li class="y"><span class="s" aria-label="許可">+</span><span class="v">書く</span><span class="d">結果のファイル 1 つ</span></li>
+        <li class="n"><span class="s" aria-label="不許可">−</span><span class="v">読む</span><span class="d">Mac の中のそれ以外のファイル</span></li>
+        <li class="n"><span class="s" aria-label="不許可">−</span><span class="v">実行</span><span class="d">git、任意の gh コマンド、そのほかのシェルコマンド</span></li>
+        <li class="n"><span class="s" aria-label="不許可">−</span><span class="v">読込</span><span class="d">PR に含まれる .claude/、.mcp.json、CLAUDE.local.md</span></li>
+        <li class="n"><span class="s" aria-label="不許可">−</span><span class="v">送信</span><span class="d">利用状況のデータ。アプリにテレメトリはありません</span></li>
+    </ul>
+    <div class="perm-notes">
+      <div><h3>防げないこと</h3><p>ご自身の Claude Code 設定の許可ルールと、プロファイルに足したツールは有効なままです。狭く保ってください。PR の文章がレビュー内容に影響する可能性は残るので、投稿内容は読んで確かめてください。</p></div>
+      <div><h3>コードの行き先</h3><p>アプリは <code>gh</code> で GitHub と、<code>claude</code> で Claude とやり取りします。どちらもあなたの設定のままです。サーバーは <code>127.0.0.1</code> だけで待ち受け、起動時に作るトークンのない要求を受け付けません。</p></div>
+    </div>
+  </section>
+
+  <section class="sec" id="more">
+    <a class="hunk" href="#more">@@ そのほかの機能 @@</a>
+    <h2>ほかにできること。</h2>
+    <ul class="changes">
+        <li><span class="s" aria-hidden="true">+</span><div><h3>レビュープロファイル</h3><p>観点、チームの指針、指摘しないこと、指摘数の上限を決められます。Standard、Security focused、Quick の 3 つが付属します。プレビューで Claude に渡す内容をそのまま確認できます。</p></div></li>
+        <li><span class="s" aria-hidden="true">+</span><div><h3>過去のコメントの再確認</h3><p>以前のレビューコメントを今のコードと照らし、修正済み、未修正、未確認に分けます。作成者の「直しました」は根拠に数えません。</p></div></li>
+        <li><span class="s" aria-hidden="true">+</span><div><h3>リポジトリの規約</h3><p><code>CLAUDE.md</code>、<code>AGENTS.md</code>、<code>REVIEW.md</code> を読みます。常にベースブランチのものです。</p></div></li>
+        <li><span class="s" aria-hidden="true">+</span><div><h3>PR の見守り</h3><p>作成者が push や返信をすると、レビューをやり直します。あなたの操作なしに再投稿はしません。</p></div></li>
+        <li><span class="s" aria-hidden="true">+</span><div><h3>プロファイルの振り分け</h3><p>リポジトリ、ラベル、<code>@org/security</code> のようなメンションで、使うプロファイルを変えられます。</p></div></li>
+        <li><span class="s" aria-hidden="true">+</span><div><h3>小さなネイティブアプリ</h3><p>CPU ごとに約 12 MB。デスクトップ通知に対応し、画面は日本語と英語です。</p></div></li>
+    </ul>
+  </section>
+
+  <section class="sec" id="faq">
+    <a class="hunk" href="#faq">@@ よくある質問 @@</a>
+    <h2>よくある質問。</h2>
+    <div class="faq">
+        <details><summary>API キーは必要ですか？</summary><p>アプリでの設定は要りません。インストール済みの <code>claude</code> をあなたの設定のまま実行し、Claude の認証情報は保存しません。GitHub へのアクセスは <code>gh</code> のログインを使います。</p></details>
+        <details><summary>費用はかかりますか？</summary><p>アプリは無料で、MIT ライセンスです。レビューにはあなたの Claude Code のプランか API アカウントを使います。使用量はレビュー画面で確認できます。</p></details>
+        <details><summary>勝手に投稿することはありますか？</summary><p>完全自動運転をオンにしない限り、ありません。通常のレビューでは、投稿ボタンを押すまで GitHub には何も届きません。</p></details>
+        <details><summary>リポジトリを clone する必要はありますか？</summary><p>ありません。PR の変更ファイルだけを一時ディレクトリに取得します。</p></details>
+        <details><summary>完全自動運転はバックグラウンドで動き続けますか？</summary><p>いいえ。アプリのウィンドウを開いている間だけ動きます。</p></details>
+        <details><summary>Windows や Linux で使えますか？</summary><p>今は macOS だけです。</p></details>
+    </div>
+  </section>
+
+  <section class="get-it" id="download">
+    <a class="hunk" href="#download">@@ ダウンロード @@</a>
+    <h2>CC Auto Review を<wbr>入手する。</h2>
+    <div class="cta">
+      <a class="btn btn-primary" data-arch="arm64" href="https://github.com/karamage/cc-auto-review/releases/latest">Apple シリコン版をダウンロード<small>M1 以降、<span data-size>DMG</span></small></a>
+      <a class="btn btn-ghost" data-arch="x64" href="https://github.com/karamage/cc-auto-review/releases/latest">Intel 版をダウンロード<small><span data-size>DMG</span></small></a>
+    </div>
+    <p class="meta"><span data-version>最新版</span>。<a href="https://github.com/karamage/cc-auto-review/releases">すべてのリリース</a>。</p>
+    <div class="req">
+      <div><h3>DMG を開く</h3><p>アプリを「アプリケーション」へドラッグします。Developer ID で署名し、Apple の公証を受けています。macOS 11 以降が必要です。</p></div>
+      <div><h3>GitHub CLI を入れる</h3><p><a href="https://cli.github.com">gh</a> を入れて、<code>gh auth login</code> でログインします。</p></div>
+      <div><h3>Claude Code を入れる</h3><p><a href="https://claude.com/claude-code">Claude Code</a> 2.1.314 以降を入れます。古い版はファイルへのアクセスを制限できないので使えません。</p></div>
+    </div>
+    <details class="source">
+      <summary>ソースからビルドする</summary>
+      <pre>git clone https://github.com/karamage/cc-auto-review.git
+cd cc-auto-review
+bun install
+bun run app:build   # src-tauri/target/release/bundle/macos/</pre>
+    </details>
+  </section>
+</main>
+
+<footer class="foot">
+  <nav aria-label="フッター">
+    <a href="https://github.com/karamage/cc-auto-review">GitHub</a>
+    <a href="https://github.com/karamage/cc-auto-review/releases">リリース</a>
+    <a href="https://github.com/karamage/cc-auto-review/blob/main/README.ja.md">README</a>
+    <a href="https://github.com/karamage/cc-auto-review/blob/main/SECURITY.md">セキュリティポリシー</a>
+    <a href="https://github.com/karamage/cc-auto-review/blob/main/LICENSE">MIT ライセンス</a>
+    <a href="../" hreflang="en" lang="en">English</a>
+  </nav>
+  <p>このプロジェクトは Anthropic とは関係がなく、Anthropic の承認や支援も受けていません。Claude は Anthropic, PBC の商標です。Claude Code の利用には Anthropic の規約が適用されます。</p>
+  <p>このページにアクセス解析はありません。Google Fonts からフォントを読み込み、最新リリースと採点する PR の情報を GitHub の API に問い合わせます。</p>
+</footer>
+</body>
+</html>
