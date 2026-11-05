@@ -142,7 +142,10 @@ test("回答と、diff に対応づけた指摘案を返し、作業ディレク
   expect(last.answer).toBe("問題があります");
   expect(last.proposals.map((p) => p.anchor)).toEqual(["line", "summary"]);
   expect(claudeCwds[0]).toBe(`${ROOT}/repo`);
-  expect(claudeCalls[0]?.join(" ")).toContain("Read,Grep,Glob,Write,Bash(remote-read:*)");
+  const args = claudeCalls[0]?.join(" ");
+  expect(args).toContain(`Read,Grep,Glob,Edit(/${ROOT}/chat.json),Bash(remote-read:*)`);
+  expect(args).toContain(`--add-dir ${ROOT}`);
+  expect(args).toContain("--permission-mode dontAsk");
   expect(files.removed).toEqual([`${ROOT}/chat.json`]);
   expect(fs.removed).toEqual([ROOT]);
 });

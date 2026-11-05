@@ -166,7 +166,7 @@ export function registerChatRoutes(app: Hono, deps: AppDeps): void {
         await send({ type: "answering" });
 
         const result = await deps.reviewer.ask(
-          { workDir: snapshot.workDir, repo: pr.repo, headSha, baseSha },
+          { workDir: snapshot.workDir, root: snapshot.root, repo: pr.repo, headSha, baseSha },
           prompt,
           outputPath,
           {
