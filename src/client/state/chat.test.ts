@@ -44,7 +44,10 @@ function reviewedStore(storage: SessionStorage | null = null) {
 }
 
 function chatApi(
-  respond: (request: ChatRequest, onEvent: (event: ChatStreamEvent) => void) => void | Promise<void>,
+  respond: (
+    request: ChatRequest,
+    onEvent: (event: ChatStreamEvent) => void,
+  ) => void | Promise<void>,
 ): ApiClient {
   return {
     async streamChat(_pr: unknown, request: ChatRequest, onEvent: (e: ChatStreamEvent) => void) {
@@ -116,7 +119,13 @@ test("失敗した質問は履歴に含めず、再送すると置き換わる",
 
 test("接続が結果なしで閉じたら失敗として出す", async () => {
   const store = reviewedStore();
-  await sendChat(chatApi(() => {}), store, pr, "abc", "質問");
+  await sendChat(
+    chatApi(() => {}),
+    store,
+    pr,
+    "abc",
+    "質問",
+  );
   expect(store.get(pr).chat.messages[0]?.error).not.toBeNull();
   expect(store.get(pr).chat.pending).toBe(false);
 });
@@ -191,7 +200,12 @@ test("再レビューを始めると会話を消し、前の回答が遅れて�
   );
 
   const reviewApi = {
-    async streamReview(_pr: unknown, _sha: unknown, _options: unknown, onEvent: (e: unknown) => void) {
+    async streamReview(
+      _pr: unknown,
+      _sha: unknown,
+      _options: unknown,
+      onEvent: (e: unknown) => void,
+    ) {
       onEvent({ type: "findings", findings: [], priorChecks: [] });
     },
   } as unknown as ApiClient;

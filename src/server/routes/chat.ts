@@ -29,7 +29,9 @@ const MAX_FINDING_BODY_LENGTH = 2000;
 const MAX_FINDING_TITLE_LENGTH = 200;
 
 function parseReference(raw: unknown): ChatReference | null {
-  const item = raw as Partial<Record<"kind" | "findingId" | "path" | "line" | "side", unknown>> | null;
+  const item = raw as Partial<
+    Record<"kind" | "findingId" | "path" | "line" | "side", unknown>
+  > | null;
   if (item === null || typeof item !== "object") return null;
   if (item.kind === "finding" && typeof item.findingId === "string") {
     return { kind: "finding", findingId: item.findingId };

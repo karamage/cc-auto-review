@@ -42,6 +42,8 @@ export function DiffFileView({
   checkOf,
   onStatus,
   onBody,
+  onAskFinding,
+  onAskLine,
 }: {
   file: DiffFile;
   /** 行アンカーの指摘のみ。summary の指摘は ReviewPage が別枠で出す */
@@ -53,6 +55,9 @@ export function DiffFileView({
   checkOf: (commentId: number) => PriorFindingCheck | undefined;
   onStatus: (findingId: string, status: FindingStatus) => void;
   onBody: (findingId: string, body: string) => void;
+  /** チャットで質問する。質問できない状態なら無い */
+  onAskFinding?: (findingId: string) => void;
+  onAskLine?: (path: string, line: number, side: "LEFT" | "RIGHT") => void;
 }) {
   // side が LEFT のコメントは変更前ファイルの行番号を持つ。
   // 変更後の行番号と突き合わせると別の行の下に出るので、ファイル単位でまとめる
@@ -113,7 +118,12 @@ export function DiffFileView({
 
                 return (
                   <Fragment key={`${hunk.header}-${index}`}>
-                    <DiffLineRow line={line} marked={heaviest(lineItems)} />
+                    <DiffLineRow
+                      path={file.path}
+                      line={line}
+                      marked={heaviest(lineItems)}
+                      onAsk={onAskLine}
+                    />
                     {lineItems.length + lineComments.length === 0 ? null : (
                       <tr className="diff-annotations">
                         <td colSpan={4}>
@@ -124,6 +134,11 @@ export function DiffFileView({
                               number={numberOf(item.anchored.finding.id)}
                               onStatus={(status) => onStatus(item.anchored.finding.id, status)}
                               onBody={(body) => onBody(item.anchored.finding.id, body)}
+                              onAsk={
+                                onAskFinding === undefined
+                                  ? undefined
+                                  : () => onAskFinding(item.anchored.finding.id)
+                              }
                             />
                           ))}
                           {lineComments.map((c) => (

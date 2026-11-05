@@ -20,12 +20,15 @@ export function FindingCard({
   number,
   onStatus,
   onBody,
+  onAsk,
 }: {
   item: DraftItem;
   /** 図面の改訂記号のような通し番号。投稿前の確認やファイル索引で指摘を指し示すのに使う */
   number?: number;
   onStatus: (status: FindingStatus) => void;
   onBody: (body: string) => void;
+  /** チャットでこの指摘について質問する。質問できない状態なら無い */
+  onAsk?: () => void;
 }) {
   const { finding, anchor, reason } = item.anchored;
   const text = t().review;
@@ -94,6 +97,11 @@ export function FindingCard({
         >
           {item.status === "rejected" ? text.unreject : text.reject}
         </button>
+        {onAsk === undefined ? null : (
+          <button type="button" data-choice="ask" onClick={onAsk}>
+            {t().chat.ask}
+          </button>
+        )}
         {item.status === "accepted" ? <span className="finding-hint">{text.editHint}</span> : null}
       </footer>
     </article>

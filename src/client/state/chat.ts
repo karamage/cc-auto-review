@@ -35,18 +35,19 @@ export interface ChatState {
   reference: ChatReference | null;
 }
 
-export const EMPTY_CHAT: ChatState = { messages: [], pending: false, progress: "", reference: null };
+export const EMPTY_CHAT: ChatState = {
+  messages: [],
+  pending: false,
+  progress: "",
+  reference: null,
+};
 
 /** 結果がある回のコミットを表示しているときだけ質問できる。指摘の番号と diff がずれないように */
 export function canChat(session: ReviewSession, headSha: string): boolean {
   return session.phase === "done" && session.headSha === headSha;
 }
 
-function updateChat(
-  store: SessionStore,
-  pr: PRRef,
-  change: (chat: ChatState) => ChatState,
-): void {
+function updateChat(store: SessionStore, pr: PRRef, change: (chat: ChatState) => ChatState): void {
   store.update(pr, (s) => ({ ...s, chat: change(s.chat) }));
 }
 
