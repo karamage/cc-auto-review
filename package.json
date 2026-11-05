@@ -11,6 +11,7 @@
     "dev:client": "vite",
     "build:client": "vite build",
     "build:server": "bun scripts/build-server.ts",
+    "build:site": "bun scripts/build-site.ts",
     "build": "bun run build:client && bun run build:server",
     "tauri": "tauri",
     "app:dev": "bun run build && tauri dev",

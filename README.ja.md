@@ -24,6 +24,8 @@
     <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License"></a>
   </p>
 
+  <p><a href="https://karamage.github.io/cc-auto-review/ja/"><strong>サイトとダウンロード</strong></a></p>
+
   <p><a href="README.md">English README</a></p>
 </div>
 
