@@ -219,9 +219,16 @@ h3 { font-size: 1.0625rem; font-weight: 600; margin: 0; }
 
 /* 実物の録画 */
 .film { padding-top: 0; padding-bottom: 0; }
-.film figure { max-width: 1120px; }
+.film figure { max-width: 1280px; }
 .film video { width: 100%; height: auto; background: var(--abyss); box-shadow: 0 0 0 1px var(--line); border-radius: 6px; }
-.film-tabs { display: flex; gap: 4px; margin-bottom: 10px; }
+.film-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 16px; margin-bottom: 10px; }
+.film-tabs { display: flex; flex-wrap: wrap; gap: 4px; }
+.film-ctrl { display: flex; gap: 6px; }
+.film-ctrl button { background: none; border: 1px solid rgb(138 180 240 / 0.45); border-radius: 3px; padding: 3px 12px; font-size: 0.875rem; color: var(--paper); }
+.film-ctrl button:hover { border-color: var(--paper); }
+.film-ctrl button[hidden] { display: none; }
+.film-ctrl [data-film-sound] { background: var(--cyan); border-color: var(--cyan); color: var(--abyss); font-weight: 600; }
+.film-ctrl [data-film-sound]:hover { background: var(--paper); border-color: var(--paper); }
 .film-tabs button { background: none; border: 0; border-radius: 3px; padding: 4px 12px; font-size: 0.875rem; color: var(--mist); }
 .film-tabs button:hover { color: var(--paper); }
 .film-tabs button[aria-pressed="true"] { background: var(--night-3); color: var(--paper); font-weight: 600; }
@@ -460,6 +467,7 @@ figcaption { margin-top: 10px; font-size: 0.8125rem; color: var(--haze); }
   .sec, .get-it, .foot { padding-left: 20px; padding-right: 20px; }
   .film { padding-left: 0; padding-right: 0; }
   .film video { border-radius: 0; }
+  .film-bar { padding: 0 20px; }
   figcaption { padding: 0 20px; }
   .flow-grid { grid-template-columns: minmax(0, 1fr); gap: 0; }
   .stage { top: 64px; z-index: 5; margin: 0 -20px; border-radius: 0; order: -1; }
