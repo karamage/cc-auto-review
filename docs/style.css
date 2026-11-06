@@ -428,6 +428,10 @@ figcaption { font-size: 0.8125rem; line-height: 1.4; color: var(--dim); }
 .hits li { display: grid; grid-template-columns: 70px minmax(0, 1fr); gap: 2px 12px; padding: 14px 0; border-top: 1px solid var(--hair); font-size: 0.875rem; line-height: 1.5; color: var(--mist); }
 .hits .sev { text-align: left; line-height: 1.9; }
 .hits li code { display: block; grid-column: 2; padding: 0; background: none; white-space: normal; font-size: 0.6875rem; color: var(--dim); overflow-wrap: anywhere; }
+.risk-share { margin-top: 14px; min-height: 40px; padding: 0 18px; border: 0; border-radius: 999px; background: none; box-shadow: inset 0 0 0 1px var(--hair-2); color: var(--text); font: inherit; font-size: 0.875rem; cursor: pointer; }
+.risk-share:hover { box-shadow: inset 0 0 0 1px var(--text); }
+.risk-share[hidden] { display: none; }
+.hero-try a { color: var(--text); }
 .risk-note { margin-top: clamp(32px, 6vh, 64px); color: var(--dim); font-size: 0.875rem; }
 .risk-note { padding-right: min(40%, 480px); }
 

@@ -24,7 +24,7 @@
     <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License"></a>
   </p>
 
-  <p><a href="https://karamage.github.io/cc-auto-review/ja/#download"><strong>macOS 版をダウンロード</strong></a> · <a href="https://karamage.github.io/cc-auto-review/ja/">サイト</a></p>
+  <p><a href="https://karamage.github.io/cc-auto-review/ja/#download"><strong>macOS 版をダウンロード</strong></a> · <a href="https://karamage.github.io/cc-auto-review/ja/#risk"><strong>PR をブラウザで採点する</strong></a> · <a href="https://karamage.github.io/cc-auto-review/ja/">サイト</a></p>
 
   <p><a href="README.md">English README</a></p>
 </div>
