@@ -24,7 +24,7 @@
     <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License"></a>
   </p>
 
-  <p><a href="https://karamage.github.io/cc-auto-review/ja/"><strong>サイトとダウンロード</strong></a></p>
+  <p><a href="https://karamage.github.io/cc-auto-review/ja/#download"><strong>macOS 版をダウンロード</strong></a> · <a href="https://karamage.github.io/cc-auto-review/ja/">サイト</a></p>
 
   <p><a href="README.md">English README</a></p>
 </div>
@@ -112,6 +112,10 @@
 
 ## 🚀 インストール
 
+### ダウンロード
+
+Apple シリコン版か Intel 版の **[DMG をダウンロード](https://karamage.github.io/cc-auto-review/ja/#download)** して開き、アプリを「アプリケーション」にドラッグしてください。Developer ID で署名し、Apple の公証を受けているので、そのまま開けます。過去の版は[リリースページ](https://github.com/karamage/cc-auto-review/releases)にあります。
+
 ### 必要なもの
 
 - macOS 11 以降
@@ -120,7 +124,8 @@
 
 `gh` と `claude` はログインシェルの `PATH` から探すので、Finder や Dock から起動しても動きます。
 
-### アプリをビルドする
+<details>
+<summary><strong>ソースからビルドする</strong></summary>
 
 ```bash
 git clone https://github.com/karamage/cc-auto-review.git
@@ -140,6 +145,8 @@ bun run app:build
 
 > [!IMPORTANT]
 > 手元でビルドしたアプリは署名されていません。開けないときは「システム設定 → プライバシーとセキュリティ → このまま開く」で許可してください。`bun run release:mac` で作った DMG は署名・公証済みなので、そのまま開けます。
+
+</details>
 
 ## 📖 使い方
 

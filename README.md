@@ -24,7 +24,7 @@
     <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License"></a>
   </p>
 
-  <p><a href="https://karamage.github.io/cc-auto-review/"><strong>Website and download</strong></a></p>
+  <p><a href="https://karamage.github.io/cc-auto-review/#download"><strong>Download for macOS</strong></a> · <a href="https://karamage.github.io/cc-auto-review/">Website</a></p>
 
   <p><a href="README.ja.md">日本語の README はこちら</a></p>
 </div>
@@ -112,6 +112,10 @@ When you turn on the **autopilot**, the app works through your review requests b
 
 ## 🚀 Installation
 
+### Download
+
+**[Download the DMG](https://karamage.github.io/cc-auto-review/#download)** for Apple silicon or Intel, open it, and drag the app to Applications. It is signed with a Developer ID and notarized by Apple, so it opens normally. All versions are on the [releases page](https://github.com/karamage/cc-auto-review/releases).
+
 ### Prerequisites
 
 - macOS 11+
@@ -120,7 +124,8 @@ When you turn on the **autopilot**, the app works through your review requests b
 
 The app looks for `gh` and `claude` in your login shell's `PATH`, so it works when launched from Finder or the Dock.
 
-### Build the app
+<details>
+<summary><strong>Build from source</strong></summary>
 
 ```bash
 git clone https://github.com/karamage/cc-auto-review.git
@@ -140,6 +145,8 @@ Then drag `CC Auto Review.app` from `src-tauri/target/release/bundle/macos/` int
 
 > [!IMPORTANT]
 > A locally built app is not signed. If macOS refuses to open it, allow it in **System Settings → Privacy & Security → Open Anyway**. Release DMGs built with `bun run release:mac` are signed and notarized and open normally.
+
+</details>
 
 ## 📖 Usage
 
