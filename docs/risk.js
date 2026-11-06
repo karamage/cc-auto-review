@@ -16,6 +16,8 @@
       human: "The autopilot would hand this to you and post nothing.",
       auto: "The autopilot would review it on its own.",
       pasted: "Pasted diff",
+      copied: "Link copied",
+      copyFailed: "Could not copy the link. Copy it from the address bar.",
     },
     ja: {
       badUrl: "github.com/owner/repo/pull/123 の形で PR の URL を入力してください。",
@@ -29,6 +31,8 @@
       human: "完全自動運転なら、何も投稿せずにあなたへ回します。",
       auto: "完全自動運転なら、そのままレビューを進めます。",
       pasted: "貼り付けた diff",
+      copied: "リンクをコピーしました",
+      copyFailed: "リンクをコピーできません。アドレスバーからコピーしてください。",
     },
   }[lang];
 
@@ -47,6 +51,8 @@
   const button = form.querySelector("button");
   const input = form.querySelector("input");
   const presetButtons = [...document.querySelectorAll("[data-preset]")];
+  const share = $("[data-share]");
+  const shareLabel = share.textContent;
 
   const el = (tag, cls, text) => {
     const node = document.createElement(tag);
@@ -57,7 +63,7 @@
 
   // 画面に入ってから数え上げる。そこまでの点数は pending に置く
   let seen = false;
-  let pending = 0;
+  let pending = null;
   let shown = 0;
   let raf = 0;
   const countTo = (target) => {
@@ -123,6 +129,30 @@
     for (const b of presetButtons) b.setAttribute("aria-pressed", String(b === active));
   };
 
+  // 共有できるのは公開 PR の結果だけ。貼り付けた diff の内容は URL に載せない
+  let latestRun = 0;
+  let shareTimer = 0;
+  const setAddress = (query) => {
+    history.replaceState(null, "", `${location.pathname}${query}${location.hash || "#risk"}`);
+  };
+  const resetShare = () => {
+    clearTimeout(shareTimer);
+    share.textContent = shareLabel;
+  };
+  const showLink = (pr) => {
+    setAddress(`?pr=${pr.owner}/${pr.repo}/pull/${pr.number}`);
+    resetShare();
+    share.hidden = false;
+  };
+  const showWithoutLink = () => {
+    latestRun++;
+    button.disabled = false;
+    button.textContent = T.score;
+    if (location.search) setAddress("");
+    resetShare();
+    share.hidden = true;
+  };
+
   const addLines = (lines) => lines.map((l) => `+${l}`).join("\n");
   const file = (path, added, deleted = []) =>
     `diff --git a/${path} b/${path}\n--- a/${path}\n+++ b/${path}\n@@ -1,${deleted.length} +1,${added.length} @@\n${deleted.map((l) => `-${l}`).join("\n")}${deleted.length ? "\n" : ""}${addLines(added)}\n`;
@@ -168,6 +198,7 @@
   const runPreset = (name, btn) => {
     const p = PRESETS[name];
     press(btn);
+    showWithoutLink();
     input.value = "";
     scoreDiff(p.diff, { title: p.title[lang] }, p.title[lang]);
   };
@@ -175,9 +206,11 @@
     b.addEventListener("click", () => runPreset(b.dataset.preset, b));
   }
 
+  // ?pr= はリンクを開いた人の入力ではないので、github.com の PR の形だけを受け付ける
   const parseUrl = (text) => {
-    const m = text.trim().match(/(?:github\.com\/)?([\w.-]+)\/([\w.-]+)\/pull\/(\d+)/);
-    return m ? { owner: m[1], repo: m[2], number: m[3] } : null;
+    const m = text.trim().match(/^(?:https?:\/\/)?(?:www\.)?(?:github\.com\/)?([\w-]+)\/([\w.-]+)\/pull\/(\d+)(?:[/?#].*)?$/i);
+    if (!m || m[2] === "." || m[2] === "..") return null;
+    return { owner: m[1], repo: m[2], number: m[3] };
   };
 
   const httpError = (res) => {
@@ -187,10 +220,8 @@
     return T.net;
   };
 
-  form.addEventListener("submit", async (event) => {
-    event.preventDefault();
-    const pr = parseUrl(input.value);
-    if (!pr) return fail(T.badUrl);
+  const scorePr = async (pr) => {
+    const run = ++latestRun;
     error.textContent = "";
     button.disabled = true;
     button.textContent = T.scoring;
@@ -200,12 +231,14 @@
         fetch(api, { headers: { Accept: "application/vnd.github+json" } }),
         fetch(api, { headers: { Accept: "application/vnd.github.diff" } }),
       ]);
+      if (run !== latestRun) return;
       if (!info.ok) return fail(httpError(info));
       if (!patch.ok) return fail(httpError(patch));
-      const meta = await info.json();
+      const [meta, diff] = await Promise.all([info.json(), patch.text()]);
+      if (run !== latestRun) return;
       press(null);
       scoreDiff(
-        await patch.text(),
+        diff,
         {
           title: meta.title ?? "",
           body: meta.body ?? "",
@@ -214,11 +247,34 @@
         },
         `${pr.owner}/${pr.repo}#${pr.number}`,
       );
+      showLink(pr);
     } catch {
-      fail(T.net);
+      if (run === latestRun) fail(T.net);
     } finally {
-      button.disabled = false;
-      button.textContent = T.score;
+      if (run === latestRun) {
+        button.disabled = false;
+        button.textContent = T.score;
+      }
+    }
+  };
+
+  form.addEventListener("submit", (event) => {
+    event.preventDefault();
+    const pr = parseUrl(input.value);
+    if (!pr) return fail(T.badUrl);
+    scorePr(pr);
+  });
+
+  share.addEventListener("click", async () => {
+    try {
+      await navigator.clipboard.writeText(location.href);
+      share.textContent = T.copied;
+      clearTimeout(shareTimer);
+      shareTimer = setTimeout(() => {
+        share.textContent = shareLabel;
+      }, 2000);
+    } catch {
+      fail(T.copyFailed);
     }
   });
 
@@ -227,14 +283,26 @@
     const text = $("[data-paste]").value;
     if (!/^(diff --git |@@ |--- )/m.test(text)) return fail(T.empty);
     press(null);
+    showWithoutLink();
     scoreDiff(text, {}, T.pasted);
   });
 
-  runPreset("feature", presetButtons.find((b) => b.dataset.preset === "feature"));
+  const runDefaultPreset = () => runPreset("feature", presetButtons.find((b) => b.dataset.preset === "feature"));
+  const sharedPr = new URLSearchParams(location.search).get("pr");
+  const shared = sharedPr === null ? null : parseUrl(sharedPr);
+  if (shared) {
+    input.value = `https://github.com/${shared.owner}/${shared.repo}/pull/${shared.number}`;
+    num.textContent = "–";
+    scorePr(shared);
+  } else {
+    runDefaultPreset();
+    if (sharedPr !== null) fail(T.badUrl);
+  }
   new IntersectionObserver(([e], io) => {
     if (!e.isIntersecting) return;
     io.disconnect();
     seen = true;
+    if (pending === null) return;
     countTo(pending);
     dial.style.setProperty("--score", pending);
   }, { threshold: 0.3 }).observe(num);
