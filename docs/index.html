@@ -314,6 +314,7 @@
   <section class="sec" id="faq">
     <h2>Questions.</h2>
     <div class="faq">
+        <details><summary>How is this different from connecting Claude to GitHub through MCP?</summary><p>MCP gives Claude access to GitHub while you build. CC Auto Review is for the review side: it lists the PRs waiting on you, shows Claude's findings beside the diff to accept, reject or edit before posting, and scores each PR's risk. The autopilot can work through your review requests and hand the risky ones to you. By default, Claude runs with read-only GitHub access pinned to that PR, so instructions hidden in a PR have less to work with.</p></details>
         <details><summary>Do I need an API key?</summary><p>No setup in the app. It runs your installed <code>claude</code> as you have configured it and stores no Claude credentials. GitHub access goes through your <code>gh</code> login.</p></details>
         <details><summary>What does it cost?</summary><p>The app is free and MIT licensed. Reviews use your Claude Code plan or API account, and the review screen shows your usage.</p></details>
         <details><summary>Does it post anything without asking?</summary><p>Not unless you turn on the autopilot. In a normal review, nothing reaches GitHub until you press post.</p></details>

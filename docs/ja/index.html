@@ -314,6 +314,7 @@
   <section class="sec" id="faq">
     <h2>よくある質問。</h2>
     <div class="faq">
+        <details><summary>Claude を MCP で GitHub につなぐのと何が違いますか？</summary><p>MCP は、開発中の Claude に GitHub へのアクセスを与えるものです。CC Auto Review はレビューのためのアプリです。あなたのレビュー待ちの PR を一覧にし、Claude の指摘を diff の横に並べて、投稿前に採用・却下・編集できるようにします。PR ごとのリスクも点数で示します。完全自動運転では、レビュー依頼を順に処理し、リスクの高い PR をあなたに回します。また、Claude の GitHub アクセスは既定で読み取りのみで、対象の PR に固定されるので、PR に隠された指示の影響を抑えられます。</p></details>
         <details><summary>API キーは必要ですか？</summary><p>アプリでの設定は要りません。インストール済みの <code>claude</code> をあなたの設定のまま実行し、Claude の認証情報は保存しません。GitHub へのアクセスは <code>gh</code> のログインを使います。</p></details>
         <details><summary>費用はかかりますか？</summary><p>アプリは無料で、MIT ライセンスです。レビューにはあなたの Claude Code のプランか API アカウントを使います。使用量はレビュー画面で確認できます。</p></details>
         <details><summary>勝手に投稿することはありますか？</summary><p>完全自動運転をオンにしない限り、ありません。通常のレビューでは、投稿ボタンを押すまで GitHub には何も届きません。</p></details>
