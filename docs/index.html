@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CC Auto Review: review GitHub pull requests with your local Claude Code</title>
 <meta name="description" content="A macOS app that reviews GitHub pull requests with the Claude Code you already have. AI findings beside the diff, a 0–100 risk score, and an optional autopilot that hands risky PRs to you.">
-<meta name="theme-color" content="#0b2142">
+<meta name="theme-color" content="#04050f">
 <link rel="canonical" href="https://karamage.github.io/cc-auto-review/">
 <link rel="alternate" hreflang="en" href="https://karamage.github.io/cc-auto-review/">
 <link rel="alternate" hreflang="ja" href="https://karamage.github.io/cc-auto-review/ja/">
@@ -21,11 +21,14 @@
 <link rel="icon" href="icon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Martian+Mono:wdth,wght@75..112.5,300..800&family=Schibsted+Grotesk:wght@400;500;600&display=swap">
-<link rel="stylesheet" href="style.css?v=2">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Martian+Mono:wdth,wght@75..112.5,300..600&family=Newsreader:opsz,wght@6..72,200..500&family=Schibsted+Grotesk:wght@400;500;600&display=swap">
+<link rel="preload" as="image" href="media/scene-mountain.webp" fetchpriority="high">
+<link rel="stylesheet" href="style.css?v=3">
+<script>if(!matchMedia("(prefers-reduced-motion: reduce)").matches)document.documentElement.classList.add("motion")</script>
 <script src="engine.js?v=1" defer></script>
-<script src="risk.js?v=1" defer></script>
-<script src="site.js?v=2" defer></script>
+<script src="risk.js?v=2" defer></script>
+<script src="site.js?v=3" defer></script>
+<script src="scene.js?v=1" defer></script>
 <script src="download.js?v=1" defer></script>
 </head>
 <body>
@@ -45,71 +48,73 @@
 
 <main id="main">
   <div class="hero">
-    <script>if(!matchMedia("(prefers-reduced-motion: reduce)").matches)document.currentScript.parentNode.dataset.stage="read"</script>
-    <canvas class="hero-map" aria-hidden="true"></canvas>
-    <p class="hunk mono" aria-hidden="true">@@ -41 +41 @@ how you review pull requests</p>
-    <div class="line del">
-      <span class="scan" aria-hidden="true"></span>
-      <span class="no" aria-hidden="true">41</span>
-      <span class="sign" aria-hidden="true">−</span>
-      <span class="text"><span class="strike">Read every pull request yourself.</span></span>
-    </div>
-    <div class="comment-wrap">
-      <aside class="comment" aria-label="Sample review comment on the headline">
-        <div class="comment-head"><span class="sev">should</span><p class="comment-title">Your attention goes to the wrong PRs</p></div>
-        <dl>
-          <dt>When it happens</dt><dd>Twenty small PRs arrive ahead of the one that touches auth.</dd>
-          <dt>Impact</dt><dd>The risky one waits its turn, and you read it tired.</dd>
-        </dl>
-        <div class="comment-actions">
-          <button type="button" class="mini" data-act="accept" aria-pressed="true">Accept</button>
-          <button type="button" class="mini" data-act="reject" aria-pressed="false">Reject</button>
-          <span class="comment-status" role="status">Accepted</span>
-        </div>
-      </aside>
-    </div>
-    <div class="line add">
-      <span class="no" aria-hidden="true">41</span>
-      <span class="sign" aria-hidden="true">+</span>
-      <h1 class="text">Read only the ones that need you.</h1>
-    </div>
-    <div class="hero-foot">
-      <div>
-        <p class="lede"><strong>CC Auto Review</strong> is a macOS app that reviews GitHub pull requests with the Claude Code you already have. Findings sit beside the diff, every PR gets a risk score from 0 to 100, and you decide what gets posted.</p>
+    <script>if(document.documentElement.classList.contains("motion"))document.currentScript.parentNode.dataset.stage="read"</script>
+    <div class="hero-pin">
+      <div class="plates" aria-hidden="true">
+        <img class="plate plate-a" src="media/scene-mountain.webp" alt="" width="1536" height="1024" fetchpriority="high">
+        <img class="plate plate-b" data-src="media/scene-cleared.webp" alt="" width="1536" height="1024">
+        <canvas class="scene-gl"></canvas>
+        <span class="plain-ring"></span>
+        <span class="shade"></span>
       </div>
-      <div>
-        <div class="cta">
+      <div class="hero-copy">
+        <p class="was"><span class="strike">Read every pull request yourself.</span></p>
+        <h1 class="now">Read only the ones that need you.</h1>
+        <aside class="note" aria-label="Sample review comment on the headline">
+          <span class="sev">should</span><span class="note-title">Your attention goes to the wrong PRs</span>
+          <span class="note-actions">
+            <button type="button" class="mini" data-act="accept" aria-pressed="true">Accept</button>
+            <button type="button" class="mini" data-act="reject" aria-pressed="false">Reject</button>
+          </span>
+          <span class="comment-status" role="status">Accepted</span>
+        </aside>
+      </div>
+      <div class="hero-acts">
+        <p class="act act2">Twenty small PRs arrive ahead of the one that touches auth. The risky one waits its turn, and you read it tired.</p>
+        <p class="act act3">The app reviews the rest. These three need you.</p>
+      </div>
+      <div class="hero-foot">
+        <p class="lede"><strong>CC Auto Review</strong> is a macOS app that reviews GitHub pull requests with the Claude Code you already have. Findings sit beside the diff, every PR gets a risk score from 0 to 100, and you decide what gets posted.</p>
+        <div class="hero-get">
+          <div class="cta">
           <a class="btn btn-primary" data-arch="arm64" href="https://github.com/karamage/cc-auto-review/releases/latest">Download for Apple silicon<small>M1 and later, <span data-size>DMG</span></small></a>
           <a class="btn btn-ghost" data-arch="x64" href="https://github.com/karamage/cc-auto-review/releases/latest">Download for Intel<small><span data-size>DMG</span></small></a>
         </div>
-        <p class="meta"><span data-version>Latest release</span>, macOS 11 or later. Signed and notarized. Free and open source (MIT).</p>
+          <p class="meta"><span data-version>Latest release</span>, macOS 11 or later. Signed and notarized. Free and open source (MIT).</p>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="gutter" aria-hidden="true"></div>
-
   <section class="sec film" aria-label="The film and the app">
-    <figure>
+    <figure class="theatre">
+      <div class="screen">
+        <img class="screen-glow" src="media/film-en.jpg" alt="" aria-hidden="true" loading="lazy">
+        <video src="media/film-en.mp4" poster="media/film-en.jpg" width="1920" height="1080" muted playsinline preload="none" aria-label="A 37-second film. A person faces a mountain of pull requests. The app scores a PR, Claude finds a SQL injection, the score rises above 50, and the autopilot hands risky PRs to a human. The mountain clears, leaving only the PRs that need the person."></video>
+        <button type="button" class="screen-play" data-film-big hidden></button>
+        <div class="hud">
+          <button type="button" class="hud-btn" data-film-play aria-label="Play"></button>
+          <input class="hud-seek" type="range" min="0" max="1000" value="0" step="1" data-film-seek aria-label="Seek">
+          <span class="hud-time" data-film-time>0:00</span>
+          <button type="button" class="hud-sound" data-film-sound>Play with sound</button>
+          <button type="button" class="hud-btn hud-full" data-film-full aria-label="Full screen"></button>
+        </div>
+      </div>
       <div class="film-bar">
         <div class="film-tabs" role="group" aria-label="The film and the app">
           <button type="button" aria-pressed="true" data-film="film" data-src="media/film-en" data-w="1920" data-h="1080" data-caption="What CC Auto Review does, in 37 seconds. Screens use sample data." data-alt="A 37-second film. A person faces a mountain of pull requests. The app scores a PR, Claude finds a SQL injection, the score rises above 50, and the autopilot hands risky PRs to a human. The mountain clears, leaving only the PRs that need the person.">The film, 37 s</button>
           <button type="button" aria-pressed="false" data-film="review" data-w="1320" data-h="825" data-src="media/review-en" data-caption="Open a PR, run the review, accept a finding. Sample data." data-alt="Opening a pull request, running the AI review, jumping to a finding and accepting it.">A review</button>
           <button type="button" aria-pressed="false" data-film="autopilot" data-w="1320" data-h="825" data-src="media/autopilot-en" data-caption="Turn on the autopilot. Five PRs are reviewed, and the risky one is handed to you. Sample data." data-alt="Turning on the autopilot: it reviews five PRs, approves or comments, and hands the risky one to a human.">The autopilot</button>
         </div>
-        <div class="film-ctrl">
-          <button type="button" data-film-play hidden></button>
-          <button type="button" data-film-sound hidden></button>
-        </div>
+        <figcaption data-film-caption>What CC Auto Review does, in 37 seconds. Screens use sample data.</figcaption>
       </div>
-      <video src="media/film-en.mp4" poster="media/film-en.jpg" width="1920" height="1080" muted playsinline preload="none" aria-label="A 37-second film. A person faces a mountain of pull requests. The app scores a PR, Claude finds a SQL injection, the score rises above 50, and the autopilot hands risky PRs to a human. The mountain clears, leaving only the PRs that need the person."></video>
-      <figcaption data-film-caption>What CC Auto Review does, in 37 seconds. Screens use sample data.</figcaption>
     </figure>
   </section>
 
   <section class="sec" id="flow">
-    <a class="hunk" href="#flow">@@ how a review runs @@</a>
-    <h2>One pull request, from open to posted.</h2>
+    <header class="sec-head">
+      <h2>One pull request, from open to posted.</h2>
+    </header>
     <div class="flow-grid">
       <ol class="steps">
           <li class="step" data-step="1" data-score="42" data-score-label="MEDIUM, from the diff" data-state-text="AI has not run yet">
@@ -173,7 +178,8 @@
   </section>
 
   <section class="sec risk" id="risk">
-    <a class="hunk" href="#risk">@@ risk score @@</a>
+    <div class="risk-top">
+    <div class="risk-ask">
     <h2>Try the score on a real pull request.</h2>
     <p class="intro">Paste any public PR. This is the baseline scoring code from the app, running in your browser. The diff comes straight from GitHub's public API and goes nowhere else.</p>
     <form class="risk-form" data-risk-form>
@@ -187,23 +193,36 @@
       <button type="button" data-paste-score>Score it</button>
     </details>
     <p class="risk-error" data-risk-error role="alert"></p>
-    <div class="board">
-      <div>
-        <span class="score-num" data-score-num>0</span>
-        <p class="score-line"><span class="score-level" data-score-level></span><span class="score-source" data-score-source></span></p>
-        <p class="verdict" role="status" data-verdict></p>
-        <div class="scale" aria-hidden="true"><i></i><i></i><i></i><i></i><span class="scale-mark" data-scale-mark style="left:0"></span><span class="scale-threshold">Above 50 goes to a human</span></div>
-        <ul class="hits" data-hits></ul>
+    </div>
+    <div class="dial" data-dial>
+      <div class="dial-face">
+        <svg viewBox="0 0 400 400" aria-hidden="true">
+          <circle class="dial-track" cx="200" cy="200" r="186" pathLength="100"/>
+          <circle class="dial-arc" cx="200" cy="200" r="186" pathLength="100"/>
+          <line class="dial-tick" x1="200" y1="372" x2="200" y2="400"/>
+        </svg>
+        <div class="dial-read">
+          <span class="score-num" data-score-num>0</span>
+          <span class="score-level" data-score-level></span>
+        </div>
       </div>
+      <p class="dial-threshold">Above 50 goes to a human</p>
+      <p class="score-source" data-score-source></p>
+      <p class="verdict" role="status" data-verdict></p>
+    </div>
+    </div>
+    <div class="board">
       <ul class="factors" data-factors></ul>
+      <ul class="hits" data-hits></ul>
     </div>
     <p class="risk-note">This is the baseline, before any AI runs. In the app, Claude then adjusts it by up to ±20 and can escalate. A score is a way to decide who reads a PR first. It does not tell you the code is correct.</p>
   </section>
 
   <section class="sec" id="autopilot">
-    <a class="hunk" href="#autopilot">@@ autopilot, optional @@</a>
-    <h2>Let it clear the queue. It keeps the risky ones for you.</h2>
+    <header class="sec-head">
+      <h2>Let it clear the queue.<br> It keeps the risky ones for you.</h2>
     <p class="intro">Turn it on and the app works through your review requests on an interval: it approves or comments, waits for the author, and reviews again. Anything risky comes back to you with nothing posted.</p>
+    </header>
     <div class="pilot-grid">
       <div>
         <div class="queue-head">
@@ -248,19 +267,30 @@
   </section>
 
   <section class="sec" id="boundary">
-    <a class="hunk" href="#boundary">@@ what claude can touch @@</a>
-    <h2>A pull request can't change the rules it's reviewed by.</h2>
+    <header class="sec-head">
+      <h2>A pull request can't change the rules it's reviewed by.</h2>
     <p class="intro">Text in a PR can be written to steer a reviewer, so every review runs inside a short list of permissions.</p>
-    <ul class="perm">
+    </header>
+    <div class="bound">
+      <div class="bound-in">
+        <h3>What Claude can do</h3>
+        <ul class="perm">
         <li class="y"><span class="s" aria-label="Allowed">+</span><span class="v">read</span><span class="d">the PR's changed files and diff, in a temporary directory</span></li>
         <li class="y"><span class="s" aria-label="Allowed">+</span><span class="v">read</span><span class="d">CLAUDE.md, AGENTS.md and REVIEW.md, from the base branch</span></li>
         <li class="y"><span class="s" aria-label="Allowed">+</span><span class="v">fetch</span><span class="d">other files through remote-read: GET only, pinned to this PR's repository and commits</span></li>
         <li class="y"><span class="s" aria-label="Allowed">+</span><span class="v">write</span><span class="d">one result file</span></li>
+        </ul>
+      </div>
+      <div class="bound-out">
+        <h3>What it can't</h3>
+        <ul class="perm">
         <li class="n"><span class="s" aria-label="Not allowed">−</span><span class="v">read</span><span class="d">anything else on your Mac</span></li>
         <li class="n"><span class="s" aria-label="Not allowed">−</span><span class="v">run</span><span class="d">git, arbitrary gh commands, other shell commands</span></li>
         <li class="n"><span class="s" aria-label="Not allowed">−</span><span class="v">load</span><span class="d">.claude/, .mcp.json and CLAUDE.local.md from the PR</span></li>
         <li class="n"><span class="s" aria-label="Not allowed">−</span><span class="v">send</span><span class="d">usage data. The app has no telemetry</span></li>
-    </ul>
+        </ul>
+      </div>
+    </div>
     <div class="perm-notes">
       <div><h3>What this doesn't cover</h3><p>Allow rules in your own Claude Code settings and a profile's extra tools still apply, so keep them narrow. PR text can still try to influence the review itself, so read what the app posts.</p></div>
       <div><h3>Where your code goes</h3><p>The app talks to GitHub through <code>gh</code> and to Claude through <code>claude</code>, as you have them configured. Its server listens on <code>127.0.0.1</code> and only accepts requests carrying a token made at launch.</p></div>
@@ -268,8 +298,9 @@
   </section>
 
   <section class="sec" id="more">
-    <a class="hunk" href="#more">@@ also in the app @@</a>
-    <h2>The rest of what it does.</h2>
+    <header class="sec-head">
+      <h2>The rest of what it does.</h2>
+    </header>
     <ul class="changes">
         <li><span class="s" aria-hidden="true">+</span><div><h3>Review profiles</h3><p>Set perspectives, team guidelines, things not to report and a finding limit. Ships with Standard, Security focused and Quick. Preview shows exactly what Claude receives.</p></div></li>
         <li><span class="s" aria-hidden="true">+</span><div><h3>Earlier comments re-checked</h3><p>Prior review comments are marked fixed, unfixed or unverified against the current code. An author saying “fixed it” doesn't count as evidence.</p></div></li>
@@ -281,7 +312,6 @@
   </section>
 
   <section class="sec" id="faq">
-    <a class="hunk" href="#faq">@@ questions @@</a>
     <h2>Questions.</h2>
     <div class="faq">
         <details><summary>Do I need an API key?</summary><p>No setup in the app. It runs your installed <code>claude</code> as you have configured it and stores no Claude credentials. GitHub access goes through your <code>gh</code> login.</p></details>
@@ -294,18 +324,20 @@
   </section>
 
   <section class="get-it" id="download">
-    <a class="hunk" href="#download">@@ download @@</a>
+    <img class="get-plate" src="media/scene-cleared.webp" alt="Three glowing pull requests left above a cleared plain, with one person standing below them." width="1536" height="1024" loading="lazy">
+    <div class="get-top">
     <h2>Get CC Auto Review.</h2>
     <div class="cta">
       <a class="btn btn-primary" data-arch="arm64" href="https://github.com/karamage/cc-auto-review/releases/latest">Download for Apple silicon<small>M1 and later, <span data-size>DMG</span></small></a>
       <a class="btn btn-ghost" data-arch="x64" href="https://github.com/karamage/cc-auto-review/releases/latest">Download for Intel<small><span data-size>DMG</span></small></a>
     </div>
     <p class="meta"><span data-version>Latest release</span>. <a href="https://github.com/karamage/cc-auto-review/releases">All releases</a>.</p>
-    <div class="req">
-      <div><h3>Open the DMG</h3><p>Drag the app to Applications. It is signed with a Developer ID and notarized by Apple, and needs macOS 11 or later.</p></div>
-      <div><h3>Install GitHub CLI</h3><p>Get <a href="https://cli.github.com">gh</a>, then sign in with <code>gh auth login</code>.</p></div>
-      <div><h3>Install Claude Code</h3><p>Get <a href="https://claude.com/claude-code">Claude Code</a> 2.1.314 or later. Older versions are refused because they cannot restrict file access.</p></div>
     </div>
+    <ol class="req">
+      <li><h3>Open the DMG</h3><p>Drag the app to Applications. It is signed with a Developer ID and notarized by Apple, and needs macOS 11 or later.</p></li>
+      <li><h3>Install GitHub CLI</h3><p>Get <a href="https://cli.github.com">gh</a>, then sign in with <code>gh auth login</code>.</p></li>
+      <li><h3>Install Claude Code</h3><p>Get <a href="https://claude.com/claude-code">Claude Code</a> 2.1.314 or later. Older versions are refused because they cannot restrict file access.</p></li>
+    </ol>
     <details class="source">
       <summary>Build from source</summary>
       <pre>git clone https://github.com/karamage/cc-auto-review.git

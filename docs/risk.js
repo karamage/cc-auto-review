@@ -32,7 +32,7 @@
     },
   }[lang];
 
-  const LEVEL_COLOR = { LOW: "--mint", MEDIUM: "--amber", HIGH: "#ff9d7a", CRITICAL: "--pink" };
+  const LEVEL_COLOR = { LOW: "--mint", MEDIUM: "--amber", HIGH: "--coral", CRITICAL: "--pink" };
   const SEV = { critical: "blocker", high: "blocker", medium: "", low: "question" };
 
   const $ = (sel) => document.querySelector(sel);
@@ -40,7 +40,7 @@
   const level = $("[data-score-level]");
   const source = $("[data-score-source]");
   const verdict = $("[data-verdict]");
-  const mark = $("[data-scale-mark]");
+  const dial = $("[data-dial]");
   const factors = $("[data-factors]");
   const hits = $("[data-hits]");
   const error = $("[data-risk-error]");
@@ -79,15 +79,13 @@
   };
 
   const render = (risk, label) => {
-    const c = LEVEL_COLOR[risk.level];
-    num.style.color = c.startsWith("--") ? `var(${c})` : c;
+    dial.style.setProperty("--tone", `var(${LEVEL_COLOR[risk.level]})`);
     pending = risk.score;
     if (seen) countTo(risk.score);
     level.textContent = risk.level;
-    level.style.color = num.style.color;
     source.textContent = label;
     verdict.textContent = risk.needsHuman ? T.human : T.auto;
-    mark.style.left = `calc(${risk.score}% - 1.5px)`;
+    if (seen) dial.style.setProperty("--score", risk.score);
     factors.replaceChildren(
       ...risk.factors.map((f) => {
         const row = el("li", "factor");
@@ -238,5 +236,6 @@
     io.disconnect();
     seen = true;
     countTo(pending);
+    dial.style.setProperty("--score", pending);
   }, { threshold: 0.3 }).observe(num);
 })();

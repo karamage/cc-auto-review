@@ -41,100 +41,33 @@
     }
   }
 
-  // ---- ヒーローの列: PR の差分がスキャン線を通り過ぎる ----
-  const canvas = document.querySelector(".hero-map");
-  if (canvas && getComputedStyle(canvas).display !== "none") {
-    const ctx = canvas.getContext("2d");
-    const dpr = Math.min(devicePixelRatio || 1, 2);
-    const ROW = 5;
-    let width = 0;
-    let height = 0;
-    // 種付きの乱数で、毎回同じ見た目の列を作る
-    let seed = 482;
-    const rnd = () => {
-      seed = (seed * 1664525 + 1013904223) % 4294967296;
-      return seed / 4294967296;
+  // ---- 上部: ヒーローを過ぎたら背景を付ける ----
+  const top = document.querySelector(".top");
+  if (top) {
+    const heroEl = document.querySelector(".hero");
+    const update = () => {
+      const end = heroEl ? heroEl.offsetHeight - innerHeight * 0.5 : 40;
+      top.classList.toggle("solid", scrollY > end);
     };
-    const rows = [];
-    while (rows.length < 900) {
-      const risky = rnd() < 0.16;
-      const len = 26 + Math.floor(rnd() * 70);
-      let indent = 0;
-      for (let i = 0; i < len; i += 1) {
-        if (rnd() < 0.25) indent = Math.floor(rnd() * 4);
-        const roll = rnd();
-        const kind = risky && roll < 0.42 ? "del" : roll < 0.3 ? "add" : roll < 0.38 ? "del" : "ctx";
-        rows.push({ kind, x: indent * 0.05, w: rnd() < 0.08 ? 0 : 0.1 + rnd() * 0.62, risky });
-      }
-      for (let i = 0; i < 4; i += 1) rows.push({ kind: "gap", x: 0, w: 0, risky: false });
-    }
-    const color = { ctx: "138,180,240", add: "61,255,176", del: "255,123,156" };
-    const resize = () => {
-      const box = canvas.getBoundingClientRect();
-      width = box.width;
-      height = box.height;
-      canvas.width = width * dpr;
-      canvas.height = height * dpr;
-    };
-    const draw = (t) => {
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.clearRect(0, 0, width, height);
-      const offset = t * 0.016;
-      const first = Math.floor(offset / ROW);
-      const scanY = height * 0.42;
-      for (let i = 0; i <= height / ROW + 1; i += 1) {
-        const row = rows[(first + i) % rows.length];
-        if (row.w === 0) continue;
-        const y = i * ROW - (offset % ROW);
-        const dist = Math.abs(y - scanY);
-        // スキャン線を過ぎた行（上）は確定した色、これからの行（下）は沈める
-        const reviewed = y < scanY;
-        const near = Math.max(0, 1 - dist / 46);
-        let alpha = reviewed ? (row.kind === "ctx" ? 0.2 : 0.62) : 0.13;
-        if (!reviewed && row.kind !== "ctx") alpha = 0.2;
-        alpha = Math.min(1, alpha + near * 0.6);
-        // 右端に向かって消して、見出しの帯と喧嘩させない
-        ctx.fillStyle = `rgba(${color[row.kind]},${alpha})`;
-        ctx.fillRect(width * (0.1 + row.x), y, width * row.w * 0.86, ROW - 2);
-        if (reviewed && row.risky) {
-          ctx.fillStyle = "rgba(255,123,156,0.85)";
-          ctx.fillRect(width * 0.04, y, 3, ROW);
-        }
-      }
-      ctx.fillStyle = "rgba(46,233,255,0.95)";
-      ctx.fillRect(0, scanY, width, 1.5);
-      const glow = ctx.createLinearGradient(0, scanY - 40, 0, scanY);
-      glow.addColorStop(0, "rgba(46,233,255,0)");
-      glow.addColorStop(1, "rgba(46,233,255,0.14)");
-      ctx.fillStyle = glow;
-      ctx.fillRect(0, scanY - 40, width, 40);
-    };
-    resize();
-    addEventListener("resize", () => { resize(); draw(performance.now()); });
-    if (reduced) {
-      draw(90000);
-    } else {
-      let visible = true;
-      new IntersectionObserver(([e]) => {
-        visible = e.isIntersecting;
-        if (visible) requestAnimationFrame(loop);
-      }).observe(canvas);
-      const loop = (t) => {
-        if (!visible) return;
-        draw(t + 90000);
-        requestAnimationFrame(loop);
-      };
-      requestAnimationFrame(loop);
-    }
+    update();
+    addEventListener("scroll", update, { passive: true });
+    addEventListener("resize", update);
   }
 
   // ---- 動画: 見えたら無音で再生し、音は操作で出す ----
-  const film = document.querySelector(".film video");
+  const film = document.querySelector(".screen video");
   if (film) {
+    const screen = film.closest(".screen");
+    const theatre = film.closest(".theatre");
+    const glow = screen.querySelector(".screen-glow");
     const buttons = [...document.querySelectorAll("[data-film]")];
     const caption = document.querySelector("[data-film-caption]");
     const playBtn = document.querySelector("[data-film-play]");
+    const bigBtn = document.querySelector("[data-film-big]");
     const soundBtn = document.querySelector("[data-film-sound]");
+    const fullBtn = document.querySelector("[data-film-full]");
+    const seek = document.querySelector("[data-film-seek]");
+    const time = document.querySelector("[data-film-time]");
     const L = {
       en: { play: "Play", pause: "Pause", replay: "Replay", sound: "Play with sound", mute: "Mute" },
       ja: { play: "再生", pause: "一時停止", replay: "もう一度見る", sound: "音ありで再生", mute: "消音" },
@@ -147,33 +80,27 @@
     // 狭い画面と通信節約の設定では軽い版を使う
     const srcOf = (base) =>
       kind === "film" && (innerWidth < 900 || saveData) ? `${base}-720.mp4` : `${base}.mp4`;
+    const clock = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, "0")}`;
     const refresh = () => {
-      playBtn.hidden = false;
+      const label = film.ended ? L.replay : film.paused ? L.play : L.pause;
+      playBtn.setAttribute("aria-label", label);
+      playBtn.dataset.state = film.paused || film.ended ? "play" : "pause";
+      bigBtn.setAttribute("aria-label", label);
+      bigBtn.hidden = !(film.paused || film.ended);
+      screen.dataset.playing = String(!film.paused && !film.ended);
       soundBtn.hidden = kind !== "film";
-      playBtn.textContent = film.ended ? L.replay : film.paused ? L.play : L.pause;
       soundBtn.textContent = film.muted ? L.sound : L.mute;
     };
-    const tryPlay = () => film.play().catch(() => {}).finally(refresh);
-    const select = (button) => {
-      for (const b of buttons) b.setAttribute("aria-pressed", String(b === button));
-      kind = button.dataset.film;
-      film.loop = kind !== "film";
-      film.muted = true;
-      film.width = Number(button.dataset.w);
-      film.height = Number(button.dataset.h);
-      film.poster = `${button.dataset.src}.jpg`;
-      film.src = srcOf(button.dataset.src);
-      film.setAttribute("aria-label", button.dataset.alt);
-      caption.textContent = button.dataset.caption;
+    const paintTime = () => {
+      const total = film.duration || 0;
+      const ratio = total ? film.currentTime / total : 0;
+      seek.value = String(Math.round(ratio * 1000));
+      seek.style.setProperty("--v", `${ratio * 100}%`);
+      seek.setAttribute("aria-valuetext", clock(film.currentTime));
+      time.textContent = total ? `${clock(film.currentTime)} / ${clock(total)}` : "0:00";
     };
-    for (const button of buttons) {
-      button.addEventListener("click", () => {
-        select(button);
-        userPaused = false;
-        tryPlay();
-      });
-    }
-    playBtn.addEventListener("click", () => {
+    const tryPlay = () => film.play().catch(() => {}).finally(refresh);
+    const toggle = () => {
       if (film.paused || film.ended) {
         userPaused = false;
         if (film.ended) film.currentTime = 0;
@@ -182,7 +109,32 @@
         userPaused = true;
         film.pause();
       }
-    });
+    };
+    const select = (button) => {
+      for (const b of buttons) b.setAttribute("aria-pressed", String(b === button));
+      kind = button.dataset.film;
+      film.loop = kind !== "film";
+      film.muted = true;
+      film.width = Number(button.dataset.w);
+      film.height = Number(button.dataset.h);
+      theatre.style.setProperty("--ar", String(Number(button.dataset.w) / Number(button.dataset.h)));
+      film.poster = `${button.dataset.src}.jpg`;
+      glow.src = `${button.dataset.src}.jpg`;
+      film.src = srcOf(button.dataset.src);
+      film.setAttribute("aria-label", button.dataset.alt);
+      caption.textContent = button.dataset.caption;
+      paintTime();
+    };
+    for (const button of buttons) {
+      button.addEventListener("click", () => {
+        select(button);
+        userPaused = false;
+        tryPlay();
+      });
+    }
+    playBtn.addEventListener("click", toggle);
+    bigBtn.addEventListener("click", toggle);
+    film.addEventListener("click", toggle);
     soundBtn.addEventListener("click", () => {
       // 音は物語に合わせてあるので、初めて音を出すときは頭から見せる
       if (film.muted) film.currentTime = 0;
@@ -190,8 +142,20 @@
       userPaused = false;
       tryPlay();
     });
+    seek.addEventListener("input", () => {
+      if (film.duration) film.currentTime = (Number(seek.value) / 1000) * film.duration;
+      paintTime();
+    });
+    fullBtn.addEventListener("click", () => {
+      if (document.fullscreenElement) document.exitFullscreen();
+      else if (screen.requestFullscreen) screen.requestFullscreen();
+      else film.webkitEnterFullscreen?.();
+    });
     for (const event of ["play", "pause", "ended", "volumechange"]) {
       film.addEventListener(event, refresh);
+    }
+    for (const event of ["timeupdate", "loadedmetadata", "seeked"]) {
+      film.addEventListener(event, paintTime);
     }
     select(buttons[0]);
     refresh();
@@ -203,22 +167,6 @@
       },
       { threshold: 0.35 },
     ).observe(film);
-  }
-
-  // ---- 行番号: 本文の高さまで続ける ----
-  const gutter = document.querySelector(".gutter");
-  if (gutter) {
-    const fill = () => {
-      const top = hero ? hero.offsetTop + hero.offsetHeight : 0;
-      const end = document.querySelector(".get-it")?.offsetTop ?? document.body.scrollHeight;
-      gutter.style.top = `${top}px`;
-      gutter.style.height = `${end - top}px`;
-      const count = Math.ceil((end - top) / 28);
-      if (gutter.childElementCount === count) return;
-      gutter.textContent = Array.from({ length: count }, (_, i) => i + 45).join("\n");
-    };
-    fill();
-    new ResizeObserver(fill).observe(document.body);
   }
 
   // ---- 流れ: 読んでいる段落に合わせて舞台を進める ----
@@ -250,7 +198,11 @@
       raf = requestAnimationFrame(tick);
     };
     const set = (el) => {
-      steps.forEach((s) => s.classList.toggle("on", s === el));
+      const at = steps.indexOf(el);
+      steps.forEach((s, i) => {
+        s.classList.toggle("on", s === el);
+        s.classList.toggle("done", i < at);
+      });
       stage.dataset.step = el.dataset.step;
       moveTo(Number(el.dataset.score));
       label.textContent = el.dataset.scoreLabel;

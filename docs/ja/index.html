@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CC Auto Review: 手元の Claude Code で GitHub の PR をレビューする</title>
 <meta name="description" content="手元の Claude Code で GitHub の Pull Request をレビューする macOS アプリ。diff の横に AI の指摘を並べ、リスクを 0〜100 点で示し、完全自動運転ではリスクのある PR だけを人に回します。">
-<meta name="theme-color" content="#0b2142">
+<meta name="theme-color" content="#04050f">
 <link rel="canonical" href="https://karamage.github.io/cc-auto-review/ja/">
 <link rel="alternate" hreflang="en" href="https://karamage.github.io/cc-auto-review/">
 <link rel="alternate" hreflang="ja" href="https://karamage.github.io/cc-auto-review/ja/">
@@ -21,11 +21,14 @@
 <link rel="icon" href="../icon.svg" type="image/svg+xml">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Martian+Mono:wdth,wght@75..112.5,300..800&family=M+PLUS+1+Code:wght@400;500;700&family=IBM+Plex+Sans+JP:wght@400;600&display=swap">
-<link rel="stylesheet" href="../style.css?v=2">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Martian+Mono:wdth,wght@75..112.5,300..600&family=Newsreader:opsz,wght@6..72,200&family=Shippori+Mincho:wght@500;600&family=IBM+Plex+Sans+JP:wght@400;500;600&display=swap">
+<link rel="preload" as="image" href="../media/scene-mountain.webp" fetchpriority="high">
+<link rel="stylesheet" href="../style.css?v=3">
+<script>if(!matchMedia("(prefers-reduced-motion: reduce)").matches)document.documentElement.classList.add("motion")</script>
 <script src="../engine.js?v=1" defer></script>
-<script src="../risk.js?v=1" defer></script>
-<script src="../site.js?v=2" defer></script>
+<script src="../risk.js?v=2" defer></script>
+<script src="../site.js?v=3" defer></script>
+<script src="../scene.js?v=1" defer></script>
 <script src="../download.js?v=1" defer></script>
 </head>
 <body>
@@ -45,71 +48,73 @@
 
 <main id="main">
   <div class="hero">
-    <script>if(!matchMedia("(prefers-reduced-motion: reduce)").matches)document.currentScript.parentNode.dataset.stage="read"</script>
-    <canvas class="hero-map" aria-hidden="true"></canvas>
-    <p class="hunk mono" aria-hidden="true">@@ -41 +41 @@ PR の読み方</p>
-    <div class="line del">
-      <span class="scan" aria-hidden="true"></span>
-      <span class="no" aria-hidden="true">41</span>
-      <span class="sign" aria-hidden="true">−</span>
-      <span class="text"><span class="strike">PR を、<wbr>全部自分で<wbr>読む。</span></span>
-    </div>
-    <div class="comment-wrap">
-      <aside class="comment" aria-label="見出しに付いたレビューコメントの見本">
-        <div class="comment-head"><span class="sev">should</span><p class="comment-title">注意を向ける先がずれています</p></div>
-        <dl>
-          <dt>起きる条件</dt><dd>認証に触れる PR の手前に、小さな PR が 20 件並んでいる。</dd>
-          <dt>影響</dt><dd>危ない PR の順番が最後になり、疲れた頭で読むことになる。</dd>
-        </dl>
-        <div class="comment-actions">
-          <button type="button" class="mini" data-act="accept" aria-pressed="true">採用</button>
-          <button type="button" class="mini" data-act="reject" aria-pressed="false">却下</button>
-          <span class="comment-status" role="status">採用しました</span>
-        </div>
-      </aside>
-    </div>
-    <div class="line add">
-      <span class="no" aria-hidden="true">41</span>
-      <span class="sign" aria-hidden="true">+</span>
-      <h1 class="text">読むのは、<br class=wide>あなたが必要な PR&nbsp;だけ。</h1>
-    </div>
-    <div class="hero-foot">
-      <div>
-        <p class="lede"><strong>CC Auto Review</strong> は、手元の Claude Code で GitHub の Pull Request をレビューする macOS アプリです。diff の横に指摘を並べ、PR ごとにリスクを 0〜100 点で示します。何を投稿するかは、あなたが決めます。</p>
+    <script>if(document.documentElement.classList.contains("motion"))document.currentScript.parentNode.dataset.stage="read"</script>
+    <div class="hero-pin">
+      <div class="plates" aria-hidden="true">
+        <img class="plate plate-a" src="../media/scene-mountain.webp" alt="" width="1536" height="1024" fetchpriority="high">
+        <img class="plate plate-b" data-src="../media/scene-cleared.webp" alt="" width="1536" height="1024">
+        <canvas class="scene-gl"></canvas>
+        <span class="plain-ring"></span>
+        <span class="shade"></span>
       </div>
-      <div>
-        <div class="cta">
+      <div class="hero-copy">
+        <p class="was"><span class="strike">PR を、全部自分で読む。</span></p>
+        <h1 class="now">読むのは、<wbr>あなたが必要な PR&nbsp;だけ。</h1>
+        <aside class="note" aria-label="見出しに付いたレビューコメントの見本">
+          <span class="sev">should</span><span class="note-title">注意を向ける先がずれています</span>
+          <span class="note-actions">
+            <button type="button" class="mini" data-act="accept" aria-pressed="true">採用</button>
+            <button type="button" class="mini" data-act="reject" aria-pressed="false">却下</button>
+          </span>
+          <span class="comment-status" role="status">採用しました</span>
+        </aside>
+      </div>
+      <div class="hero-acts">
+        <p class="act act2">認証に触れる PR の手前に、小さな PR が 20 件並んでいる。危ない PR の順番は最後になり、疲れた頭で読むことになる。</p>
+        <p class="act act3">ほかはアプリがレビューします。残った 3 件を、あなたが読みます。</p>
+      </div>
+      <div class="hero-foot">
+        <p class="lede"><strong>CC Auto Review</strong> は、手元の Claude Code で GitHub の Pull Request をレビューする macOS アプリです。diff の横に指摘を並べ、PR ごとにリスクを 0〜100 点で示します。何を投稿するかは、あなたが決めます。</p>
+        <div class="hero-get">
+          <div class="cta">
           <a class="btn btn-primary" data-arch="arm64" href="https://github.com/karamage/cc-auto-review/releases/latest">Apple シリコン版をダウンロード<small>M1 以降、<span data-size>DMG</span></small></a>
           <a class="btn btn-ghost" data-arch="x64" href="https://github.com/karamage/cc-auto-review/releases/latest">Intel 版をダウンロード<small><span data-size>DMG</span></small></a>
         </div>
-        <p class="meta"><span data-version>最新版</span>、macOS 11 以降。署名と公証済み。無料のオープンソース（MIT）。</p>
+          <p class="meta"><span data-version>最新版</span>、macOS 11 以降。署名と公証済み。無料のオープンソース（MIT）。</p>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="gutter" aria-hidden="true"></div>
-
   <section class="sec film" aria-label="紹介動画とアプリの画面">
-    <figure>
+    <figure class="theatre">
+      <div class="screen">
+        <img class="screen-glow" src="../media/film-ja.jpg" alt="" aria-hidden="true" loading="lazy">
+        <video src="../media/film-ja.mp4" poster="../media/film-ja.jpg" width="1920" height="1080" muted playsinline preload="none" aria-label="37 秒の紹介動画。PR の山を見上げる人。アプリが PR を採点し、Claude が SQL インジェクションを見つけ、点数が 50 を超え、完全自動運転がリスクのある PR を人に回す。山が消え、その人が読むべき PR だけが残る。"></video>
+        <button type="button" class="screen-play" data-film-big hidden></button>
+        <div class="hud">
+          <button type="button" class="hud-btn" data-film-play aria-label="再生"></button>
+          <input class="hud-seek" type="range" min="0" max="1000" value="0" step="1" data-film-seek aria-label="再生位置">
+          <span class="hud-time" data-film-time>0:00</span>
+          <button type="button" class="hud-sound" data-film-sound>音ありで再生</button>
+          <button type="button" class="hud-btn hud-full" data-film-full aria-label="全画面"></button>
+        </div>
+      </div>
       <div class="film-bar">
         <div class="film-tabs" role="group" aria-label="紹介動画とアプリの画面">
           <button type="button" aria-pressed="true" data-film="film" data-src="../media/film-ja" data-w="1920" data-h="1080" data-caption="CC Auto Review のできることを 37 秒で紹介します。画面のデータは見本です。" data-alt="37 秒の紹介動画。PR の山を見上げる人。アプリが PR を採点し、Claude が SQL インジェクションを見つけ、点数が 50 を超え、完全自動運転がリスクのある PR を人に回す。山が消え、その人が読むべき PR だけが残る。">紹介動画（37 秒）</button>
           <button type="button" aria-pressed="false" data-film="review" data-w="1320" data-h="825" data-src="../media/review-ja" data-caption="PR を開いてレビューを実行し、指摘を採用します。データは見本です。" data-alt="PR を開き、AI レビューを実行し、指摘へ移動して採用する様子。">レビュー</button>
           <button type="button" aria-pressed="false" data-film="autopilot" data-w="1320" data-h="825" data-src="../media/autopilot-ja" data-caption="完全自動運転をオンにします。5 件をレビューし、リスクのある 1 件をあなたに回します。データは見本です。" data-alt="完全自動運転をオンにすると、5 件の PR をレビューし、承認かコメントをして、リスクのある 1 件を人に回す様子。">完全自動運転</button>
         </div>
-        <div class="film-ctrl">
-          <button type="button" data-film-play hidden></button>
-          <button type="button" data-film-sound hidden></button>
-        </div>
+        <figcaption data-film-caption>CC Auto Review のできることを 37 秒で紹介します。画面のデータは見本です。</figcaption>
       </div>
-      <video src="../media/film-ja.mp4" poster="../media/film-ja.jpg" width="1920" height="1080" muted playsinline preload="none" aria-label="37 秒の紹介動画。PR の山を見上げる人。アプリが PR を採点し、Claude が SQL インジェクションを見つけ、点数が 50 を超え、完全自動運転がリスクのある PR を人に回す。山が消え、その人が読むべき PR だけが残る。"></video>
-      <figcaption data-film-caption>CC Auto Review のできることを 37 秒で紹介します。画面のデータは見本です。</figcaption>
     </figure>
   </section>
 
   <section class="sec" id="flow">
-    <a class="hunk" href="#flow">@@ レビューの流れ @@</a>
-    <h2>PR を開いてから<wbr>投稿するまで。</h2>
+    <header class="sec-head">
+      <h2>PR を開いてから<wbr>投稿するまで。</h2>
+    </header>
     <div class="flow-grid">
       <ol class="steps">
           <li class="step" data-step="1" data-score="42" data-score-label="MEDIUM（diff のみ）" data-state-text="AI はまだ動いていません">
@@ -173,7 +178,8 @@
   </section>
 
   <section class="sec risk" id="risk">
-    <a class="hunk" href="#risk">@@ リスクの点数 @@</a>
+    <div class="risk-top">
+    <div class="risk-ask">
     <h2>本物の PR で、<wbr>点数を試してください。</h2>
     <p class="intro">公開 PR の URL を貼るだけです。動いているのはアプリと同じ基準点の採点コードで、計算はブラウザの中で完結します。diff は GitHub の公開 API から直接取得し、ほかには送りません。</p>
     <form class="risk-form" data-risk-form>
@@ -187,23 +193,36 @@
       <button type="button" data-paste-score>採点する</button>
     </details>
     <p class="risk-error" data-risk-error role="alert"></p>
-    <div class="board">
-      <div>
-        <span class="score-num" data-score-num>0</span>
-        <p class="score-line"><span class="score-level" data-score-level></span><span class="score-source" data-score-source></span></p>
-        <p class="verdict" role="status" data-verdict></p>
-        <div class="scale" aria-hidden="true"><i></i><i></i><i></i><i></i><span class="scale-mark" data-scale-mark style="left:0"></span><span class="scale-threshold">50 を超えたら人へ</span></div>
-        <ul class="hits" data-hits></ul>
+    </div>
+    <div class="dial" data-dial>
+      <div class="dial-face">
+        <svg viewBox="0 0 400 400" aria-hidden="true">
+          <circle class="dial-track" cx="200" cy="200" r="186" pathLength="100"/>
+          <circle class="dial-arc" cx="200" cy="200" r="186" pathLength="100"/>
+          <line class="dial-tick" x1="200" y1="372" x2="200" y2="400"/>
+        </svg>
+        <div class="dial-read">
+          <span class="score-num" data-score-num>0</span>
+          <span class="score-level" data-score-level></span>
+        </div>
       </div>
+      <p class="dial-threshold">50 を超えたら人へ</p>
+      <p class="score-source" data-score-source></p>
+      <p class="verdict" role="status" data-verdict></p>
+    </div>
+    </div>
+    <div class="board">
       <ul class="factors" data-factors></ul>
+      <ul class="hits" data-hits></ul>
     </div>
     <p class="risk-note">これは AI を動かす前の基準点です。アプリでは、このあと Claude が最大 ±20 の補正を加え、エスカレーションすることもあります。点数は誰が先に読むかを決める目安で、コードの正しさを保証するものではありません。</p>
   </section>
 
   <section class="sec" id="autopilot">
-    <a class="hunk" href="#autopilot">@@ 完全自動運転（任意） @@</a>
-    <h2>依頼の山はアプリが片付け、<wbr>危ない PR&nbsp;だけを<wbr>あなたに回します。</h2>
+    <header class="sec-head">
+      <h2>依頼の山はアプリが片付け、<wbr>危ない PR&nbsp;だけを<wbr>あなたに回します。</h2>
     <p class="intro">オンにすると、レビュー依頼を一定の間隔で処理します。承認かコメントをして作成者の対応を待ち、再レビューします。リスクのある PR は、何も投稿せずにあなたへ回します。</p>
+    </header>
     <div class="pilot-grid">
       <div>
         <div class="queue-head">
@@ -248,19 +267,30 @@
   </section>
 
   <section class="sec" id="boundary">
-    <a class="hunk" href="#boundary">@@ Claude が触れる範囲 @@</a>
-    <h2>PR は、自分を審査する<wbr>ルールを変えられません。</h2>
+    <header class="sec-head">
+      <h2>PR は、自分を審査する<wbr>ルールを変えられません。</h2>
     <p class="intro">PR の文章にはレビュアーを誘導する指示を仕込めます。だからレビューは毎回、短い許可リストの中で動きます。</p>
-    <ul class="perm">
+    </header>
+    <div class="bound">
+      <div class="bound-in">
+        <h3>Claude にできること</h3>
+        <ul class="perm">
         <li class="y"><span class="s" aria-label="許可">+</span><span class="v">読む</span><span class="d">一時ディレクトリに置いた、PR の変更ファイルと diff</span></li>
         <li class="y"><span class="s" aria-label="許可">+</span><span class="v">読む</span><span class="d">CLAUDE.md、AGENTS.md、REVIEW.md（ベースブランチのもの）</span></li>
         <li class="y"><span class="s" aria-label="許可">+</span><span class="v">取得</span><span class="d">remote-read 経由のほかのファイル。GET のみで、この PR のリポジトリとコミットに固定</span></li>
         <li class="y"><span class="s" aria-label="許可">+</span><span class="v">書く</span><span class="d">結果のファイル 1 つ</span></li>
+        </ul>
+      </div>
+      <div class="bound-out">
+        <h3>できないこと</h3>
+        <ul class="perm">
         <li class="n"><span class="s" aria-label="不許可">−</span><span class="v">読む</span><span class="d">Mac の中のそれ以外のファイル</span></li>
         <li class="n"><span class="s" aria-label="不許可">−</span><span class="v">実行</span><span class="d">git、任意の gh コマンド、そのほかのシェルコマンド</span></li>
         <li class="n"><span class="s" aria-label="不許可">−</span><span class="v">読込</span><span class="d">PR に含まれる .claude/、.mcp.json、CLAUDE.local.md</span></li>
         <li class="n"><span class="s" aria-label="不許可">−</span><span class="v">送信</span><span class="d">利用状況のデータ。アプリにテレメトリはありません</span></li>
-    </ul>
+        </ul>
+      </div>
+    </div>
     <div class="perm-notes">
       <div><h3>防げないこと</h3><p>ご自身の Claude Code 設定の許可ルールと、プロファイルに足したツールは有効なままです。狭く保ってください。PR の文章がレビュー内容に影響する可能性は残るので、投稿内容は読んで確かめてください。</p></div>
       <div><h3>コードの行き先</h3><p>アプリは <code>gh</code> で GitHub と、<code>claude</code> で Claude とやり取りします。どちらもあなたの設定のままです。サーバーは <code>127.0.0.1</code> だけで待ち受け、起動時に作るトークンのない要求を受け付けません。</p></div>
@@ -268,8 +298,9 @@
   </section>
 
   <section class="sec" id="more">
-    <a class="hunk" href="#more">@@ そのほかの機能 @@</a>
-    <h2>ほかにできること。</h2>
+    <header class="sec-head">
+      <h2>ほかにできること。</h2>
+    </header>
     <ul class="changes">
         <li><span class="s" aria-hidden="true">+</span><div><h3>レビュープロファイル</h3><p>観点、チームの指針、指摘しないこと、指摘数の上限を決められます。Standard、Security focused、Quick の 3 つが付属します。プレビューで Claude に渡す内容をそのまま確認できます。</p></div></li>
         <li><span class="s" aria-hidden="true">+</span><div><h3>過去のコメントの再確認</h3><p>以前のレビューコメントを今のコードと照らし、修正済み、未修正、未確認に分けます。作成者の「直しました」は根拠に数えません。</p></div></li>
@@ -281,7 +312,6 @@
   </section>
 
   <section class="sec" id="faq">
-    <a class="hunk" href="#faq">@@ よくある質問 @@</a>
     <h2>よくある質問。</h2>
     <div class="faq">
         <details><summary>API キーは必要ですか？</summary><p>アプリでの設定は要りません。インストール済みの <code>claude</code> をあなたの設定のまま実行し、Claude の認証情報は保存しません。GitHub へのアクセスは <code>gh</code> のログインを使います。</p></details>
@@ -294,18 +324,20 @@
   </section>
 
   <section class="get-it" id="download">
-    <a class="hunk" href="#download">@@ ダウンロード @@</a>
+    <img class="get-plate" src="../media/scene-cleared.webp" alt="片付いた平原の上に光る 3 件の PR が残り、その下に一人が立っている。" width="1536" height="1024" loading="lazy">
+    <div class="get-top">
     <h2>CC Auto Review を<wbr>入手する。</h2>
     <div class="cta">
       <a class="btn btn-primary" data-arch="arm64" href="https://github.com/karamage/cc-auto-review/releases/latest">Apple シリコン版をダウンロード<small>M1 以降、<span data-size>DMG</span></small></a>
       <a class="btn btn-ghost" data-arch="x64" href="https://github.com/karamage/cc-auto-review/releases/latest">Intel 版をダウンロード<small><span data-size>DMG</span></small></a>
     </div>
     <p class="meta"><span data-version>最新版</span>。<a href="https://github.com/karamage/cc-auto-review/releases">すべてのリリース</a>。</p>
-    <div class="req">
-      <div><h3>DMG を開く</h3><p>アプリを「アプリケーション」へドラッグします。Developer ID で署名し、Apple の公証を受けています。macOS 11 以降が必要です。</p></div>
-      <div><h3>GitHub CLI を入れる</h3><p><a href="https://cli.github.com">gh</a> を入れて、<code>gh auth login</code> でログインします。</p></div>
-      <div><h3>Claude Code を入れる</h3><p><a href="https://claude.com/claude-code">Claude Code</a> 2.1.314 以降を入れます。古い版はファイルへのアクセスを制限できないので使えません。</p></div>
     </div>
+    <ol class="req">
+      <li><h3>DMG を開く</h3><p>アプリを「アプリケーション」へドラッグします。Developer ID で署名し、Apple の公証を受けています。macOS 11 以降が必要です。</p></li>
+      <li><h3>GitHub CLI を入れる</h3><p><a href="https://cli.github.com">gh</a> を入れて、<code>gh auth login</code> でログインします。</p></li>
+      <li><h3>Claude Code を入れる</h3><p><a href="https://claude.com/claude-code">Claude Code</a> 2.1.314 以降を入れます。古い版はファイルへのアクセスを制限できないので使えません。</p></li>
+    </ol>
     <details class="source">
       <summary>ソースからビルドする</summary>
       <pre>git clone https://github.com/karamage/cc-auto-review.git
