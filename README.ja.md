@@ -123,7 +123,7 @@
 
 Apple シリコン版か Intel 版の **[DMG をダウンロード](https://karamage.github.io/cc-auto-review/ja/#download)** して開き、アプリを「アプリケーション」にドラッグしてください。Developer ID で署名し、Apple の公証を受けているので、そのまま開けます。過去の版は[リリースページ](https://github.com/karamage/cc-auto-review/releases)にあります。
 
-Linux（x86_64）では、[リリースページ](https://github.com/karamage/cc-auto-review/releases)から `.AppImage` か `.deb` をダウンロードしてください。署名はしていないので、各ファイルと一緒に置く `.sha256` で確かめてください。
+Linux（x86_64）では、[リリースページ](https://github.com/karamage/cc-auto-review/releases)から `.AppImage` か `.deb` をダウンロードしてください。署名はしていないので、各ファイルと一緒に置く `.sha256` で確かめてください。出たばかりで、CI での起動までは確認していますが、実機での確認はまだです。問題があれば [Issue](https://github.com/karamage/cc-auto-review/issues) で教えてください。
 
 ### 必要なもの
 
