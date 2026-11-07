@@ -16,7 +16,7 @@
     Claude Code に PR を先にレビューさせて、危ない PR だけ自分に回すデスクトップアプリを作りました。
   </p>
   <p>
-    手元の <code>claude -p</code> で GitHub の PR をレビューする、macOS と Linux のアプリです。diff の横に AI の指摘を並べ、変更のリスクを 0〜100 点で示します。危ない PR だけを回すのは、任意の完全自動運転です。
+    手元の <code>claude -p</code> で GitHub の PR をレビューする、macOS と Linux のアプリです。diff の横に AI の指摘を並べ、変更のリスクを 0〜100 点で示します。危ない PR だけをあなたがレビューします。
   </p>
 
   <p>
