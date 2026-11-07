@@ -10,10 +10,13 @@
   <h1>CC Auto Review</h1>
 
   <p>
-    <strong>手元の Claude Code で GitHub の Pull Request をレビューする</strong>
+    <strong>大量の PR のレビューで疲弊していませんか？</strong>
   </p>
   <p>
-    <code>claude -p</code> を使う macOS と Linux のデスクトップアプリです。diff の横に AI の指摘を並べ、変更のリスクを 0〜100 点で示し、完全自動運転ではリスクのある PR だけを人に回します。
+    Claude Code に PR を先にレビューさせて、危ない PR だけ自分に回すデスクトップアプリを作りました。
+  </p>
+  <p>
+    手元の <code>claude -p</code> で GitHub の PR をレビューする、macOS と Linux のアプリです。diff の横に AI の指摘を並べ、変更のリスクを 0〜100 点で示します。危ない PR だけを回すのは、任意の完全自動運転です。
   </p>
 
   <p>

@@ -10,10 +10,13 @@
   <h1>CC Auto Review</h1>
 
   <p>
-    <strong>Review GitHub pull requests with the Claude Code you already have installed</strong>
+    <strong>Worn out by reviewing a flood of PRs?</strong>
   </p>
   <p>
-    A desktop app for macOS and Linux built on <code>claude -p</code>: AI findings next to the diff, a 0–100 risk score, and an optional autopilot that hands risky PRs back to you.
+    I built a desktop app that lets Claude Code review PRs first and sends only the risky ones to you.
+  </p>
+  <p>
+    It reviews GitHub pull requests on macOS and Linux with your local <code>claude -p</code>: AI findings next to the diff, a 0–100 risk score, and an optional autopilot that hands risky PRs back to you.
   </p>
 
   <p>
