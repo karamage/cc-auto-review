@@ -33,8 +33,8 @@ export async function runPreflight(
   if ((await run(["gh", "--version"])).exitCode !== 0) {
     messages.push(
       say(
-        "gh コマンドが見つかりません。GitHub CLI をインストールしてください（例: brew install gh）。",
-        "The gh command was not found. Install the GitHub CLI (e.g. brew install gh).",
+        "gh コマンドが見つかりません。GitHub CLI をインストールしてください（https://cli.github.com）。",
+        "The gh command was not found. Install the GitHub CLI (https://cli.github.com).",
       ),
     );
   } else {

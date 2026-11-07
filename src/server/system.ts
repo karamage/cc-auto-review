@@ -12,13 +12,16 @@ export function appleScriptString(text: string): string {
 }
 
 export class OsSystemActions implements SystemActions {
-  constructor(private readonly runner: CommandRunner) {}
+  constructor(
+    private readonly runner: CommandRunner,
+    private readonly platform: NodeJS.Platform = process.platform,
+  ) {}
 
   async openUrl(url: string): Promise<void> {
     const cmd =
-      process.platform === "darwin"
+      this.platform === "darwin"
         ? ["open", url]
-        : process.platform === "win32"
+        : this.platform === "win32"
           ? ["cmd", "/c", "start", "", url]
           : ["xdg-open", url];
     await this.runner.run(cmd);
@@ -26,11 +29,14 @@ export class OsSystemActions implements SystemActions {
 
   /** 通知を出せなくても、一覧には印が残る。失敗は無視する */
   async notify(title: string, body: string): Promise<void> {
-    if (process.platform !== "darwin") return;
-    await this.runner.run([
-      "osascript",
-      "-e",
-      `display notification ${appleScriptString(body)} with title ${appleScriptString(title)}`,
-    ]);
+    if (this.platform === "darwin") {
+      await this.runner.run([
+        "osascript",
+        "-e",
+        `display notification ${appleScriptString(body)} with title ${appleScriptString(title)}`,
+      ]);
+    } else if (this.platform === "linux") {
+      await this.runner.run(["notify-send", "--app-name=CC Auto Review", "--", title, body]);
+    }
   }
 }

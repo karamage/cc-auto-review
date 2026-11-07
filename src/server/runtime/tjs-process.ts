@@ -3,6 +3,7 @@
  * ほかのモジュールより先に評価されるよう、tjs 向けの入口（index.tjs.ts）で最初に import する
  */
 import { resolve } from "./tjs-node/path.ts";
+import { platformFromNavigator } from "./tjs-platform.ts";
 
 const encoder = new TextEncoder();
 
@@ -28,8 +29,7 @@ const tjsProcess = {
   env: tjs.env,
   execPath: tjs.exePath,
   pid: tjs.pid,
-  // tjs で動かすのは macOS 向けのアプリだけ
-  platform: "darwin",
+  platform: platformFromNavigator(navigator.platform),
   exit: (code = 0): never => tjs.exit(code),
   on(signal: tjs.Signal, listener: () => void) {
     tjs.addSignalListener(signal, listener);

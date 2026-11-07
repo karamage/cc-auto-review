@@ -13,7 +13,7 @@
     <strong>手元の Claude Code で GitHub の Pull Request をレビューする</strong>
   </p>
   <p>
-    <code>claude -p</code> を使う macOS のデスクトップアプリです。diff の横に AI の指摘を並べ、変更のリスクを 0〜100 点で示し、完全自動運転ではリスクのある PR だけを人に回します。
+    <code>claude -p</code> を使う macOS と Linux のデスクトップアプリです。diff の横に AI の指摘を並べ、変更のリスクを 0〜100 点で示し、完全自動運転ではリスクのある PR だけを人に回します。
   </p>
 
   <p>
@@ -25,6 +25,7 @@
   <p>
     <a href="https://github.com/karamage/cc-auto-review/actions/workflows/ci.yml"><img src="https://github.com/karamage/cc-auto-review/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI"></a>
     <img src="https://img.shields.io/badge/macOS-11%2B-000000?logo=apple&logoColor=white" alt="macOS 11 以降">
+    <img src="https://img.shields.io/badge/Linux-x86__64-FCC624?logo=linux&logoColor=black" alt="Linux x86_64">
     <img src="https://img.shields.io/badge/Tauri-2-24C8DB?logo=tauri&logoColor=white" alt="Tauri 2">
     <img src="https://img.shields.io/badge/Claude_Code-required-555555" alt="Claude Code が必要">
     <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License"></a>
@@ -122,9 +123,11 @@
 
 Apple シリコン版か Intel 版の **[DMG をダウンロード](https://karamage.github.io/cc-auto-review/ja/#download)** して開き、アプリを「アプリケーション」にドラッグしてください。Developer ID で署名し、Apple の公証を受けているので、そのまま開けます。過去の版は[リリースページ](https://github.com/karamage/cc-auto-review/releases)にあります。
 
+Linux（x86_64）では、[リリースページ](https://github.com/karamage/cc-auto-review/releases)から `.AppImage` か `.deb` をダウンロードしてください。署名はしていないので、各ファイルと一緒に置く `.sha256` で確かめてください。
+
 ### 必要なもの
 
-- macOS 11 以降
+- macOS 11 以降、または WebKitGTK 4.1 のある Linux x86_64
 - [GitHub CLI](https://cli.github.com)（`gh`）。`gh auth login` 済みであること
 - [Claude Code](https://claude.com/claude-code)（`claude`）2.1.314 以降
 
@@ -151,6 +154,8 @@ bun run app:build
 
 > [!IMPORTANT]
 > 手元でビルドしたアプリは署名されていません。開けないときは「システム設定 → プライバシーとセキュリティ → このまま開く」で許可してください。`bun run release:mac` で作った DMG は署名・公証済みなので、そのまま開けます。
+
+Linux では `cmake`、C コンパイラ、[Tauri が要るシステムパッケージ](https://tauri.app/start/prerequisites/#linux)を入れて、`bun run app:build:linux` を実行します。初回は txiki.js をソースからビルドします。リリース用の Linux パッケージは、リリースを公開すると `.github/workflows/release-linux.yml` が作ります。
 
 </details>
 
@@ -340,7 +345,7 @@ Issue と Pull Request を歓迎します。PR を出す前に `bun run check` �
 - 🐛 不具合の報告と修正
 - 🧭 既定のレビュー観点・プロファイルの追加
 - 🌐 日本語と英語以外への画面の翻訳
-- 🪟 macOS 以外への対応
+- 🪟 Windows への対応
 - 📚 ドキュメントとスクリーンショット
 
 ## 📄 ライセンス

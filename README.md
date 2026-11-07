@@ -13,7 +13,7 @@
     <strong>Review GitHub pull requests with the Claude Code you already have installed</strong>
   </p>
   <p>
-    A macOS desktop app built on <code>claude -p</code>: AI findings next to the diff, a 0–100 risk score, and an optional autopilot that hands risky PRs back to you.
+    A desktop app for macOS and Linux built on <code>claude -p</code>: AI findings next to the diff, a 0–100 risk score, and an optional autopilot that hands risky PRs back to you.
   </p>
 
   <p>
@@ -25,6 +25,7 @@
   <p>
     <a href="https://github.com/karamage/cc-auto-review/actions/workflows/ci.yml"><img src="https://github.com/karamage/cc-auto-review/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI"></a>
     <img src="https://img.shields.io/badge/macOS-11%2B-000000?logo=apple&logoColor=white" alt="macOS 11+">
+    <img src="https://img.shields.io/badge/Linux-x86__64-FCC624?logo=linux&logoColor=black" alt="Linux x86_64">
     <img src="https://img.shields.io/badge/Tauri-2-24C8DB?logo=tauri&logoColor=white" alt="Tauri 2">
     <img src="https://img.shields.io/badge/Claude_Code-required-555555" alt="Claude Code required">
     <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License"></a>
@@ -122,9 +123,11 @@ When you turn on the **autopilot**, the app works through your review requests b
 
 **[Download the DMG](https://karamage.github.io/cc-auto-review/#download)** for Apple silicon or Intel, open it, and drag the app to Applications. It is signed with a Developer ID and notarized by Apple, so it opens normally. All versions are on the [releases page](https://github.com/karamage/cc-auto-review/releases).
 
+On Linux x86_64, download the `.AppImage` or `.deb` from the [releases page](https://github.com/karamage/cc-auto-review/releases). They are not signed, so check them against the `.sha256` file next to each one.
+
 ### Prerequisites
 
-- macOS 11+
+- macOS 11+, or Linux x86_64 with WebKitGTK 4.1
 - [GitHub CLI](https://cli.github.com) (`gh`), signed in with `gh auth login`
 - [Claude Code](https://claude.com/claude-code) (`claude`) 2.1.314 or later
 
@@ -151,6 +154,8 @@ Then drag `CC Auto Review.app` from `src-tauri/target/release/bundle/macos/` int
 
 > [!IMPORTANT]
 > A locally built app is not signed. If macOS refuses to open it, allow it in **System Settings → Privacy & Security → Open Anyway**. Release DMGs built with `bun run release:mac` are signed and notarized and open normally.
+
+On Linux, install `cmake`, a C compiler and [Tauri's system packages](https://tauri.app/start/prerequisites/#linux), then run `bun run app:build:linux`. The first build compiles txiki.js from source. Linux packages for releases are built by `.github/workflows/release-linux.yml` when a release is published.
 
 </details>
 
@@ -340,7 +345,7 @@ Areas where help is especially welcome:
 - 🐛 Bug reports and fixes
 - 🧭 New default review perspectives and profiles
 - 🌐 Translations of the UI beyond English and Japanese
-- 🪟 Support for platforms other than macOS
+- 🪟 Windows support
 - 📚 Documentation and screenshots
 
 ## 📄 License
