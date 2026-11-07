@@ -50,3 +50,13 @@ test("remote-read を、自分自身を呼び直す実行可能なスクリプ�
     await rm(dir, { recursive: true, force: true });
   }
 });
+
+test("SHELL が無いときの既定は、macOS で zsh、それ以外で sh", async () => {
+  const printf = "-ilc printf '__CC_AUTO_REVIEW_PATH__%s__CC_AUTO_REVIEW_PATH__' \"$PATH\"";
+  const linux = new FakeCommandRunner({ [`/bin/sh ${printf}`]: {} });
+  await loginShellPath(linux, { PATH: "/usr/bin" }, "linux");
+  expect(linux.calls[0]?.[0]).toBe("/bin/sh");
+  const mac = new FakeCommandRunner({ [`/bin/zsh ${printf}`]: {} });
+  await loginShellPath(mac, { PATH: "/usr/bin" }, "darwin");
+  expect(mac.calls[0]?.[0]).toBe("/bin/zsh");
+});

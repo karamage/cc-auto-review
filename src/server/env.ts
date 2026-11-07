@@ -8,8 +8,12 @@ import type { CommandRunner } from "./exec.ts";
  * そのままでは Homebrew の gh や ~/.local/bin の claude が見つからないので、
  * ログインシェルに PATH を聞いて補う。聞けなければよく使われる場所を足す
  */
-export async function loginShellPath(runner: CommandRunner, env = process.env): Promise<string> {
-  const shell = env.SHELL ?? "/bin/zsh";
+export async function loginShellPath(
+  runner: CommandRunner,
+  env = process.env,
+  platform: NodeJS.Platform = process.platform,
+): Promise<string> {
+  const shell = env.SHELL ?? (platform === "darwin" ? "/bin/zsh" : "/bin/sh");
   const marker = "__CC_AUTO_REVIEW_PATH__";
   const result = await runner.run([shell, "-ilc", `printf '${marker}%s${marker}' "$PATH"`], {
     timeoutMs: 5000,

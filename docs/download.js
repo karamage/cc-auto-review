@@ -1,4 +1,4 @@
-// 最新リリースの DMG を GitHub API から引いて、ダウンロードボタンの href と版とサイズを差し替える。
+// 最新リリースのパッケージを GitHub API から引いて、ダウンロードボタンの href と版とサイズを差し替える。
 // API が使えないとき（レート制限など）はリリースページへのリンクのまま残す
 (async () => {
   const KEY = "cc-auto-review-latest-release";
@@ -34,10 +34,13 @@
     const release = await load();
     if (!release) return;
     const mb = (bytes) => `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-    for (const el of document.querySelectorAll("[data-arch]")) {
-      const asset = release.assets.find((a) => a.name.endsWith(`_${el.dataset.arch}.dmg`));
+    for (const el of document.querySelectorAll("[data-arch], [data-asset]")) {
+      const suffix = el.dataset.asset || `_${el.dataset.arch}.dmg`;
+      const asset = release.assets.find((a) => a.name.endsWith(suffix));
       if (!asset) continue;
       el.href = asset.browser_download_url;
+      // Linux のボタンは、添付が見つかったときだけ出す
+      el.hidden = false;
       const size = el.querySelector("[data-size]");
       if (size) size.textContent = mb(asset.size);
     }

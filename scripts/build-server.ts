@@ -10,6 +10,8 @@
  *
  *   bun scripts/build-server.ts                          このマシン向け
  *   bun scripts/build-server.ts universal-apple-darwin   Apple Silicon と Intel の両方を入れた 1 つのファイル
+ *
+ * Linux 向けのリリースは無いので、ソースからビルドする。git、cmake、C コンパイラが要る
  */
 import { chmod, copyFile, mkdir, rm, stat } from "node:fs/promises";
 import { join } from "node:path";
@@ -35,6 +37,9 @@ const TJS_ASSETS: Record<string, { file: string; sha256: string }> = {
     sha256: "9d36d7cc20e6adb4cf132a9a2ed7ea2b449ca03a257b3a52e8fe2c6d16dd6d3b",
   },
 };
+
+/** ソースからビルドするときのコミット。タグが動かされていないことを確かめる */
+const TJS_COMMIT = "1a230d31183f062fae7a6c4fd2cff466cecc1787";
 
 /** universal は、この 2 つを lipo で 1 つにまとめたもの */
 const UNIVERSAL = "universal-apple-darwin";
@@ -137,6 +142,52 @@ async function fetchTjs(triple: string): Promise<string> {
   return exe;
 }
 
+/** 固定したコミットの txiki.js をビルドする。一度作ったものは使い回す */
+async function buildTjs(triple: string): Promise<string> {
+  const dir = join(cacheDir, `tjs-${TJS_VERSION}-${triple}`);
+  const exe = join(dir, "tjs");
+  if (await exists(exe)) return exe;
+
+  await rm(dir, { recursive: true, force: true });
+  await mkdir(dir, { recursive: true });
+  const src = join(dir, "src");
+  await run([
+    "git",
+    "clone",
+    "--quiet",
+    "--depth=1",
+    `--branch=v${TJS_VERSION}`,
+    "--recurse-submodules",
+    "--shallow-submodules",
+    "https://github.com/saghul/txiki.js.git",
+    src,
+  ]);
+  const proc = Bun.spawn(["git", "-C", src, "rev-parse", "HEAD"], { stdout: "pipe" });
+  const commit = (await new Response(proc.stdout).text()).trim();
+  if (commit !== TJS_COMMIT) {
+    throw new Error(`Commit mismatch for txiki.js: expected ${TJS_COMMIT}, got ${commit}`);
+  }
+
+  // サーバは tjs:ffi を使わない。切っておくと libffi が実行時に要らなくなる
+  const build = join(src, "build");
+  await run([
+    "cmake",
+    "-S",
+    src,
+    "-B",
+    build,
+    "-DCMAKE_BUILD_TYPE=Release",
+    "-DBUILD_WITH_FFI=OFF",
+    "-DBUILD_WITH_STRIP=ON",
+  ]);
+  // 数を指定しないと make が無制限に並列で動き、メモリが足りなくなる
+  await run(["cmake", "--build", build, "--parallel", String(navigator.hardwareConcurrency)]);
+  await copyFile(join(build, "tjs"), exe);
+  await chmod(exe, 0o755);
+  await rm(src, { recursive: true, force: true });
+  return exe;
+}
+
 function sidecar(triple: string): string {
   return join(binDir, `cc-auto-review-server-${triple}`);
 }
@@ -160,6 +211,8 @@ if (triple === UNIVERSAL) {
     parts.push(await fetchTjs(part));
   }
   await run(["lipo", "-create", ...parts, "-output", file]);
+} else if (triple.includes("-linux-")) {
+  await copyFile(await buildTjs(triple), file);
 } else {
   await copyFile(await fetchTjs(triple), file);
 }

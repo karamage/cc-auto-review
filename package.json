@@ -26,6 +26,7 @@
     "app:dmg:x64": "bun run build:client && bun scripts/build-server.ts x86_64-apple-darwin && tauri build --target x86_64-apple-darwin --bundles dmg",
     "app:build:universal": "bun run build:client && bun scripts/build-server.ts universal-apple-darwin && tauri build --target universal-apple-darwin --bundles app",
     "app:dmg:universal": "bun run build:client && bun scripts/build-server.ts universal-apple-darwin && tauri build --target universal-apple-darwin --bundles dmg",
+    "app:build:linux": "bun run build && tauri build --bundles deb,appimage",
     "release:mac": "bun scripts/release-mac.ts"
   },
   "dependencies": {

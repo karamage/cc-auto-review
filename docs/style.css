@@ -195,6 +195,7 @@ p code, dd code, li code { color: var(--text); background: rgb(170 180 255 / 0.1
 .hero-get .meta { text-align: right; max-width: 560px; }
 
 .cta { display: flex; flex-wrap: wrap; gap: 8px; }
+.btn[hidden] { display: none; }
 .btn {
   display: inline-flex; flex-direction: column; justify-content: center;
   min-height: 54px; padding: 7px 24px; border-radius: 999px; text-decoration: none; font-weight: 600; line-height: 1.28; font-size: 0.9375rem;

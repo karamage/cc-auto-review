@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-CC Auto Review is a macOS desktop app (Tauri 2) that reviews GitHub PRs by shelling out to the user's local `claude -p` and `gh`. A Hono server serves both the API and the React UI on `127.0.0.1`; the Tauri shell only spawns that server and points a webview at it. There is no API key and no clone: only the PR's changed files are written to a temp dir.
+CC Auto Review is a desktop app for macOS and Linux (Tauri 2) that reviews GitHub PRs by shelling out to the user's local `claude -p` and `gh`. A Hono server serves both the API and the React UI on `127.0.0.1`; the Tauri shell only spawns that server and points a webview at it. There is no API key and no clone: only the PR's changed files are written to a temp dir.
 
 ## Commands
 
@@ -24,6 +24,7 @@ bun run start                 # build client, then run server and open the brows
 
 bun run app:build             # client + bundled server + .app for this CPU (also :x64, :universal, app:dmg*)
 bun run release:mac           # signed + notarized DMGs (needs Developer ID + notarytool profile)
+bun run app:build:linux       # .deb and .AppImage on Linux (builds txiki.js from source; needs cmake)
 ```
 
 `bunfig.toml` preloads `src/test-setup.ts`, which sets the UI language to Japanese — test expectations are written against Japanese strings.
@@ -40,6 +41,7 @@ The server runs on **Bun in dev/tests** (`src/server/index.ts`) and on **txiki.j
 
 - `scripts/build-server.ts` bundles `index.tjs.ts` into `dist/server/server.js` and rewrites `node:*` imports to shims in `runtime/tjs-node/`. Only `node:fs/promises`, `node:os`, `node:path`, `node:crypto` have shims — **importing any other `node:` module, or a Bun-only API, from server code reachable from `main.ts` breaks the app build.** Keep Bun-specific code behind the `Runtime` interface.
 - The same binary doubles as the `remote-read` helper: `start()` checks `argv[2] === "remote-read"`. `env.ts:installRemoteRead` writes a shell wrapper to `~/.config/cc-auto-review/bin/remote-read` (path without spaces, because Claude's `Bash(<cmd>:*)` permission is prefix-matched).
+- txiki.js publishes no Linux binary, so `build-server.ts` builds the pinned commit from source on `*-linux-*` targets. Linux packages are built by `.github/workflows/release-linux.yml` when a release is published; macOS DMGs stay local (`release:mac`).
 - `main.ts` rebuilds `PATH` from the login shell (`loginShellPath`) because Finder-launched apps lack it.
 - Desktop handshake: Tauri (`src-tauri/src/lib.rs`) generates a token, passes it as `CC_AUTO_REVIEW_TOKEN`, and waits for a `CC_AUTO_REVIEW_READY <url>` line on stdout. When a token is set, every `/api/*` request must carry `x-cc-auto-review-token` (`app.ts`); the client reads it from `?token=` (`client/desktop.ts`).
 

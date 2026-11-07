@@ -50,7 +50,14 @@ fn start_server(app: &tauri::AppHandle) -> Result<(), Box<dyn std::error::Error>
     let sidecar = std::env::current_exe()?.with_file_name(SIDECAR);
     let token = new_token();
 
-    let mut child = Command::new(&sidecar)
+    let mut command = Command::new(&sidecar);
+    for (name, value) in appimage_env_changes(std::env::vars()) {
+        match value {
+            Some(value) => command.env(name, value),
+            None => command.env_remove(name),
+        };
+    }
+    let mut child = command
         .arg("run")
         .arg(&server_js)
         .args(["--desktop", "--port", "0", "--client-dir"])
@@ -109,6 +116,50 @@ fn start_server(app: &tauri::AppHandle) -> Result<(), Box<dyn std::error::Error>
     Ok(())
 }
 
+/// AppImage の起動スクリプトが設定する変数のうち、値に AppImage のパスを含まないもの
+const APPIMAGE_ONLY_VARS: &[&str] = &[
+    "APPIMAGE",
+    "ARGV0",
+    "OWD",
+    "GTK_THEME",
+    "PYTHONDONTWRITEBYTECODE",
+];
+
+/// AppImage の中で動いているときに、sidecar の環境変数をどう変えるか。値が None なら消す。
+///
+/// 起動スクリプトは同梱のライブラリを使うため LD_LIBRARY_PATH や PYTHONHOME などを設定する。
+/// sidecar に引き継ぐと gh、claude、xdg-open、Claude Code のフックや MCP サーバまで届いて、
+/// 利用者のプログラムが同梱のライブラリで動いてしまう。PATH のように元の値の前に足された変数は、
+/// AppImage の項目だけを除く
+fn appimage_env_changes(
+    vars: impl Iterator<Item = (String, String)>,
+) -> Vec<(String, Option<String>)> {
+    let vars: Vec<_> = vars.collect();
+    let Some(appdir) = vars
+        .iter()
+        .find(|(name, _)| name == "APPDIR")
+        .map(|(_, value)| value.clone())
+    else {
+        return Vec::new();
+    };
+    let inside = |entry: &str| entry == appdir || entry.starts_with(&format!("{appdir}/"));
+    vars.iter()
+        .filter_map(|(name, value)| {
+            if name == "APPDIR" || APPIMAGE_ONLY_VARS.contains(&name.as_str()) {
+                return Some((name.clone(), None));
+            }
+            if !value.split(':').any(inside) {
+                return None;
+            }
+            let kept: Vec<_> = value
+                .split(':')
+                .filter(|entry| !entry.is_empty() && !inside(entry))
+                .collect();
+            Some((name.clone(), (!kept.is_empty()).then(|| kept.join(":"))))
+        })
+        .collect()
+}
+
 /// 改行を残したまま 1 行ずつ読む。UTF-8 でないバイトは置き換える
 fn split_lines(reader: impl Read) -> impl Iterator<Item = String> {
     let mut reader = BufReader::new(reader);
@@ -143,4 +194,68 @@ pub fn run() {
                 }
             }
         });
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn changes(vars: &[(&str, &str)]) -> Vec<(String, Option<String>)> {
+        appimage_env_changes(vars.iter().map(|(k, v)| (k.to_string(), v.to_string())))
+    }
+
+    #[test]
+    fn appimage_の外では何も変えない() {
+        assert!(changes(&[("PATH", "/usr/bin"), ("GTK_THEME", "Dark")]).is_empty());
+    }
+
+    #[test]
+    fn appimage_の項目だけを除いて利用者の値を残す() {
+        let result = changes(&[
+            ("APPDIR", "/tmp/.mount_x"),
+            ("PATH", "/tmp/.mount_x/usr/bin/:/home/me/bin:/usr/bin"),
+            ("XDG_DATA_DIRS", "/tmp/.mount_x/usr/share:/usr/share:"),
+            ("HOME", "/home/me"),
+        ]);
+        assert!(result.contains(&("PATH".into(), Some("/home/me/bin:/usr/bin".into()))));
+        assert!(result.contains(&("XDG_DATA_DIRS".into(), Some("/usr/share".into()))));
+        assert!(result.contains(&("APPDIR".into(), None)));
+        assert!(!result.iter().any(|(name, _)| name == "HOME"));
+    }
+
+    #[test]
+    fn appimage_の項目しかない変数は消す() {
+        let result = changes(&[
+            ("APPDIR", "/tmp/.mount_x"),
+            ("LD_LIBRARY_PATH", "/tmp/.mount_x/usr/lib/:/tmp/.mount_x/lib/"),
+            ("PYTHONHOME", "/tmp/.mount_x/usr/"),
+            ("GTK_PATH", "/tmp/.mount_x//usr/lib/gtk-3.0"),
+        ]);
+        for name in ["LD_LIBRARY_PATH", "PYTHONHOME", "GTK_PATH"] {
+            assert!(result.contains(&(name.into(), None)), "{name}");
+        }
+    }
+
+    #[test]
+    fn パスを含まない_appimage_の変数も消す() {
+        let result = changes(&[
+            ("APPDIR", "/tmp/.mount_x"),
+            ("GTK_THEME", "Adwaita:light"),
+            ("PYTHONDONTWRITEBYTECODE", "1"),
+            ("APPIMAGE", "/home/me/a.AppImage"),
+            ("ARGV0", "/home/me/a.AppImage"),
+        ]);
+        for name in ["GTK_THEME", "PYTHONDONTWRITEBYTECODE", "APPIMAGE", "ARGV0"] {
+            assert!(result.contains(&(name.into(), None)), "{name}");
+        }
+    }
+
+    #[test]
+    fn 名前の先頭が同じだけの別のディレクトリは残す() {
+        let result = changes(&[
+            ("APPDIR", "/tmp/.mount_x"),
+            ("PATH", "/tmp/.mount_x/usr/bin:/tmp/.mount_xy/bin"),
+        ]);
+        assert!(result.contains(&("PATH".into(), Some("/tmp/.mount_xy/bin".into()))));
+    }
 }

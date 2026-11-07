@@ -22,7 +22,7 @@ test("gh が無ければインストール方法を案内する", async () => {
   const result = await runPreflight(runner, "ja");
   expect(result.ok).toBe(false);
   expect(result.messages[0]).toContain("gh コマンドが見つかりません");
-  expect(result.messages[0]).toContain("brew install gh");
+  expect(result.messages[0]).toContain("https://cli.github.com");
 });
 
 test("gh が未認証なら gh auth login を案内する", async () => {
