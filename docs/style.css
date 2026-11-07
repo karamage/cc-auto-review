@@ -228,7 +228,7 @@ h3 { font-size: 1.0625rem; font-weight: 600; margin: 0; }
 
 /* --- 動画: 高さから幅を決め、どの画面でも枠ごと収める --- */
 .film {
-  background: var(--ink); min-height: 100svh; display: flex; align-items: center;
+  background: var(--ink); min-height: 100svh; display: flex; flex-direction: column; align-items: center; justify-content: center;
   scroll-margin-top: calc(var(--nav) * -1);
   padding: calc(var(--nav) + 12px) var(--edge) 28px;
 }
@@ -291,6 +291,11 @@ h3 { font-size: 1.0625rem; font-weight: 600; margin: 0; }
 .hud-sound[hidden] { display: none; }
 
 .film-bar { position: relative; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 24px; width: min(100%, 1560px, calc((100svh - var(--nav) - 118px) * var(--ar))); margin-top: 14px; }
+.star-cta { position: relative; display: flex; align-items: center; justify-content: center; gap: 12px; width: fit-content; min-height: 60px; margin: clamp(24px, 4vh, 40px) auto 0; padding: 10px 28px; border-radius: 16px; color: var(--text); font-size: 1.0625rem; font-weight: 500; text-decoration: none; background: rgb(240 242 255 / 0.03); box-shadow: inset 0 0 0 1px var(--hair-2); transition: box-shadow 0.15s, background-color 0.15s; }
+.star-cta:hover { background: rgb(240 242 255 / 0.07); box-shadow: inset 0 0 0 1px var(--text); }
+.star-cta .star-icon { color: var(--text); transition: color 0.15s; }
+.star-cta:hover .star-icon { color: var(--amber); }
+.star-pill { margin-left: 6px; padding: 4px 10px; border-radius: 8px; background: var(--dusk-2); font-size: 0.9375rem; font-variant-numeric: tabular-nums; }
 .film-tabs { display: flex; flex-wrap: wrap; gap: 2px; padding: 3px; border-radius: 999px; box-shadow: inset 0 0 0 1px var(--hair); }
 .film-tabs button { background: none; border: 0; border-radius: 999px; padding: 3px 14px; font-size: 0.875rem; color: var(--mist); transition: color 0.15s, background-color 0.15s; }
 .film-tabs button:hover { color: var(--text); }
@@ -622,6 +627,7 @@ figcaption { font-size: 0.8125rem; line-height: 1.4; color: var(--dim); }
   .top nav .opt2 { display: none; }
   .top nav .star { padding: 7px 10px; }
   .top nav .star-label, .top nav .star-count { display: none; }
+  .star-cta { gap: 8px; max-width: calc(100% - 32px); padding: 10px 16px; font-size: 0.9375rem; white-space: nowrap; }
   .logo span { font-size: 0.9375rem; }
   :lang(ja) h2 { font-size: 1.625rem; }
   .hero-foot .btn-ghost { display: none; }
