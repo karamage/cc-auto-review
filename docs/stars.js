@@ -26,7 +26,7 @@
   try {
     const count = await load();
     if (typeof count !== "number" || count < MIN_SHOWN) return;
-    const text = new Intl.NumberFormat("en", { notation: "compact" }).format(count);
+    const text = new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 }).format(count);
     for (const el of document.querySelectorAll("[data-stars]")) {
       el.textContent = text;
       el.hidden = false;
