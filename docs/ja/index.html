@@ -4,14 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CC Auto Review: 手元の Claude Code で GitHub の PR をレビューする</title>
-<meta name="description" content="手元の Claude Code で GitHub の Pull Request をレビューする macOS アプリ。diff の横に AI の指摘を並べ、リスクを 0〜100 点で示し、完全自動運転ではリスクのある PR だけを人に回します。">
+<meta name="description" content="手元の Claude Code で GitHub の Pull Request をレビューする、macOS と Linux のデスクトップアプリ。diff の横に AI の指摘を並べ、リスクを 0〜100 点で示し、完全自動運転ではリスクのある PR だけを人に回します。">
 <meta name="theme-color" content="#04050f">
 <link rel="canonical" href="https://karamage.github.io/cc-auto-review/ja/">
 <link rel="alternate" hreflang="en" href="https://karamage.github.io/cc-auto-review/">
 <link rel="alternate" hreflang="ja" href="https://karamage.github.io/cc-auto-review/ja/">
 <link rel="alternate" hreflang="x-default" href="https://karamage.github.io/cc-auto-review/">
 <meta property="og:title" content="CC Auto Review: 読むのは、あなたが必要な PR だけ。">
-<meta property="og:description" content="手元の Claude Code で GitHub の Pull Request をレビューする macOS アプリ。diff の横に AI の指摘を並べ、リスクを 0〜100 点で示し、完全自動運転ではリスクのある PR だけを人に回します。">
+<meta property="og:description" content="手元の Claude Code で GitHub の Pull Request をレビューする、macOS と Linux のデスクトップアプリ。diff の横に AI の指摘を並べ、リスクを 0〜100 点で示し、完全自動運転ではリスクのある PR だけを人に回します。">
 <meta property="og:image" content="https://karamage.github.io/cc-auto-review/media/og-ja.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -74,7 +74,7 @@
         <p class="act act3">ほかはアプリがレビューします。残った 3 件を、あなたが読みます。</p>
       </div>
       <div class="hero-foot">
-        <p class="lede"><strong>CC Auto Review</strong> は、手元の Claude Code で GitHub の Pull Request をレビューする macOS アプリです。diff の横に指摘を並べ、PR ごとにリスクを 0〜100 点で示します。何を投稿するかは、あなたが決めます。</p>
+        <p class="lede"><strong>CC Auto Review</strong> は、手元の Claude Code で GitHub の Pull Request をレビューする、macOS と Linux のデスクトップアプリです。diff の横に指摘を並べ、PR ごとにリスクを 0〜100 点で示します。何を投稿するかは、あなたが決めます。</p>
         <div class="hero-get">
           <div class="cta">
           <a class="btn btn-primary" data-arch="arm64" href="https://github.com/karamage/cc-auto-review/releases/latest">Apple シリコン版をダウンロード<small>M1 以降、<span data-size>DMG</span></small></a>
@@ -83,6 +83,7 @@
           <a class="btn btn-ghost" data-asset="_x64.deb" hidden href="https://github.com/karamage/cc-auto-review/releases/latest">Linux .deb<small>x86_64, <span data-size>deb</span></small></a>
         </div>
           <p class="meta"><span data-version>最新版</span>、macOS 11 以降。署名と公証済み。無料のオープンソース（MIT）。</p>
+          <p class="meta">Linux 版は出たばかりで、CI での起動までは確認していますが、実機での確認はまだです。</p>
           <p class="meta hero-try"><a href="#risk">インストールなしで、本物の PR をブラウザで採点する。</a></p>
         </div>
       </div>
@@ -324,7 +325,7 @@
         <details><summary>勝手に投稿することはありますか？</summary><p>完全自動運転をオンにしない限り、ありません。通常のレビューでは、投稿ボタンを押すまで GitHub には何も届きません。</p></details>
         <details><summary>リポジトリを clone する必要はありますか？</summary><p>ありません。PR の変更ファイルだけを一時ディレクトリに取得します。</p></details>
         <details><summary>完全自動運転はバックグラウンドで動き続けますか？</summary><p>いいえ。アプリのウィンドウを開いている間だけ動きます。</p></details>
-        <details><summary>Windows や Linux で使えますか？</summary><p>Linux（x86_64）向けには、次のリリースから AppImage と .deb を配布します。署名はしていないので、各ファイルと一緒に置く .sha256 で確かめてください。Windows には対応していません。</p></details>
+        <details><summary>Windows や Linux で使えますか？</summary><p>Linux（x86_64）向けに AppImage と .deb を配布しています。出たばかりで、CI での起動までは確認していますが、実機での確認はまだです。問題があれば <a href="https://github.com/karamage/cc-auto-review/issues">Issue</a> で教えてください。WebKitGTK 4.1 が必要です。署名はしていないので、各ファイルと一緒に置く .sha256 で確かめてください。Windows には対応していません。</p></details>
     </div>
   </section>
 

@@ -123,7 +123,7 @@ When you turn on the **autopilot**, the app works through your review requests b
 
 **[Download the DMG](https://karamage.github.io/cc-auto-review/#download)** for Apple silicon or Intel, open it, and drag the app to Applications. It is signed with a Developer ID and notarized by Apple, so it opens normally. All versions are on the [releases page](https://github.com/karamage/cc-auto-review/releases).
 
-On Linux x86_64, download the `.AppImage` or `.deb` from the [releases page](https://github.com/karamage/cc-auto-review/releases). They are not signed, so check them against the `.sha256` file next to each one.
+On Linux x86_64, download the `.AppImage` or `.deb` from the [releases page](https://github.com/karamage/cc-auto-review/releases). They are not signed, so check them against the `.sha256` file next to each one. These builds are new: they start in CI but have not been tested on a real desktop yet, so please [report any problems](https://github.com/karamage/cc-auto-review/issues).
 
 ### Prerequisites
 

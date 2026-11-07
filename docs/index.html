@@ -4,14 +4,14 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CC Auto Review: review GitHub pull requests with your local Claude Code</title>
-<meta name="description" content="A macOS app that reviews GitHub pull requests with the Claude Code you already have. AI findings beside the diff, a 0–100 risk score, and an optional autopilot that hands risky PRs to you.">
+<meta name="description" content="A desktop app for macOS and Linux that reviews GitHub pull requests with the Claude Code you already have. AI findings beside the diff, a 0–100 risk score, and an optional autopilot that hands risky PRs to you.">
 <meta name="theme-color" content="#04050f">
 <link rel="canonical" href="https://karamage.github.io/cc-auto-review/">
 <link rel="alternate" hreflang="en" href="https://karamage.github.io/cc-auto-review/">
 <link rel="alternate" hreflang="ja" href="https://karamage.github.io/cc-auto-review/ja/">
 <link rel="alternate" hreflang="x-default" href="https://karamage.github.io/cc-auto-review/">
 <meta property="og:title" content="CC Auto Review: read only the pull requests that need you">
-<meta property="og:description" content="A macOS app that reviews GitHub pull requests with the Claude Code you already have. AI findings beside the diff, a 0–100 risk score, and an optional autopilot that hands risky PRs to you.">
+<meta property="og:description" content="A desktop app for macOS and Linux that reviews GitHub pull requests with the Claude Code you already have. AI findings beside the diff, a 0–100 risk score, and an optional autopilot that hands risky PRs to you.">
 <meta property="og:image" content="https://karamage.github.io/cc-auto-review/media/og-en.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
@@ -74,7 +74,7 @@
         <p class="act act3">The app reviews the rest. These three need you.</p>
       </div>
       <div class="hero-foot">
-        <p class="lede"><strong>CC Auto Review</strong> is a macOS app that reviews GitHub pull requests with the Claude Code you already have. Findings sit beside the diff, every PR gets a risk score from 0 to 100, and you decide what gets posted.</p>
+        <p class="lede"><strong>CC Auto Review</strong> is a desktop app for macOS and Linux that reviews GitHub pull requests with the Claude Code you already have. Findings sit beside the diff, every PR gets a risk score from 0 to 100, and you decide what gets posted.</p>
         <div class="hero-get">
           <div class="cta">
           <a class="btn btn-primary" data-arch="arm64" href="https://github.com/karamage/cc-auto-review/releases/latest">Download for Apple silicon<small>M1 and later, <span data-size>DMG</span></small></a>
@@ -83,6 +83,7 @@
           <a class="btn btn-ghost" data-asset="_x64.deb" hidden href="https://github.com/karamage/cc-auto-review/releases/latest">Linux .deb<small>x86_64, <span data-size>deb</span></small></a>
         </div>
           <p class="meta"><span data-version>Latest release</span>, macOS 11 or later. Signed and notarized. Free and open source (MIT).</p>
+          <p class="meta">Linux builds are new: they start in CI but have not been tested on a real desktop yet.</p>
           <p class="meta hero-try"><a href="#risk">Score a real PR in your browser, no install.</a></p>
         </div>
       </div>
@@ -324,7 +325,7 @@
         <details><summary>Does it post anything without asking?</summary><p>Not unless you turn on the autopilot. In a normal review, nothing reaches GitHub until you press post.</p></details>
         <details><summary>Do I need to clone my repositories?</summary><p>No. Only the PR's changed files are fetched, into a temporary directory.</p></details>
         <details><summary>Does the autopilot keep running in the background?</summary><p>No. It runs only while the app window is open.</p></details>
-        <details><summary>Can I use it on Windows or Linux?</summary><p>Linux x86_64 builds start with the next release, as an AppImage and a .deb. They are not signed, so check them against the .sha256 file next to each download. Windows is not supported.</p></details>
+        <details><summary>Can I use it on Windows or Linux?</summary><p>Linux x86_64 is available as an AppImage and a .deb. These builds are new: they start in CI but have not been tested on a real desktop yet, so please <a href="https://github.com/karamage/cc-auto-review/issues">report any problems</a>. They need WebKitGTK 4.1 and are not signed, so check them against the .sha256 file next to each download. Windows is not supported.</p></details>
     </div>
   </section>
 
