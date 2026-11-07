@@ -23,13 +23,14 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Martian+Mono:wdth,wght@75..112.5,300..600&family=Newsreader:opsz,wght@6..72,200&family=Shippori+Mincho:wght@500;600&family=IBM+Plex+Sans+JP:wght@400;500;600&display=swap">
 <link rel="preload" as="image" href="../media/scene-mountain.webp" fetchpriority="high">
-<link rel="stylesheet" href="../style.css?v=4">
+<link rel="stylesheet" href="../style.css?v=5">
 <script>if(!matchMedia("(prefers-reduced-motion: reduce)").matches)document.documentElement.classList.add("motion")</script>
 <script src="../engine.js?v=1" defer></script>
 <script src="../risk.js?v=3" defer></script>
 <script src="../site.js?v=3" defer></script>
 <script src="../scene.js?v=1" defer></script>
 <script src="../download.js?v=1" defer></script>
+<script src="../stars.js?v=1" defer></script>
 </head>
 <body>
 <a class="skip" href="#main">本文へ移動</a>
@@ -40,7 +41,7 @@
     <a class="opt" href="#risk">リスクの点数</a>
     <a class="opt" href="#autopilot">完全自動運転</a>
     <a class="opt" href="#boundary">安全性</a>
-    <a class="opt" href="https://github.com/karamage/cc-auto-review">GitHub</a>
+    <a class="star" href="https://github.com/karamage/cc-auto-review" aria-label="GitHub で CC Auto Review にスターを付ける"><svg class="star-icon" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M8 .9l2.2 4.6 5 .7-3.6 3.5.9 5L8 12.3l-4.5 2.4.9-5L.8 6.2l5-.7z"/></svg><span class="star-label">スター</span><span class="star-count" data-stars hidden></span></a>
     <a class="opt2" href="../" hreflang="en" lang="en">English</a>
     <a class="get" href="#download">ダウンロード</a>
   </nav>
@@ -340,6 +341,10 @@
       <a class="btn btn-ghost" data-asset="_x64.deb" hidden href="https://github.com/karamage/cc-auto-review/releases/latest">Linux .deb<small>x86_64, <span data-size>deb</span></small></a>
     </div>
     <p class="meta"><span data-version>最新版</span>。<a href="https://github.com/karamage/cc-auto-review/releases">すべてのリリース</a>。</p>
+    <div class="star-ask">
+      <p>無料のオープンソースです。スターが付くと、ほかの人にも見つけてもらいやすくなります。</p>
+      <a class="btn btn-ghost btn-star" href="https://github.com/karamage/cc-auto-review"><svg class="star-icon" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path fill="currentColor" d="M8 .9l2.2 4.6 5 .7-3.6 3.5.9 5L8 12.3l-4.5 2.4.9-5L.8 6.2l5-.7z"/></svg><span>GitHub でスターを付ける</span><span class="star-count" data-stars hidden></span></a>
+    </div>
     </div>
     <ol class="req">
       <li><h3>DMG を開く</h3><p>アプリを「アプリケーション」へドラッグします。Developer ID で署名し、Apple の公証を受けています。macOS 11 以降が必要です。</p></li>
@@ -366,7 +371,7 @@ bun run app:build   # src-tauri/target/release/bundle/macos/</pre>
     <a href="../" hreflang="en" lang="en">English</a>
   </nav>
   <p>このプロジェクトは Anthropic とは関係がなく、Anthropic の承認や支援も受けていません。Claude は Anthropic, PBC の商標です。Claude Code の利用には Anthropic の規約が適用されます。</p>
-  <p>このページにアクセス解析はありません。Google Fonts からフォントを読み込み、最新リリースと採点する PR の情報を GitHub の API に問い合わせます。</p>
+  <p>このページにアクセス解析はありません。Google Fonts からフォントを読み込み、最新リリース、スター数、採点する PR の情報を GitHub の API に問い合わせます。</p>
 </footer>
 </body>
 </html>

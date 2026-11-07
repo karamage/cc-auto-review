@@ -86,6 +86,10 @@ p code, dd code, li code { color: var(--text); background: rgb(170 180 255 / 0.1
 .top nav a:hover { color: var(--text); }
 .top nav .get { color: var(--ink); background: var(--text); padding: 7px 16px; border-radius: 999px; font-weight: 600; transition: background-color 0.15s, box-shadow 0.25s; }
 .top nav .get:hover { color: var(--ink); background: var(--cyan); box-shadow: 0 0 24px rgb(69 228 255 / 0.5); }
+.top nav .star { display: inline-flex; align-items: center; gap: 6px; padding: 7px 14px; border-radius: 999px; color: var(--text); box-shadow: inset 0 0 0 1px var(--hair-2); transition: box-shadow 0.15s; }
+.top nav .star:hover { box-shadow: inset 0 0 0 1px var(--text); }
+.star-icon { flex: none; color: var(--amber); }
+.star-count { padding-left: 8px; margin-left: 2px; border-left: 1px solid var(--hair-2); font-variant-numeric: tabular-nums; }
 
 /* --- ヒーロー: 映画のポスターの構図。スクロールの間だけ画面に留める --- */
 .hero { position: relative; height: 100svh; background: var(--ink); }
@@ -530,6 +534,8 @@ figcaption { font-size: 0.8125rem; line-height: 1.4; color: var(--dim); }
 .get-it .cta { justify-content: center; margin-top: clamp(24px, 4vh, 40px); }
 .get-it .meta { color: var(--mist); }
 .get-it .meta a { color: var(--mist); }
+.star-ask { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 12px 20px; margin-top: 24px; padding-bottom: 36px; color: var(--mist); }
+.btn-star { flex-direction: row; align-items: center; gap: 8px; min-height: 44px; padding: 7px 20px; }
 .req {
   counter-reset: req; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 28px clamp(24px, 4vw, 72px);
   max-width: 1400px; margin: clamp(16px, 4vh, 40px) auto 0; padding-bottom: 36px; text-align: left;
@@ -614,6 +620,8 @@ figcaption { font-size: 0.8125rem; line-height: 1.4; color: var(--dim); }
   .top { gap: 8px; }
   .top nav { gap: 12px; }
   .top nav .opt2 { display: none; }
+  .top nav .star { padding: 7px 10px; }
+  .top nav .star-label, .top nav .star-count { display: none; }
   .logo span { font-size: 0.9375rem; }
   :lang(ja) h2 { font-size: 1.625rem; }
   .hero-foot .btn-ghost { display: none; }
@@ -636,4 +644,9 @@ figcaption { font-size: 0.8125rem; line-height: 1.4; color: var(--dim); }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation: none !important; transition: none !important; }
+}
+
+/* ヘッダーに収まらない幅では、ダウンロード欄のスターボタンだけを残す */
+@media (max-width: 359px) {
+  .top nav .star { display: none; }
 }
