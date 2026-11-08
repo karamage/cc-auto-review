@@ -1,5 +1,5 @@
 > [!TIP]
-> **⭐ `focus-cafe` のアーリーアクセスを受け取るには、このリポジトリにスターを付けて X で [@kara_mage](https://x.com/kara_mage) をフォローしてください**。
+> **⭐ 私たちのプロダクトのアーリーアクセスを受け取るには、このリポジトリにスターを付けて X で [@kara_mage](https://x.com/kara_mage) をフォローしてください**。
 
 > [!NOTE]
 > このプロジェクトは Anthropic との提携関係になく、Anthropic による承認や後援も受けていません。Claude は Anthropic, PBC の商標です。このプロジェクトは Claude を利用した個人開発者による独立したプロジェクトです。
