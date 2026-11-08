@@ -1,5 +1,5 @@
 > [!TIP]
-> **⭐ Star the repo and follow [@kara_mage](https://x.com/kara_mage) on X for early access to `focus-cafe`**.
+> **⭐ Star the repo and follow [@kara_mage](https://x.com/kara_mage) on X for early access to our products**.
 
 > [!NOTE]
 > This project is not affiliated with, endorsed by, or sponsored by Anthropic. Claude is a trademark of Anthropic, PBC. This is an independent developer project using Claude.
