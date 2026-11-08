@@ -132,15 +132,24 @@
   // 共有できるのは公開 PR の結果だけ。貼り付けた diff の内容は URL に載せない
   let latestRun = 0;
   let shareTimer = 0;
-  const setAddress = (query) => {
-    history.replaceState(null, "", `${location.pathname}${query}${location.hash || "#risk"}`);
+  // 触るのは pr パラメータだけ。?ref= などの流入元パラメータとハッシュはそのまま残す
+  const setSharedPr = (pr) => {
+    const params = new URLSearchParams(location.search);
+    params.delete("pr");
+    const query = [params.toString(), pr && `pr=${pr}`].filter(Boolean).join("&");
+    const hash = pr ? location.hash || "#risk" : location.hash;
+    history.replaceState(null, "", `${location.pathname}${query ? `?${query}` : ""}${hash}`);
   };
+  let shareUrl = "";
   const resetShare = () => {
     clearTimeout(shareTimer);
     share.textContent = shareLabel;
   };
   const showLink = (pr) => {
-    setAddress(`?pr=${pr.owner}/${pr.repo}/pull/${pr.number}`);
+    const path = `${pr.owner}/${pr.repo}/pull/${pr.number}`;
+    setSharedPr(path);
+    // 共有リンクには流入元パラメータを載せない
+    shareUrl = `${location.origin}${location.pathname}?pr=${path}#risk`;
     resetShare();
     share.hidden = false;
   };
@@ -148,7 +157,7 @@
     latestRun++;
     button.disabled = false;
     button.textContent = T.score;
-    if (location.search) setAddress("");
+    if (new URLSearchParams(location.search).has("pr")) setSharedPr("");
     resetShare();
     share.hidden = true;
   };
@@ -267,7 +276,7 @@
 
   share.addEventListener("click", async () => {
     try {
-      await navigator.clipboard.writeText(location.href);
+      await navigator.clipboard.writeText(shareUrl);
       share.textContent = T.copied;
       clearTimeout(shareTimer);
       shareTimer = setTimeout(() => {
