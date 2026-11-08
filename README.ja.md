@@ -1,9 +1,3 @@
-> [!TIP]
-> **⭐ 私たちのプロダクトのアーリーアクセスを受け取るには、このリポジトリにスターを付けて X で [@kara_mage](https://x.com/kara_mage) をフォローしてください**。
-
-> [!NOTE]
-> このプロジェクトは Anthropic との提携関係になく、Anthropic による承認や後援も受けていません。Claude は Anthropic, PBC の商標です。このプロジェクトは Claude を利用した個人開発者による独立したプロジェクトです。
-
 <div align="center">
   <img src="assets/icon.png" alt="CC Auto Review のロゴ" width="120" height="120">
 
@@ -37,6 +31,9 @@
   <p><a href="https://karamage.github.io/cc-auto-review/ja/#download"><strong>macOS 版をダウンロード</strong></a> · <a href="https://karamage.github.io/cc-auto-review/ja/#risk"><strong>PR をブラウザで採点する</strong></a> · <a href="https://karamage.github.io/cc-auto-review/ja/">サイト</a></p>
 
   <p><a href="README.md">English README</a></p>
+
+  <p>⭐ <strong>レビューの時間が減ったら、スターを付けてもらえると他のレビュアーにも届きやすくなります。</strong><br>
+  プロダクトのアーリーアクセスは X の <a href="https://x.com/kara_mage">@kara_mage</a> で案内しています。</p>
 </div>
 
 <p align="center">
@@ -53,7 +50,7 @@
 > CC Auto Review は Claude の認証情報を保存しません。手元にインストールした未改変の Claude Code を、あなたの設定のまま実行します。GitHub へのアクセスは `gh` のログインを使います。利用には [Anthropic の規約](https://code.claude.com/docs/en/legal-and-compliance)が適用されます。完全自動運転を使う前に規約を確認するか、API キーを使ってください。
 
 > [!NOTE]
-> このプロジェクトは Anthropic とは関係がなく、Anthropic の承認や支援も受けていません。Claude は Anthropic, PBC の商標です。アプリが投稿するレビューは**あなたの** GitHub アカウントから出ます。
+> このプロジェクトは個人開発者による独立したプロジェクトで、Anthropic とは関係がなく、Anthropic の承認や支援も受けていません。Claude は Anthropic, PBC の商標です。アプリが投稿するレビューは**あなたの** GitHub アカウントから出ます。
 
 ## 🌟 概要
 
@@ -61,9 +58,21 @@
 
 **完全自動運転**をオンにすると、レビュー依頼をアプリが自分で処理します。承認かコメントをして作成者の対応を待ち、再レビューします。CI・マイグレーション・認証・秘密情報・巨大な変更・リスクの点数が高い PR は、投稿せずに人へ回します。
 
+## 🆚 ほかの方法との違い
+
+| | CC Auto Review | SaaS の AI レビューボット | CI で動かす Claude Code |
+|---|---|---|---|
+| レビューするもの | 手元にある Claude Code | ベンダーのサーバー上のモデル | CI ランナー上の Claude Code |
+| リポジトリ側の設定 | 不要。`gh` で読めるリポジトリならどれでも使える | GitHub App のインストール（Organization かリポジトリの管理者権限が必要） | ワークフローとシークレットの追加（リポジトリの管理者権限が必要） |
+| 投稿の前に | 指摘を 1 件ずつ採用・却下・編集できる | PR に直接コメントされる | PR に直接コメントされる |
+| 人が見るべき PR | 0〜100 点のリスクで判断し、完全自動運転は危ない PR だけを人に回す | すべての PR にコメントが付く | すべての PR にコメントが付く |
+
+<sub>右 2 列は一般的な構成です。製品によって異なります。</sub>
+
 ## 📋 目次
 
 - [🌟 概要](#-概要)
+- [🆚 ほかの方法との違い](#-ほかの方法との違い)
 - [✨ 機能](#-機能)
 - [🚀 インストール](#-インストール)
 - [📖 使い方](#-使い方)
@@ -115,7 +124,7 @@
   <sub>完全自動運転をオンにすると、5 件の PR をレビューして承認かコメントをし、危ない 1 件だけを人に回す（サンプルデータ）</sub>
 </p>
 
-### 🖥 macOS のネイティブアプリ
+### 🖥 小さなネイティブアプリ
 - **小さい**: CPU ごとの版は約 12 MB、universal 版は約 23 MB です。サーバは約 6 MB の JavaScript ランタイム [txiki.js](https://github.com/saghul/txiki.js) で動きます。
 - **デスクトップ通知**: AI レビューが終わったときと失敗したときに知らせます。
 - **日本語と英語**の画面に対応しています。
@@ -360,6 +369,7 @@ MIT License です。詳しくは [LICENSE](LICENSE) を見てください。
 - レビューを担う Anthropic の [Claude Code](https://claude.com/claude-code)
 - 小さなネイティブアプリを可能にしている [Tauri](https://tauri.app)、[txiki.js](https://github.com/saghul/txiki.js)、[Hono](https://hono.dev)
 - [GitHub CLI](https://cli.github.com)
+- リスクの点数の元になった [pr-risk-score](https://github.com/karamage/pr-risk-score)。Claude Code の skill と GitHub Action で、Claude Code や CI で PR を採点できます
 - LGTM 画像の [LGTMoon](https://lgtmoon.dev)
 - README の構成の参考にした [opcode](https://github.com/winfunc/opcode)
 

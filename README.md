@@ -1,9 +1,3 @@
-> [!TIP]
-> **⭐ Star the repo and follow [@kara_mage](https://x.com/kara_mage) on X for early access to our products**.
-
-> [!NOTE]
-> This project is not affiliated with, endorsed by, or sponsored by Anthropic. Claude is a trademark of Anthropic, PBC. This is an independent developer project using Claude.
-
 <div align="center">
   <img src="assets/icon.png" alt="CC Auto Review logo" width="120" height="120">
 
@@ -37,6 +31,9 @@
   <p><a href="https://karamage.github.io/cc-auto-review/#download"><strong>Download for macOS</strong></a> · <a href="https://karamage.github.io/cc-auto-review/#risk"><strong>Score a PR in your browser</strong></a> · <a href="https://karamage.github.io/cc-auto-review/">Website</a></p>
 
   <p><a href="README.ja.md">日本語の README はこちら</a></p>
+
+  <p>⭐ <strong>If it saves you review time, a star helps other reviewers find it.</strong><br>
+  Follow <a href="https://x.com/kara_mage">@kara_mage</a> on X for early access to our products.</p>
 </div>
 
 <p align="center">
@@ -53,7 +50,7 @@
 > CC Auto Review stores no Claude credentials. It runs your locally installed, unmodified Claude Code as you have configured it, and GitHub access goes through your `gh` login. Your use is subject to [Anthropic's terms](https://code.claude.com/docs/en/legal-and-compliance). Check them before using the autopilot, or use an API key.
 
 > [!NOTE]
-> This project is not affiliated with, endorsed by, or sponsored by Anthropic. Claude is a trademark of Anthropic, PBC. Reviews the app posts come from **your** GitHub account.
+> This is an independent project, not affiliated with, endorsed by, or sponsored by Anthropic. Claude is a trademark of Anthropic, PBC. Reviews the app posts come from **your** GitHub account.
 
 ## 🌟 Overview
 
@@ -61,9 +58,21 @@
 
 When you turn on the **autopilot**, the app works through your review requests by itself. It approves or comments, waits for the author, reviews again, and hands anything risky (CI, migrations, auth, secrets, huge diffs, high risk scores) to a human without posting.
 
+## 🆚 How it differs
+
+| | CC Auto Review | Hosted AI review bots | Claude Code in CI |
+|---|---|---|---|
+| Who reviews | The Claude Code already on your machine | The vendor's model, on the vendor's servers | Claude Code on a CI runner |
+| Setup on the repository | None. Works on any repo your `gh` login can read | Install a GitHub App (needs org/repo admin) | Add a workflow and a secret (needs repo admin) |
+| Before anything is posted | You accept, reject, or edit each finding | Comments go straight to the PR | Comments go straight to the PR |
+| Which PRs need you | A 0–100 risk score; the autopilot hands only risky PRs to you | Every PR gets comments | Every PR gets comments |
+
+<sub>The other columns describe typical setups; individual products differ.</sub>
+
 ## 📋 Table of Contents
 
 - [🌟 Overview](#-overview)
+- [🆚 How it differs](#-how-it-differs)
 - [✨ Features](#-features)
 - [🚀 Installation](#-installation)
 - [📖 Usage](#-usage)
@@ -115,7 +124,7 @@ When you turn on the **autopilot**, the app works through your review requests b
   <sub>Turn on the autopilot: five PRs are reviewed, approved or commented on, and the risky one is handed to you. (Sample data)</sub>
 </p>
 
-### 🖥 Native macOS app
+### 🖥 Small native app
 - **Small**: about 12 MB per CPU (23 MB universal). The server runs on [txiki.js](https://github.com/saghul/txiki.js), a ~6 MB JavaScript runtime.
 - **Desktop notifications** when a review finishes or fails.
 - **English and Japanese** UI.
@@ -360,6 +369,7 @@ This project is licensed under the MIT License. See [LICENSE](LICENSE) for detai
 - [Claude Code](https://claude.com/claude-code) by Anthropic, which does the reviewing
 - [Tauri](https://tauri.app), [txiki.js](https://github.com/saghul/txiki.js) and [Hono](https://hono.dev), which make a small native app possible
 - [GitHub CLI](https://cli.github.com)
+- [pr-risk-score](https://github.com/karamage/pr-risk-score), the Claude Code skill and GitHub Action the risk score comes from. Use it to score PRs in Claude Code or in CI.
 - [LGTMoon](https://lgtmoon.dev) for the LGTM images
 - [opcode](https://github.com/winfunc/opcode) for README inspiration
 
