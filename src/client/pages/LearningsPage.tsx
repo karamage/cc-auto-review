@@ -204,7 +204,7 @@ export function LearningsPage({ onBack }: { onBack: () => void }) {
         <p className="muted">{text.empty}</p>
       ) : (
         <>
-          <label className="learning-repo">
+          <label className="field learning-repo">
             <span>{text.repoLabel}</span>
             <select value={current ?? ""} onChange={(e) => setRepo(e.target.value)}>
               {repos.map((name) => {
@@ -253,9 +253,9 @@ export function LearningsPage({ onBack }: { onBack: () => void }) {
 
       <section aria-label={text.add}>
         <h2>{text.add}</h2>
-        <label className="learning-repo">
+        <label className="field learning-repo">
           <span>{text.addRepoLabel}</span>
-          <input value={addTarget} onChange={(e) => setAddRepo(e.target.value)} />
+          <input type="text" value={addTarget} onChange={(e) => setAddRepo(e.target.value)} />
         </label>
         <textarea
           value={addText}
