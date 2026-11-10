@@ -11,7 +11,8 @@ import { runRemoteRead } from "./reviewer/remote-read.ts";
 import { ReviewRunner } from "./reviewer/runner.ts";
 import { Translator } from "./reviewer/translate.ts";
 import { SnapshotManager } from "./snapshot/manager.ts";
-import { dataDir, SettingsStore, StateStore } from "./store/files.ts";
+import { dataDir, JsonLearningFile, SettingsStore, StateStore } from "./store/files.ts";
+import { LearningStore } from "./store/learnings.ts";
 import { OsSystemActions } from "./system.ts";
 import type { Runtime } from "./runtime/types.ts";
 
@@ -55,6 +56,7 @@ async function main(runtime: Runtime, options: RunOptions, lang: Lang): Promise<
     translator: new Translator(runner, runtime.files),
     settings: new SettingsStore(join(home, "settings.json")),
     state: new StateStore(join(home, "state")),
+    learnings: new LearningStore(new JsonLearningFile(join(home, "learnings.json"))),
     system: new OsSystemActions(runner),
     clientDir: options.clientDir ?? DEV_CLIENT_DIR,
     staticFiles: runtime.staticFiles,

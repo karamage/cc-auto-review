@@ -123,6 +123,7 @@ function buildApp(
   const files = new StubFileReader(findingsJson);
   const fs = new MemoryFs();
   const github = new GitHubClient(runner);
+  const deps = memoryDeps(settings);
   const app = inJapanese(
     createApp({
       github,
@@ -132,10 +133,10 @@ function buildApp(
       translator: new Translator(runner, files),
       clientDir: "./dist/client",
       staticFiles: bunStaticFiles,
-      ...memoryDeps(settings),
+      ...deps,
     }),
   );
-  return { app, runner, files, fs };
+  return { app, runner, files, fs, learnings: deps.learnings };
 }
 
 /** claude の呼び出しはプロンプト全文がキーになるため、動的に応答する */
@@ -694,4 +695,45 @@ index 1111111..2222222 100644
   const last = events.at(-1) as Extract<ReviewStreamEvent, { type: "findings" }>;
   expect(last.riskScore?.semantic).toBeNull();
   expect(last.riskScore?.score).toBeGreaterThanOrEqual(60);
+});
+
+test("採用済みの学びをプロンプトに入れ、AI の候補を PR 番号つきで保存する", async () => {
+  const { app, runner, learnings } = buildApp(
+    JSON.stringify({ findings: [], learnings: ["新しい学び"] }),
+  );
+  await learnings.add("o/r", "採用済みの学び");
+  let prompt = "";
+  stubClaude(runner, (cmd) => {
+    prompt = cmd[2] as string;
+  });
+
+  await readEvents(await startReview(app));
+
+  expect(prompt).toContain("- 採用済みの学び");
+  const candidate = (await learnings.list()).find((l) => l.status === "candidate");
+  expect(candidate).toMatchObject({ text: "新しい学び", prNumber: 12, repo: "o/r" });
+});
+
+test("候補を保存できなくても、レビューの結果は返す", async () => {
+  const { app, runner, learnings } = buildApp(
+    JSON.stringify({ findings: [], learnings: ["新しい学び"] }),
+  );
+  stubClaude(runner);
+  learnings.addCandidates = async () => {
+    throw new Error("disk full");
+  };
+
+  const events = await readEvents(await startReview(app));
+  expect(events.at(-1)?.type).toBe("findings");
+});
+
+test("学びを読めなくても、学びなしでレビューする", async () => {
+  const { app, runner, learnings } = buildApp(JSON.stringify({ findings: [] }));
+  stubClaude(runner);
+  learnings.forPrompt = async () => {
+    throw new Error("EACCES");
+  };
+
+  const events = await readEvents(await startReview(app));
+  expect(events.at(-1)?.type).toBe("findings");
 });
