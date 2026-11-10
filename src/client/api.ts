@@ -2,6 +2,8 @@ import type {
   ChatRequest,
   ChatStreamEvent,
   ClaudeUsage,
+  Learning,
+  LearningPatch,
   PostedReview,
   PRActivity,
   PRDetail,
@@ -60,6 +62,12 @@ export interface ApiClient {
   saveSettings(settings: Settings): Promise<Settings>;
   /** 保存前の設定で、プロファイルがどんなプロンプトになるか */
   previewPrompt(settings: Settings, profileId: string): Promise<string>;
+  fetchLearnings(): Promise<Learning[]>;
+  addLearning(repo: string, text: string): Promise<Learning>;
+  updateLearning(id: number, patch: LearningPatch): Promise<Learning>;
+  removeLearning(id: number): Promise<void>;
+  /** repo が null ならすべての repo を空にする。消した件数を返す */
+  resetLearnings(repo: string | null): Promise<number>;
   /** 投げっぱなしの POST。外部リンクを開く、通知を出すなど */
   post(path: string, body: unknown): Promise<unknown>;
   streamReview(
@@ -189,6 +197,20 @@ export function createApiClient(base: Fetcher): ApiClient {
       (await sendJson<{ prompt: string }>("/api/settings/preview", { settings, profileId })).prompt,
 
     post: (path, body) => sendJson<unknown>(path, body),
+
+    fetchLearnings: async () =>
+      (await getJson<{ learnings: Learning[] }>("/api/learnings")).learnings,
+
+    addLearning: (repo, text) => sendJson<Learning>("/api/learnings", { repo, text }),
+
+    updateLearning: (id, patch) => sendJson<Learning>(`/api/learnings/${id}`, patch, "PUT"),
+
+    // 本文が無いと sendJson は GET になるので、空のオブジェクトを送る
+    removeLearning: (id) => sendJson<void>(`/api/learnings/${id}`, {}, "DELETE"),
+
+    resetLearnings: async (repo) =>
+      (await sendJson<{ removed: number }>("/api/learnings/reset", repo === null ? {} : { repo }))
+        .removed,
 
     async streamReview(
       pr,

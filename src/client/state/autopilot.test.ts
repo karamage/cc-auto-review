@@ -294,6 +294,11 @@ function fakeApi(result: {
     fetchDefaultSettings: () => Promise.reject(new Error("unused")),
     saveSettings: () => Promise.reject(new Error("unused")),
     previewPrompt: () => Promise.reject(new Error("unused")),
+    fetchLearnings: () => Promise.reject(new Error("unused")),
+    addLearning: () => Promise.reject(new Error("unused")),
+    updateLearning: () => Promise.reject(new Error("unused")),
+    removeLearning: () => Promise.reject(new Error("unused")),
+    resetLearnings: () => Promise.reject(new Error("unused")),
     post: () => Promise.reject(new Error("unused")),
     async markAutoJudge(pr) {
       labeled.push(pr.number);
