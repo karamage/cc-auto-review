@@ -1,6 +1,7 @@
 import { defaultSettings, normalizeSettings, type Settings } from "../../shared/settings.ts";
 import type { SystemActions } from "../system.ts";
 import type { StateKey } from "./files.ts";
+import { type LearningFile, LearningStore } from "./learnings.ts";
 
 /** テスト用。設定をメモリにだけ持つ */
 export class MemorySettingsStore {
@@ -37,12 +38,31 @@ export class RecordingSystemActions implements SystemActions {
   }
 }
 
+/** テスト用。学び帳の内容をメモリにだけ持つ */
+export class MemoryLearningFile implements LearningFile {
+  data: string | null = null;
+  failSave = false;
+  quarantined = 0;
+  async load(): Promise<string | null> {
+    return this.data;
+  }
+  async save(data: string): Promise<void> {
+    if (this.failSave) throw new Error("save failed");
+    this.data = data;
+  }
+  async quarantine(): Promise<void> {
+    this.quarantined += 1;
+    this.data = null;
+  }
+}
+
 /** createApp に渡す、テスト用の既定の部品 */
 export function memoryDeps(settings?: Settings) {
   return {
     settings: new MemorySettingsStore(settings),
     state: new MemoryStateStore(),
     system: new RecordingSystemActions(),
+    learnings: new LearningStore(new MemoryLearningFile()),
   };
 }
 

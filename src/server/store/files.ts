@@ -2,6 +2,7 @@ import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import { homedir } from "node:os";
 import { dirname, join } from "node:path";
 import { normalizeSettings, type Settings } from "../../shared/settings.ts";
+import type { LearningFile } from "./learnings.ts";
 
 /** 設定と画面の状態を置くディレクトリを指す環境変数。無ければ ~/.config/cc-auto-review */
 export const ENV_HOME = "CC_AUTO_REVIEW_HOME";
@@ -82,5 +83,22 @@ export class StateStore {
 
   async save(key: StateKey, data: string): Promise<void> {
     await writeAtomic(this.file(key), data);
+  }
+}
+
+/** 学び帳のファイル。読めないファイルは .broken に移して残す */
+export class JsonLearningFile implements LearningFile {
+  constructor(private readonly path: string) {}
+
+  async load(): Promise<string | null> {
+    return await readOrNull(this.path);
+  }
+
+  async save(data: string): Promise<void> {
+    await writeAtomic(this.path, data);
+  }
+
+  async quarantine(): Promise<void> {
+    await rename(this.path, `${this.path}.broken`);
   }
 }
