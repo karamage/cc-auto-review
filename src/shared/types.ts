@@ -176,6 +176,8 @@ export interface ReviewResult {
   risk: RiskAssessment | null;
   /** 元の日本語と locale の日本語の比較。i18n の観点が無効なら null */
   i18nComparisons: I18nComparison[] | null;
+  /** AI が出した学びの候補。形が崩れていれば空 */
+  learnings: string[];
   /**
    * AI が書いたリスクの点数の補正（素のまま）。点の計算はサーバが applySemanticRisk でする。
    * 書かれていなければ null
