@@ -1,4 +1,5 @@
-import type { ReactNode } from "react";
+import { type ReactNode, useState } from "react";
+import { LEARNING_MAX_TEXT_LENGTH } from "../../shared/types.ts";
 import { t } from "../i18n.ts";
 import type { DraftItem, FindingStatus } from "../state/draft.ts";
 import { findingAnchorId } from "./FindingIndex.tsx";
@@ -15,12 +16,81 @@ export function renderInlineCode(text: string): ReactNode[] {
   );
 }
 
+export function rememberDraft(path: string, title: string): string {
+  return t().review.rememberDraft(path, title);
+}
+
+/** 却下した指摘を、次回のレビューに引き継ぐ学びとして残す。文面は人が直してから保存する */
+function RememberLearning({
+  path,
+  title,
+  onRemember,
+}: {
+  path: string;
+  title: string;
+  onRemember: (text: string) => Promise<void>;
+}) {
+  const text = t().review;
+  const [draft, setDraft] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  if (saved) return <p className="finding-hint">{text.remembered}</p>;
+  if (draft === null) {
+    return (
+      <footer>
+        <button type="button" onClick={() => setDraft(rememberDraft(path, title))}>
+          {text.remember}
+        </button>
+      </footer>
+    );
+  }
+  return (
+    <div>
+      <textarea
+        value={draft}
+        onChange={(e) => setDraft(e.target.value)}
+        aria-label={text.rememberLabel}
+        maxLength={LEARNING_MAX_TEXT_LENGTH}
+        rows={3}
+      />
+      {error === null ? null : (
+        <p role="alert" className="error">
+          {error}
+        </p>
+      )}
+      <footer>
+        <button
+          type="button"
+          data-variant="primary"
+          disabled={busy || draft.trim() === ""}
+          onClick={() => {
+            setBusy(true);
+            setError(null);
+            onRemember(draft)
+              .then(() => setSaved(true))
+              .catch((e: unknown) => setError(e instanceof Error ? e.message : String(e)))
+              .finally(() => setBusy(false));
+          }}
+        >
+          {text.rememberSave}
+        </button>
+        <button type="button" disabled={busy} onClick={() => setDraft(null)}>
+          {text.rememberCancel}
+        </button>
+      </footer>
+    </div>
+  );
+}
+
 export function FindingCard({
   item,
   number,
   onStatus,
   onBody,
   onAsk,
+  onRemember,
 }: {
   item: DraftItem;
   /** 図面の改訂記号のような通し番号。投稿前の確認やファイル索引で指摘を指し示すのに使う */
@@ -29,6 +99,8 @@ export function FindingCard({
   onBody: (body: string) => void;
   /** チャットでこの指摘について質問する。質問できない状態なら無い */
   onAsk?: () => void;
+  /** 却下した指摘を学び帳に残す。残せない場面では無い */
+  onRemember?: (text: string) => Promise<void>;
 }) {
   const { finding, anchor, reason } = item.anchored;
   const text = t().review;
@@ -104,6 +176,9 @@ export function FindingCard({
         )}
         {item.status === "accepted" ? <span className="finding-hint">{text.editHint}</span> : null}
       </footer>
+      {item.status === "rejected" && onRemember !== undefined ? (
+        <RememberLearning path={finding.path} title={finding.title} onRemember={onRemember} />
+      ) : null}
     </article>
   );
 }

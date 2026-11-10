@@ -44,6 +44,7 @@ export function DiffFileView({
   onBody,
   onAskFinding,
   onAskLine,
+  onRemember,
 }: {
   file: DiffFile;
   /** 行アンカーの指摘のみ。summary の指摘は ReviewPage が別枠で出す */
@@ -58,6 +59,8 @@ export function DiffFileView({
   /** チャットで質問する。質問できない状態なら無い */
   onAskFinding?: (findingId: string) => void;
   onAskLine?: (path: string, line: number, side: "LEFT" | "RIGHT") => void;
+  /** 却下した指摘を学び帳に残す */
+  onRemember?: (text: string) => Promise<void>;
 }) {
   // side が LEFT のコメントは変更前ファイルの行番号を持つ。
   // 変更後の行番号と突き合わせると別の行の下に出るので、ファイル単位でまとめる
@@ -139,6 +142,7 @@ export function DiffFileView({
                                   ? undefined
                                   : () => onAskFinding(item.anchored.finding.id)
                               }
+                              onRemember={onRemember}
                             />
                           ))}
                           {lineComments.map((c) => (

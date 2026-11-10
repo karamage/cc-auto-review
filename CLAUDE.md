@@ -58,6 +58,9 @@ After a review, the client sends the question, history and current findings to `
 - `risk.ts` — rule-based `low/medium/high` level (path regexes, changed-line limits, profile routing) used by autopilot handoff.
 - `risk-score.ts` — 0–100 score ported from pr-risk-score: deterministic baseline from the diff + AI adjustment bounded to ±20, with floors and escalations. The server does the arithmetic; the AI output only proposes items. Autopilot hands a PR to a human when score > threshold (default 50) or on escalation.
 
+### Learnings (`store/learnings.ts`, `routes/learnings.ts`)
+Each `owner/repo` has one notebook in `learnings.json` under the data dir. Adopted learnings go into the review prompt (`learningsSection`). The AI's `learnings` output is saved as candidates only and is never adopted automatically, even on autopilot, because PR text reaches the model. A rejected finding can be saved as a learning from `FindingCard`.
+
 ### Testing conventions
 - Tests never run real `gh`/`claude`/`git`. Use `FakeCommandRunner` (`exec.ts`), keyed by the space-joined command line; unregistered commands throw. In-memory stores and `RecordingSystemActions` live in `store/memory.ts`.
 - The client `ApiClient` takes a `Fetcher`, so client tests call the Hono `app.fetch` directly.
@@ -69,4 +72,4 @@ UI strings live in `client/messages.ts`: `ja` is the source of truth and `en` mu
 `docs/` is the GitHub Pages site, plain HTML with no build: `docs/index.html` (EN) and `docs/ja/index.html` (JA) share `style.css`, `site.js`, `scene.js`, `risk.js`, `download.js` and `stars.js`. `scene.js` draws the hero with raw WebGL from `media/scene-mountain.webp` and `media/scene-cleared.webp`; the `--summit` and `--horizon` values in `style.css` set where the art sits for both the shader and the CSS fallback. `download.js` looks up the latest release, so a new release needs no site change. `docs/engine.js` is generated from the real scoring code with `bun run build:site`; CI fails if it is stale, so rebuild it after changing `risk-score.ts` or `diff/parse.ts`.
 
 ## Settings / data
-App settings and state: `~/.config/cc-auto-review/` (override with `CC_AUTO_REVIEW_HOME`). Snapshots go under `$TMPDIR/cc-auto-review-snapshots` and orphans are pruned on startup.
+App settings, state and learnings: `~/.config/cc-auto-review/` (override with `CC_AUTO_REVIEW_HOME`). Snapshots go under `$TMPDIR/cc-auto-review-snapshots` and orphans are pruned on startup.

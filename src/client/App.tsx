@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import type { PRRef } from "../shared/types.ts";
+import { LearningsPage } from "./pages/LearningsPage.tsx";
 import { PRListPage } from "./pages/PRListPage.tsx";
 import { ReviewPage } from "./pages/ReviewPage.tsx";
 import { SettingsPage } from "./pages/SettingsPage.tsx";
@@ -7,7 +8,11 @@ import { useLang } from "./i18n.ts";
 import type { SessionStore } from "./state/sessions.ts";
 import type { AutopilotStore } from "./state/autopilot.ts";
 
-export type Screen = { kind: "list" } | { kind: "review"; pr: PRRef } | { kind: "settings" };
+export type Screen =
+  | { kind: "list" }
+  | { kind: "review"; pr: PRRef }
+  | { kind: "settings" }
+  | { kind: "learnings" };
 
 export function App({
   sessions,
@@ -25,6 +30,7 @@ export function App({
 
   const toList = () => setScreen({ kind: "list" });
   if (screen.kind === "settings") return <SettingsPage onBack={toList} />;
+  if (screen.kind === "learnings") return <LearningsPage onBack={toList} />;
   if (screen.kind === "review") {
     return <ReviewPage sessions={sessions} pr={screen.pr} onBack={toList} />;
   }
@@ -34,6 +40,7 @@ export function App({
       autopilot={autopilot}
       onSelect={(pr) => setScreen({ kind: "review", pr })}
       onOpenSettings={() => setScreen({ kind: "settings" })}
+      onOpenLearnings={() => setScreen({ kind: "learnings" })}
     />
   );
 }

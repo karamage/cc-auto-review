@@ -102,6 +102,12 @@ function parseRisk(raw: unknown): RiskAssessment | null {
   return { level: item.level, reasons };
 }
 
+/** 候補が読めなくてもレビューは失敗にせず、読めた分だけ返す */
+function parseLearnings(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.map(text).filter((item) => item !== "");
+}
+
 /** 書かれていなければ null。頼んだ回かどうかは呼び出し側が決める */
 function parseI18nComparisons(raw: unknown): I18nComparison[] | null {
   if (!Array.isArray(raw)) return null;
@@ -169,6 +175,7 @@ export function parseReviewResult(output: string): ReviewResult {
     i18nComparisons: parseI18nComparisons(
       (parsed as { i18nComparisons?: unknown }).i18nComparisons,
     ),
+    learnings: parseLearnings((parsed as { learnings?: unknown }).learnings),
     riskScore: (parsed as { riskScore?: unknown }).riskScore ?? null,
   };
 }

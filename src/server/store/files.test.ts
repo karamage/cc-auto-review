@@ -3,7 +3,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, expect, test } from "bun:test";
 import { defaultSettings } from "../../shared/settings.ts";
-import { dataDir, SettingsStore, StateStore } from "./files.ts";
+import { dataDir, JsonLearningFile, SettingsStore, StateStore } from "./files.ts";
 
 let dir: string;
 beforeEach(async () => {
@@ -37,4 +37,15 @@ test("画面の状態はキーごとのファイルに置き、無ければ null
   expect(await state.load("sessions")).toBeNull();
   await state.save("sessions", '{"a":1}');
   expect(await state.load("sessions")).toBe('{"a":1}');
+});
+
+test("JsonLearningFile は保存した内容を読み直し、退避すると無かったことになる", async () => {
+  const path = join(dir, "nested", "learnings.json");
+  const file = new JsonLearningFile(path);
+  expect(await file.load()).toBeNull();
+  await file.save("{}");
+  expect(await file.load()).toBe("{}");
+  await file.quarantine();
+  expect(await file.load()).toBeNull();
+  expect(await readFile(`${path}.broken`, "utf8")).toBe("{}");
 });

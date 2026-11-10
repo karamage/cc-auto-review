@@ -7,6 +7,7 @@ import type { GitHubClient } from "./github/client.ts";
 import type { ReviewRunner } from "./reviewer/runner.ts";
 import type { Translator } from "./reviewer/translate.ts";
 import { registerChatRoutes } from "./routes/chat.ts";
+import { registerLearningRoutes } from "./routes/learnings.ts";
 import { registerPRRoutes } from "./routes/prs.ts";
 import { registerReviewRoutes } from "./routes/review.ts";
 import { registerSettingsRoutes } from "./routes/settings.ts";
@@ -18,6 +19,7 @@ import type { StateKey } from "./store/files.ts";
 import type { StaticFiles } from "./runtime/types.ts";
 import type { SystemActions } from "./system.ts";
 import { requestLang } from "./lang.ts";
+import type { LearningStore } from "./store/learnings.ts";
 
 export interface AppDeps {
   github: GitHubClient;
@@ -35,6 +37,8 @@ export interface AppDeps {
     load(key: StateKey): Promise<string | null>;
     save(key: StateKey, data: string): Promise<void>;
   };
+  /** レビューをまたいで引き継ぐ学び */
+  learnings: LearningStore;
   system: SystemActions;
   clientDir: string;
   staticFiles: StaticFiles;
@@ -80,6 +84,7 @@ export function createApp(deps: AppDeps): Hono {
   registerChatRoutes(app, deps);
   registerSubmitRoutes(app, deps);
   registerSettingsRoutes(app, deps);
+  registerLearningRoutes(app, deps);
   registerSystemRoutes(app, deps);
 
   // 想定外の失敗はすべて 500。入力の不正は各ルートが自分で 400 を返す

@@ -212,3 +212,11 @@ test("チャットの回答が無ければ読み取りエラーにする", () =>
   expect(() => parseChatResult('{"answer":"  "}')).toThrow(FindingParseError);
   expect(() => parseChatResult("not json")).toThrow(FindingParseError);
 });
+
+test("learnings の文字列だけを読み、形が崩れていても失敗にしない", () => {
+  const parse = (learnings: unknown) =>
+    parseReviewResult(JSON.stringify({ findings: [], learnings })).learnings;
+  expect(parse(["  a  ", "", 1, null, "b"])).toEqual(["a", "b"]);
+  expect(parse("文字列")).toEqual([]);
+  expect(parseReviewResult(JSON.stringify({ findings: [] })).learnings).toEqual([]);
+});

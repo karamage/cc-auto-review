@@ -255,10 +255,16 @@ function BrandMark() {
 export function TopBar({
   active = "top",
   onOpenSettings,
+  onOpenLearnings,
+  pendingLearnings = 0,
 }: {
   active?: string;
   /** 設定画面を開く。無ければボタンを出さない */
   onOpenSettings?: () => void;
+  /** 学び帳を開く。無ければボタンを出さない */
+  onOpenLearnings?: () => void;
+  /** 人が確かめていない学びの候補の数 */
+  pendingLearnings?: number;
 }) {
   const text = t().dashboard;
   // 時刻は分までしか出さない。コロンの点滅は CSS が受け持つ
@@ -302,6 +308,16 @@ export function TopBar({
           {text.source}
         </span>
       </div>
+      {onOpenLearnings === undefined ? null : (
+        <button type="button" className="topbar-settings" onClick={onOpenLearnings}>
+          {t().learnings.open}
+          {pendingLearnings === 0 ? null : (
+            <span className="topbar-badge" title={t().learnings.pendingBadge(pendingLearnings)}>
+              {pendingLearnings}
+            </span>
+          )}
+        </button>
+      )}
       {onOpenSettings === undefined ? null : (
         <button type="button" className="topbar-settings" onClick={onOpenSettings}>
           <Icon name="settings" size={16} />

@@ -130,6 +130,10 @@ export function ReviewPage({
     setDraft((s) => editBody(s, findingId, body));
   };
 
+  const rememberLearning = async (text: string): Promise<void> => {
+    await browserClient.addLearning(pr.repo, text);
+  };
+
   const handleSubmit = async (summary: PRSummary, commitId: string): Promise<void> => {
     setSubmitting(true);
     setSubmitError(null);
@@ -439,6 +443,7 @@ export function ReviewPage({
                   onAsk={
                     chatAvailable ? () => askAboutFinding(item.anchored.finding.id) : undefined
                   }
+                  onRemember={rememberLearning}
                 />
               ))}
             </section>
@@ -465,6 +470,7 @@ export function ReviewPage({
               onBody={handleBody}
               onAskFinding={chatAvailable ? askAboutFinding : undefined}
               onAskLine={chatAvailable ? askAboutLine : undefined}
+              onRemember={rememberLearning}
             />
           ))}
         </div>

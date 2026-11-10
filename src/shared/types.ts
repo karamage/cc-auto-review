@@ -176,6 +176,8 @@ export interface ReviewResult {
   risk: RiskAssessment | null;
   /** 元の日本語と locale の日本語の比較。i18n の観点が無効なら null */
   i18nComparisons: I18nComparison[] | null;
+  /** AI が出した学びの候補。形が崩れていれば空 */
+  learnings: string[];
   /**
    * AI が書いたリスクの点数の補正（素のまま）。点の計算はサーバが applySemanticRisk でする。
    * 書かれていなければ null
@@ -391,4 +393,43 @@ export interface Approval {
   author: string;
   submittedAt: string;
   url: string;
+}
+
+/** 学びの状態。candidate は AI が出して人が確かめていないもの。プロンプトには入れない */
+export type LearningStatus = "candidate" | "active";
+export type LearningSource = "ai" | "human";
+
+/** 1 冊からプロンプトに入れる数。固定した項目もこの数まで */
+export const LEARNING_PROMPT_LIMIT = 30;
+/** 1 冊に溜める候補の数。超えたら古い候補から捨てる */
+export const LEARNING_MAX_PENDING = 50;
+/** 1 回のレビューで受け取る候補の数。多く出させても人が確かめきれない */
+export const LEARNING_MAX_PER_RUN = 3;
+/** AI の候補の長さ。超えた分は切る */
+export const LEARNING_MAX_CANDIDATE_LENGTH = 500;
+/** 人が書く項目の長さ。プロンプトに毎回入るので、長すぎるものは受け付けない */
+export const LEARNING_MAX_TEXT_LENGTH = 2000;
+
+export interface Learning {
+  /** 保存ファイルの nextId から振る連番。大きいほど新しい */
+  id: number;
+  /** 小文字の owner/repo */
+  repo: string;
+  text: string;
+  status: LearningStatus;
+  pinned: boolean;
+  source: LearningSource;
+  /** 候補を出したレビューの PR 番号。人が書いたものは null */
+  prNumber: number | null;
+  /** いまプロンプトに入るか。保存はせず、読み出すときに計算する */
+  inPrompt: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface LearningPatch {
+  text?: string;
+  pinned?: boolean;
+  /** true で候補を採用する。false で採用済みを候補に戻す（プロンプトから外し、固定も外す） */
+  adopt?: boolean;
 }

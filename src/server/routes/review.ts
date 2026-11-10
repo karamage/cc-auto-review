@@ -234,6 +234,11 @@ export function registerReviewRoutes(app: Hono, deps: AppDeps): void {
 
         // 出力ファイルは作業ディレクトリの外に置く。Grep の対象に混ざらないように
         const outputPath = join(snapshot.root, "findings.json");
+        // 学びはレビューの助けで、無くてもレビューはできる。読めないことでレビューを止めない
+        const learnings = await deps.learnings.forPrompt(pr.repo).catch((error: unknown) => {
+          console.error("Could not read the learnings", error);
+          return [];
+        });
         const prompt = buildReviewPrompt({
           prNumber: pr.number,
           title: summary.title,
@@ -252,6 +257,7 @@ export function registerReviewRoutes(app: Hono, deps: AppDeps): void {
           assessRisk,
           handoffRules: auto.handoffRules,
           riskBaseline: describeBaselineForPrompt(baselineRisk),
+          learnings,
         });
 
         await send({
@@ -275,6 +281,10 @@ export function registerReviewRoutes(app: Hono, deps: AppDeps): void {
             timeoutMs: settings.timeoutMinutes * 60_000,
           },
         );
+        // 候補を残せなくても、レビューの結果は活かす
+        await deps.learnings
+          .addCandidates(pr.repo, pr.number, result.learnings)
+          .catch((error: unknown) => console.error("Could not save the learnings", error));
         await send({
           type: "findings",
           findings: anchorFindings(result.findings, files, lang),

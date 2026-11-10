@@ -15,6 +15,7 @@ import {
   type Severity,
 } from "../../shared/types.ts";
 import { ApiError, browserClient, fetchPRs } from "../api.ts";
+import { candidateCount } from "../state/learnings.ts";
 import {
   ActivityHeatmap,
   AuthorBars,
@@ -434,12 +435,25 @@ function RegisterHead({
 
 /** 設定画面を開く。一覧のどこからでも上辺の帯のボタンで開けるよう、枠に渡す */
 const OpenSettings = createContext<(() => void) | undefined>(undefined);
+const OpenLearnings = createContext<(() => void) | undefined>(undefined);
 
 /** 上辺の帯と左の帯で囲んだ、画面全体の枠 */
 function Shell({ children }: { children: ReactNode }) {
+  const [pendingLearnings, setPendingLearnings] = useState(0);
+  useEffect(() => {
+    // 件数は目印なので、取れなければ出さないだけにする
+    browserClient
+      .fetchLearnings()
+      .then((learnings) => setPendingLearnings(candidateCount(learnings)))
+      .catch(() => {});
+  }, []);
   return (
     <div className="shell">
-      <TopBar onOpenSettings={useContext(OpenSettings)} />
+      <TopBar
+        onOpenSettings={useContext(OpenSettings)}
+        onOpenLearnings={useContext(OpenLearnings)}
+        pendingLearnings={pendingLearnings}
+      />
       <SideRail />
       <main className="page dash" id="top">
         {children}
@@ -504,15 +518,19 @@ export function PRListPage({
   autopilot,
   onSelect,
   onOpenSettings,
+  onOpenLearnings,
 }: {
   sessions: SessionStore;
   autopilot: AutopilotStore;
   onSelect: (pr: PRRef) => void;
   onOpenSettings: () => void;
+  onOpenLearnings: () => void;
 }) {
   return (
     <OpenSettings.Provider value={onOpenSettings}>
-      <PRList sessions={sessions} autopilot={autopilot} onSelect={onSelect} />
+      <OpenLearnings.Provider value={onOpenLearnings}>
+        <PRList sessions={sessions} autopilot={autopilot} onSelect={onSelect} />
+      </OpenLearnings.Provider>
     </OpenSettings.Provider>
   );
 }
