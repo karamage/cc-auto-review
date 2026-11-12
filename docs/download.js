@@ -2,10 +2,14 @@
 // API が使えないとき（レート制限など）はリリースページへのリンクのまま残す
 (async () => {
   const KEY = "cc-auto-review-latest-release";
+  // 開いたままのタブでも新しいリリースに切り替わるよう、キャッシュは 10 分で捨てる
+  const TTL_MS = 10 * 60 * 1000;
   const load = async () => {
     try {
       const cached = JSON.parse(sessionStorage.getItem(KEY));
-      if (cached) return cached;
+      if (cached && typeof cached.savedAt === "number" && Date.now() - cached.savedAt < TTL_MS) {
+        return cached;
+      }
     } catch {
       // ストレージが使えなければ毎回取りに行く
     }
@@ -15,6 +19,7 @@
     if (!res.ok) return null;
     const { tag_name, assets } = await res.json();
     const release = {
+      savedAt: Date.now(),
       tag_name,
       assets: (assets || []).map(({ name, size, browser_download_url }) => ({
         name,
