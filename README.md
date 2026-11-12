@@ -113,6 +113,12 @@ When you turn on the **autopilot**, the app works through your review requests b
 - **Prompt preview** shows exactly what Claude receives.
 - **Repository conventions** (`CLAUDE.md`, `AGENTS.md`, `REVIEW.md`) are read from the base branch.
 
+### 📓 Learnings
+- **Carries what a review learned to the next one**: Knowledge like "this pattern is intentional, don't flag it" is kept per repository and put in the next review's prompt, so the same false positives don't come back.
+- **AI suggestions need your approval**: A review can suggest up to 3 learnings. They go into the prompt only after you adopt them. Even on autopilot nothing is adopted automatically, because PR text that anyone can write reaches the model.
+- **Save one from a rejected finding**: When you reject a finding, **Remember as a learning** saves why. You can also add your own on the Learnings screen.
+- **Pins and a limit**: Up to 30 learnings per repository go into the prompt. Pinned ones always go in.
+
 ### 🤖 Autopilot (optional)
 - **Sweeps your review requests** on an interval, approves or comments, and re-reviews when the author pushes or replies.
 - **Hands risky PRs to a human**: by path, by changed lines, by risk score, or by natural-language criteria you write.
