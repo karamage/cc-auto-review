@@ -5,6 +5,7 @@ import {
   activityGrid,
   authorLoad,
   cumulativeSize,
+  currentSection,
   HEATMAP_DAYS,
   niceCeiling,
   repoShares,
@@ -127,4 +128,27 @@ test("目盛りの上限は、値を超える切りのよい数にする", () =>
   expect(niceCeiling(5860)).toBe(6000);
   expect(niceCeiling(1000)).toBe(1000);
   expect(niceCeiling(1001)).toBe(1200);
+});
+
+test("currentSection はページ上の位置と入れ子で、いま見ている区画を選ぶ", () => {
+  // ページ上の並び: top(main) > insights(中に autopilot) > requests(中に open-by-url) > posted
+  const at = (shift: number) =>
+    [
+      { id: "top", top: 69, bottom: 4000, nested: false },
+      { id: "insights", top: 300, bottom: 1500, nested: false },
+      { id: "autopilot", top: 300, bottom: 1100, nested: true },
+      { id: "requests", top: 1600, bottom: 3200, nested: false },
+      { id: "open-by-url", top: 1700, bottom: 1800, nested: true },
+      { id: "posted", top: 3300, bottom: 3900, nested: false },
+    ].map((box) => ({ ...box, top: box.top - shift, bottom: box.bottom - shift }));
+  expect(currentSection(at(0), 900, false)).toBe("top");
+  // 分析と自動運転は上端がそろうので、外側の分析を選ぶ
+  expect(currentSection(at(212), 900, false)).toBe("insights");
+  // レビュー依頼の中の、まだ基準線に届かない URL で開くは選ばない
+  expect(currentSection(at(1512), 900, false)).toBe("requests");
+  expect(currentSection(at(1612), 900, false)).toBe("open-by-url");
+  expect(currentSection(at(1900), 900, false)).toBe("requests");
+  // 末尾では、基準線に届かない最後の区画を選ぶ
+  expect(currentSection(at(3000), 900, true)).toBe("posted");
+  expect(currentSection([], 900, false)).toBeUndefined();
 });

@@ -253,12 +253,10 @@ function BrandMark() {
 }
 
 export function TopBar({
-  active = "top",
   onOpenSettings,
   onOpenLearnings,
   pendingLearnings = 0,
 }: {
-  active?: string;
   /** 設定画面を開く。無ければボタンを出さない */
   onOpenSettings?: () => void;
   /** 学び帳を開く。無ければボタンを出さない */
@@ -279,18 +277,6 @@ export function TopBar({
           <span>{text.tagline}</span>
         </span>
       </a>
-      <nav className="topnav" aria-label={text.navLabel}>
-        {NAV.slice(0, 5).map((item) => (
-          <a
-            key={item.id}
-            href={`#${item.id}`}
-            aria-current={item.id === active ? "page" : undefined}
-          >
-            <Icon name={item.icon} size={16} />
-            {text.nav[item.key]}
-          </a>
-        ))}
-      </nav>
       <div className="topbar-clock">
         <time dateTime={now.toISOString()}>
           <span className="clock-date">
@@ -329,12 +315,115 @@ export function TopBar({
   );
 }
 
+/** 見出しがこの高さ（上辺の帯と飛び先の余白の下）まで来た区画を、いま見ている区画とみなす */
+const SPY_LINE_PX = 120;
+
+export interface SectionBox {
+  id: string;
+  top: number;
+  bottom: number;
+  /**
+   * ページ全体（先頭の項目）以外の区画の中にある。
+   * 自動運転は分析の中、URL で開くはレビュー依頼の中にある
+   */
+  nested: boolean;
+}
+
+/**
+ * いま見ている区画を決める。メニューの並びとページ上の並びは違うので、位置だけで決める。
+ * 基準線をまたぐ区画のうち、上端がいちばん下のもの（入れ子なら内側）を選ぶ。
+ * 上端が同じなら外側を選ぶ（分析と自動運転は横に並んで上端がそろう）。
+ * ページの末尾まで来たら、短くて基準線に届かない最後の区画を選ぶ
+ */
+export function currentSection(
+  sections: readonly SectionBox[],
+  viewportHeight: number,
+  atBottom: boolean,
+  line = SPY_LINE_PX,
+): string | undefined {
+  const pick = (boxes: readonly SectionBox[]): SectionBox | undefined =>
+    boxes.reduce<SectionBox | undefined>((best, box) => {
+      if (best === undefined || box.top > best.top) return box;
+      if (box.top === best.top && best.nested && !box.nested) return box;
+      return best;
+    }, undefined);
+  if (atBottom) {
+    const last = pick(sections.filter((box) => !box.nested && box.top < viewportHeight));
+    if (last !== undefined && last.top > line) return last.id;
+  }
+  const passed = sections.filter((box) => box.top <= line);
+  const containing = passed.filter((box) => box.bottom > line);
+  return (pick(containing) ?? pick(passed) ?? pick(sections))?.id;
+}
+
+/** スクロール位置から、左の帯で光らせる項目を追う */
+function useCurrentSection(): [string, (id: string) => void] {
+  const [current, setCurrent] = useState(NAV[0]?.id ?? "top");
+  // 項目を押したら、人が自分でスクロールするまで押した項目を光らせる。
+  // 飛び先がページの末尾に近いと、位置からは押した項目を決められないため
+  const [clicked, setClicked] = useState<string | null>(null);
+  useEffect(() => {
+    if (clicked !== null) {
+      setCurrent(clicked);
+      const release = (): void => setClicked(null);
+      const events = ["wheel", "touchstart", "keydown", "mousedown"] as const;
+      // 押したときの mousedown は済んでいるので、ここから先の操作だけを拾う
+      for (const name of events) window.addEventListener(name, release, { passive: true });
+      return () => {
+        for (const name of events) window.removeEventListener(name, release);
+      };
+    }
+    let frame = 0;
+    const update = (): void => {
+      frame = 0;
+      const elements = NAV.flatMap((item) => {
+        const el = document.getElementById(item.id);
+        return el === null ? [] : [el];
+      });
+      const sections = elements.map((el) => {
+        const rect = el.getBoundingClientRect();
+        return {
+          id: el.id,
+          top: rect.top,
+          bottom: rect.bottom,
+          nested: elements.some(
+            (other) => other !== el && other.id !== NAV[0]?.id && other.contains(el),
+          ),
+        };
+      });
+      const root = document.documentElement;
+      const atBottom =
+        window.scrollY > 0 && window.innerHeight + window.scrollY >= root.scrollHeight - 2;
+      const id = currentSection(sections, window.innerHeight, atBottom);
+      if (id !== undefined) setCurrent(id);
+    };
+    const onScroll = (): void => {
+      if (frame === 0) frame = window.requestAnimationFrame(update);
+    };
+    update();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    return () => {
+      if (frame !== 0) window.cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, [clicked]);
+  return [current, setClicked];
+}
+
 export function SideRail() {
   const text = t().dashboard;
+  const [current, select] = useCurrentSection();
   return (
     <nav className="siderail" aria-label={text.navLabel}>
-      {NAV.map((item, i) => (
-        <a key={item.id} href={`#${item.id}`} aria-current={i === 0 ? "page" : undefined}>
+      {NAV.map((item) => (
+        <a
+          key={item.id}
+          href={`#${item.id}`}
+          aria-current={item.id === current ? "location" : undefined}
+          onClick={() => select(item.id)}
+        >
           <Icon name={item.icon} size={20} />
           <span>{text.nav[item.key]}</span>
         </a>
