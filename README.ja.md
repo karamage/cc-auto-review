@@ -28,7 +28,7 @@
     <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-yellow.svg" alt="MIT License"></a>
   </p>
 
-  <p><a href="https://karamage.github.io/cc-auto-review/ja/#download"><strong>macOS 版をダウンロード</strong></a> · <a href="https://karamage.github.io/cc-auto-review/ja/#risk"><strong>PR をブラウザで採点する</strong></a> · <a href="https://karamage.github.io/cc-auto-review/ja/">サイト</a></p>
+  <p><a href="https://karamage.github.io/cc-auto-review/ja/#download"><strong>ダウンロード</strong></a> · <a href="https://karamage.github.io/cc-auto-review/ja/#risk"><strong>PR をブラウザで採点する</strong></a> · <a href="https://karamage.github.io/cc-auto-review/ja/">サイト</a></p>
 
   <p><a href="README.md">English README</a></p>
 
@@ -135,7 +135,7 @@
 
 Apple シリコン版か Intel 版の **[DMG をダウンロード](https://karamage.github.io/cc-auto-review/ja/#download)** して開き、アプリを「アプリケーション」にドラッグしてください。Developer ID で署名し、Apple の公証を受けているので、そのまま開けます。過去の版は[リリースページ](https://github.com/karamage/cc-auto-review/releases)にあります。
 
-Linux（x86_64）では、[リリースページ](https://github.com/karamage/cc-auto-review/releases)から `.AppImage` か `.deb` をダウンロードしてください。署名はしていないので、各ファイルと一緒に置く `.sha256` で確かめてください。出たばかりで、CI での起動までは確認していますが、実機での確認はまだです。問題があれば [Issue](https://github.com/karamage/cc-auto-review/issues) で教えてください。
+Linux（x86_64）では、**[`.AppImage` か `.deb` をダウンロード](https://karamage.github.io/cc-auto-review/ja/#download)** してください。署名はしていないので、各ファイルと一緒に置く `.sha256` で確かめてください。CI での起動までは確認していますが、実機での確認はまだです。問題があれば [Issue](https://github.com/karamage/cc-auto-review/issues) で教えてください。
 
 ### 必要なもの
 
