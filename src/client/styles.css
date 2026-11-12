@@ -1212,28 +1212,6 @@ button[data-variant="danger"] { color: var(--blocker); border-color: var(--block
 }
 .brand-text span { font-size: 12px; color: var(--muted); letter-spacing: 0.04em; }
 
-.topnav { display: flex; gap: 4px; min-width: 0; }
-.topnav a {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 9px 16px;
-  font-size: 13px;
-  font-weight: 500;
-  white-space: nowrap;
-  color: var(--muted);
-  text-decoration: none;
-  border: 1px solid transparent;
-  border-radius: 8px;
-  transition: color 0.15s, background-color 0.15s, border-color 0.15s;
-}
-.topnav a:hover { color: var(--fg); background: rgb(255 255 255 / 0.03); }
-.topnav a[aria-current="page"] {
-  color: #bff8ff;
-  border-color: var(--ink-rule);
-  background: linear-gradient(180deg, rgb(46 233 255 / 0.2), rgb(46 233 255 / 0.05));
-  box-shadow: 0 0 22px -8px var(--accent), inset 0 1px 0 rgb(255 255 255 / 0.08);
-}
 
 .topbar-clock { display: grid; justify-items: end; gap: 3px; margin-left: auto; flex: none; }
 .topbar-clock time { display: flex; align-items: baseline; gap: 12px; }
@@ -1294,12 +1272,12 @@ button[data-variant="danger"] { color: var(--blocker); border-color: var(--block
   transition: color 0.15s, background-color 0.15s;
 }
 .siderail a:hover { color: var(--fg); background: rgb(255 255 255 / 0.03); }
-.siderail a[aria-current="page"] {
+.siderail a[aria-current] {
   color: var(--accent);
   background: linear-gradient(90deg, rgb(46 233 255 / 0.16), transparent);
   box-shadow: inset 2px 0 var(--accent);
 }
-.siderail a[aria-current="page"] .icon { filter: drop-shadow(0 0 6px var(--accent)); }
+.siderail a[aria-current] .icon { filter: drop-shadow(0 0 6px var(--accent)); }
 .siderail a:last-child { margin-top: auto; }
 
 .topbar .language-switch select { background: rgb(14 34 64 / 0.6); border-radius: 8px; min-height: 34px; }
@@ -2320,12 +2298,6 @@ dialog.confirm { border: 1px solid var(--ink-rule); border-radius: 14px; backgro
 
 @media (max-width: 1500px) {
   .kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-  .topnav a { padding: 9px 12px; }
-}
-
-/* 学び帳と設定のボタンが並ぶと幅が足りない。サイドレールに同じ項目がある */
-@media (max-width: 1560px) {
-  .topnav { display: none; }
 }
 
 @media (max-width: 1320px) {
@@ -2352,7 +2324,7 @@ dialog.confirm { border: 1px solid var(--ink-rule); border-radius: 14px; backgro
 
 @media (max-width: 1080px) {
   .shell { grid-template-columns: minmax(0, 1fr); grid-template-areas: "top" "main"; }
-  .siderail, .topnav { display: none; }
+  .siderail { display: none; }
   .key-hints { padding-left: 0; border-left: 0; }
   .review-layout { grid-template-columns: minmax(0, 1fr); grid-template-areas: "run" "main" "submit"; }
 }
@@ -2723,7 +2695,4 @@ tr:hover > .diff-code > .diff-ask,
 .learning-meta { display: flex; gap: 10px; margin: 6px 0 0; font-size: 12px; color: var(--muted); }
 .learning-item footer, .learning-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; }
 .learnings > .learning-actions { margin-top: 32px; }
-@media (max-width: 1640px) {
-  .topnav a { padding: 9px 12px; }
-}
 .topbar-badge { padding: 0 6px; border-radius: 9px; background: var(--seal); color: var(--bg); font-size: 11px; line-height: 18px; }
