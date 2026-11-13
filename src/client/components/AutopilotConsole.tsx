@@ -1,5 +1,5 @@
-import { type CSSProperties, type KeyboardEvent, useEffect, useRef, useState } from "react";
-import type { PRRef, PRSummary } from "../../shared/types.ts";
+import { type CSSProperties, useEffect, useRef, useState } from "react";
+import type { PRRef } from "../../shared/types.ts";
 import { t } from "../i18n.ts";
 import { useSettings } from "../settings.ts";
 import {
@@ -12,14 +12,13 @@ import {
 import { type AutopilotState, type Sessions, sessionKey } from "../state/sessions.ts";
 
 /**
- * 計器盤の同心円の帯。内側ほど片付いた状態で、外側ほど手が要る。
- * 帯の並びがそのまま処理の段階を表す。
+ * 自動運転が扱った PR の状態。
  * skip-ai-review ラベルで見送った PR と、人が自動運転から外した PR は、
- * 扱っていないのと同じなので計器に載せない
+ * 扱っていないのと同じなので数えない
  */
 export type Band = Exclude<AutopilotState["status"], "skipped" | "released">;
 
-/** 計器と記録に載せる、自動運転が扱った PR の状態 */
+/** 件数と記録に載せる、自動運転が扱った PR の状態 */
 function handled(sessions: Sessions): (AutopilotState & { status: Band })[] {
   return Object.values(sessions).flatMap((s) =>
     s.autopilot == null || s.autopilot.status === "skipped" || s.autopilot.status === "released"
@@ -27,60 +26,25 @@ function handled(sessions: Sessions): (AutopilotState & { status: Band })[] {
       : [s.autopilot as AutopilotState & { status: Band }],
   );
 }
-const BANDS: readonly Band[] = ["approved", "commented", "reviewing", "human"];
-const BAND_RADIUS: Record<Band, number> = {
-  approved: 70,
-  commented: 96,
-  reviewing: 122,
-  human: 148,
-};
-/** コンパスが 10 分かけて描く円 */
-const ARC_RADIUS = 168;
-/** 6 時の方向は帯の名前を書く場所として空けておく。バルーンはその左右の間に並べる */
-const GAP_DEGREES = 44;
-const BALLOON_RADIUS = 13;
-const ARC_LENGTH = 2 * Math.PI * ARC_RADIUS;
-/** 1 周 50 目盛り（12 秒ごと）、5 目盛りごと（1 分ごと）に長い目盛りと数字 */
-const TICKS = 50;
+/** 件数の並び。手が要るものから、片付いたものへ */
+const BANDS: readonly Band[] = ["human", "reviewing", "commented", "approved"];
+/** 計器の目盛りの数。1 周が巡回の間隔で、目盛りが進んだ分だけ点く */
+const TICKS = 120;
+/** 長い目盛りを置く間隔。10 分の間隔なら 1 分ごと */
+const MAJOR_EVERY = 12;
+const TICK_OUTER = 156;
+const TICK_INNER = 142;
+const TICK_INNER_MAJOR = 134;
+/** 進み具合の点が走る輪 */
+const TRACK_RADIUS = 124;
 /** 動きの記録に出す件数 */
-const LOG_SIZE = 5;
+const LOG_SIZE = 3;
 
-export interface Blip {
-  key: string;
-  pr: PRSummary;
-  band: Band;
-  /** 12 時の方向を 0 とした時計回りの角度 */
-  angle: number;
-}
-
-/** 帯ごとの件数。計器に載りきらない分も数える */
+/** 帯ごとの件数 */
 export function countBands(sessions: Sessions): Record<Band, number> {
   const counts: Record<Band, number> = { approved: 0, commented: 0, reviewing: 0, human: 0 };
   for (const state of handled(sessions)) counts[state.status] += 1;
   return counts;
-}
-
-/** 計器に置くバルーンの上限。これを超えた分は件数の欄でだけ数える */
-const MAX_BLIPS = 36;
-
-/**
- * 自動運転が扱った PR を、状態の帯の上に置く。帯をまたいで PR ごとに別の角度を割り当て、
- * どの 2 つも同じ方向に来ないようにする（違う帯でも半径の差だけでは重なるため）。
- * 並びは PR の名前順で、PR が増減しない限り位置は変わらない。6 時の方向は帯の名前のために空ける
- */
-export function plotBlips(sessions: Sessions): Blip[] {
-  const states = handled(sessions)
-    .sort((x, y) => sessionKey(x.pr).localeCompare(sessionKey(y.pr)))
-    .slice(0, MAX_BLIPS);
-  const span = 360 - GAP_DEGREES;
-  const step = span / Math.max(states.length, 1);
-  const start = 180 + GAP_DEGREES / 2 + step / 2;
-  return states.map((state, i) => ({
-    key: sessionKey(state.pr),
-    pr: state.pr,
-    band: state.status,
-    angle: (start + i * step) % 360,
-  }));
 }
 
 /** 新しい順に並べた、自動運転の動きの記録 */
@@ -126,116 +90,39 @@ function useNow(active: boolean): number {
   return now;
 }
 
-/** 文字盤の目盛りと数字。描き直す必要が無いので、一度だけ作る */
-const DIAL_FACE = (
-  <g className="ap-face">
-    {Array.from({ length: TICKS }, (_, i) => {
-      const major = i % 5 === 0;
-      const [x1, y1] = polar((i * 360) / TICKS, 176);
-      const [x2, y2] = polar((i * 360) / TICKS, major ? 189 : 182);
-      return (
-        <line
-          // eslint-disable-next-line react/no-array-index-key -- 固定の目盛りで、並びは変わらない
-          key={i}
-          x1={x1}
-          y1={y1}
-          x2={x2}
-          y2={y2}
-          className={major ? "ap-tick ap-tick-major" : "ap-tick"}
-        />
-      );
-    })}
-    {Array.from({ length: 10 }, (_, minute) => {
-      const [x, y] = polar(minute * 36, 202);
-      return (
-        <text
-          // eslint-disable-next-line react/no-array-index-key -- 0〜9 分の固定の数字
-          key={minute}
-          x={x}
-          y={y}
-          className="ap-numeral"
-          textAnchor="middle"
-          dominantBaseline="central"
-        >
-          {minute}
-        </text>
-      );
-    })}
-  </g>
-);
-
-function Balloon({ blip, onSelect }: { blip: Blip; onSelect: (pr: PRRef) => void }) {
-  const [x, y] = polar(blip.angle, BAND_RADIUS[blip.band]);
-  const label = String(blip.pr.number);
-  const open = (): void => onSelect({ repo: blip.pr.repo, number: blip.pr.number });
-  const onKey = (e: KeyboardEvent<SVGGElement>): void => {
-    if (e.key !== "Enter" && e.key !== " ") return;
-    e.preventDefault();
-    open();
-  };
-  return (
-    <g
-      className="ap-balloon"
-      data-band={blip.band}
-      transform={`translate(${x.toFixed(2)} ${y.toFixed(2)})`}
-      role="button"
-      tabIndex={0}
-      aria-label={t().autopilot.console.open(
-        `${blip.pr.repo}#${blip.pr.number}`,
-        t().autopilot.console.band[blip.band],
-      )}
-      onClick={open}
-      onKeyDown={onKey}
-    >
-      <title>{`${blip.pr.repo}#${blip.pr.number} ${blip.pr.title}`}</title>
-      {blip.band === "human" ? <circle r={BALLOON_RADIUS} className="ap-balloon-pulse" /> : null}
-      {blip.band === "commented" || blip.band === "human" ? (
-        // 改訂記号の △。一覧の指摘の印と同じ形
-        <path d="M0 -16 16 11H-16Z" className="ap-balloon-shape" />
-      ) : (
-        <circle r={BALLOON_RADIUS} className="ap-balloon-shape" />
-      )}
-      {blip.band === "approved" ? (
-        <circle r={BALLOON_RADIUS - 3} className="ap-balloon-inner" />
-      ) : null}
-      <text
-        className="ap-balloon-label"
-        y={blip.band === "commented" || blip.band === "human" ? 3.5 : 0}
-        textAnchor="middle"
-        dominantBaseline="central"
-        style={{ fontSize: label.length > 3 ? 8 : 9.5 } as CSSProperties}
-      >
-        {label}
-      </text>
-    </g>
-  );
-}
+/** 目盛りの座標。描き直す必要が無いので、一度だけ計算する */
+const TICK_LINES = Array.from({ length: TICKS }, (_, i) => {
+  const major = i % MAJOR_EVERY === 0;
+  const angle = (i * 360) / TICKS;
+  const [x1, y1] = polar(angle, major ? TICK_INNER_MAJOR : TICK_INNER);
+  const [x2, y2] = polar(angle, TICK_OUTER);
+  return { i, major, x1, y1, x2, y2 };
+});
 
 /**
- * 10 分を 1 周とする計器。コンパスの脚が経過に合わせて弧を描き、円が閉じると巡回する。
- * 同心円の帯の上に、自動運転が扱った PR を品番バルーンで置く
+ * 巡回の計器。1 周が巡回の間隔で、経過した分の目盛りが順に点いていく。
+ * 円が閉じると巡回する。巡回中は点いた弧が一周を回り続ける
  */
 function Dial({
   view,
   now,
-  blips,
-  onSelect,
+  handledCount,
 }: {
   view: AutopilotView;
   now: number;
-  blips: Blip[];
-  onSelect: (pr: PRRef) => void;
+  handledCount: number;
 }) {
   const text = t().autopilot.console;
   const remaining = Math.max(0, nextPollAt(view, now) - now);
   const progress = view.enabled && !view.busy ? 1 - remaining / autopilotIntervalMs() : 0;
+  const lit = Math.floor(progress * TICKS);
   // 巻き戻るときだけ動きを付けない。円が閉じて 0 に戻るときに逆回転して見えないように
   const previous = useRef(progress);
   const rewinding = progress < previous.current;
   useEffect(() => {
     previous.current = progress;
   });
-  const angle = progress * 360;
+  const [hx, hy] = polar(progress * 360, TRACK_RADIUS);
 
   const readout = !view.enabled
     ? { value: text.readoutOff, caption: text.captionOff }
@@ -244,135 +131,81 @@ function Dial({
       : { value: formatCountdown(remaining), caption: text.captionUntil };
 
   return (
-    <svg
-      className="ap-dial"
-      viewBox="-214 -214 428 428"
-      role="img"
-      aria-label={text.dialLabel(readout.value, blips.length)}
-    >
-      <defs>
-        <radialGradient id="ap-glow" r="0.5">
-          <stop offset="0" stopColor="var(--ap-pencil)" stopOpacity="0.28" />
-          <stop offset="1" stopColor="var(--ap-pencil)" stopOpacity="0" />
-        </radialGradient>
-      </defs>
-
-      {/* 製図の中心線（一点鎖線）。円より少し外まで延ばす */}
-      <g className="ap-centerlines">
-        <line x1="-212" y1="0" x2="212" y2="0" />
-        <line x1="0" y1="-212" x2="0" y2="212" />
-      </g>
-
-      {BANDS.map((band) => (
-        <circle
-          key={band}
-          r={BAND_RADIUS[band]}
-          pathLength={1}
-          className="ap-band"
-          data-band={band}
-        />
-      ))}
-      {/* 6 時の方向に空けた場所へ、帯の名前を書く */}
-      <g className="ap-band-labels">
-        {BANDS.map((band) => (
-          <text key={band} x="5" y={BAND_RADIUS[band] - 5} data-band={band}>
-            {text.band[band]}
-          </text>
-        ))}
-      </g>
-      {DIAL_FACE}
-
-      {/* コンパスが描いた弧。12 時から時計回りに伸びる */}
-      <circle r={ARC_RADIUS} className="ap-arc-track" />
-      <circle
-        r={ARC_RADIUS}
-        className="ap-arc"
-        data-rewinding={rewinding}
-        transform="rotate(-90)"
-        strokeDasharray={ARC_LENGTH}
-        strokeDashoffset={ARC_LENGTH * (1 - progress)}
-      />
-
-      {/* コンパスの脚。中心の針から、弧の先の鉛筆まで */}
-      <g className="ap-compass" transform={`rotate(${angle.toFixed(2)})`}>
-        {/* 巡回中に回す内側の組。見えない円で、回転の中心を計器の中心に合わせる */}
-        <g className="ap-compass-spin">
-          <circle r={ARC_RADIUS} fill="none" stroke="none" />
-          <line x1="0" y1="-50" x2="0" y2={-ARC_RADIUS + 8} className="ap-compass-leg" />
-          <circle cx="0" cy={-ARC_RADIUS} r="26" fill="url(#ap-glow)" />
-          <path
-            d={`M-3.5 ${-ARC_RADIUS + 9} 3.5 ${-ARC_RADIUS + 9} 0 ${-ARC_RADIUS}Z`}
-            className="ap-compass-tip"
-          />
+    <div className="ap-dial">
+      <svg viewBox="-170 -170 340 340" aria-hidden="true">
+        <circle r={TRACK_RADIUS} className="ap-track" />
+        <g className="ap-ticks">
+          {TICK_LINES.map((tick) => (
+            <line
+              key={tick.i}
+              x1={tick.x1}
+              y1={tick.y1}
+              x2={tick.x2}
+              y2={tick.y2}
+              data-major={tick.major}
+              data-lit={tick.i < lit}
+              style={{ "--i": tick.i } as CSSProperties}
+            />
+          ))}
         </g>
-      </g>
-
-      {blips.map((blip) => (
-        <Balloon key={blip.key} blip={blip} onSelect={onSelect} />
-      ))}
-
-      <circle r="50" className="ap-hub" />
-      <text className="ap-readout" y="-4" textAnchor="middle" dominantBaseline="central">
-        {readout.value}
-      </text>
-      <text className="ap-readout-caption" y="20" textAnchor="middle" dominantBaseline="central">
-        {readout.caption}
-      </text>
-    </svg>
+        {view.enabled && !view.busy ? (
+          <g className="ap-head" data-rewinding={rewinding}>
+            <circle
+              r={TRACK_RADIUS}
+              className="ap-trail"
+              pathLength={1}
+              strokeDasharray={`${progress} 1`}
+              transform="rotate(-90)"
+            />
+            <circle cx={hx} cy={hy} r="5" className="ap-head-dot" />
+          </g>
+        ) : null}
+        {view.busy ? (
+          <g className="ap-sweep">
+            <circle r={TRACK_RADIUS} pathLength={1} strokeDasharray="0.22 1" />
+          </g>
+        ) : null}
+      </svg>
+      <div
+        className="ap-readout"
+        role="img"
+        aria-label={text.dialLabel(readout.value, handledCount)}
+      >
+        <strong>{readout.value}</strong>
+        <span>{readout.caption}</span>
+      </div>
+    </div>
   );
 }
 
-/** 工作機械のロータリースイッチ。切から入へ 90 度回す */
-function Knob({ on, onToggle }: { on: boolean; onToggle: () => void }) {
+/** 自動運転を入れ切りするスイッチ。入れたら、状態の言葉と色が一緒に変わる */
+function Switch({ on, onToggle }: { on: boolean; onToggle: () => void }) {
   const text = t().autopilot;
   return (
     <button
       type="button"
-      className="ap-knob"
+      className="ap-switch"
       role="switch"
       aria-checked={on}
-      aria-label={text.toggle}
-      aria-describedby="autopilot-description"
+      aria-labelledby="autopilot-title"
+      aria-describedby="autopilot-status"
       onClick={onToggle}
     >
-      <svg viewBox="-50 -50 100 100" aria-hidden="true">
-        <circle r="44" className="ap-knob-plate" />
-        <text
-          x="-27"
-          y="-27"
-          className="ap-knob-mark"
-          data-active={!on}
-          textAnchor="middle"
-          dominantBaseline="central"
-        >
-          {text.console.knobOff}
-        </text>
-        <text
-          x="27"
-          y="-27"
-          className="ap-knob-mark"
-          data-active={on}
-          textAnchor="middle"
-          dominantBaseline="central"
-        >
-          {text.console.knobOn}
-        </text>
-        <g className="ap-knob-dial">
-          <circle r="26" className="ap-knob-body" />
-          <rect x="-4" y="-25" width="8" height="50" rx="2" className="ap-knob-grip" />
-          <circle cy="-18" r="2.4" className="ap-knob-pointer" />
-        </g>
-        <circle cx="0" cy="38" r="3" className="ap-knob-lamp" />
-      </svg>
+      <span className="ap-switch-label" aria-hidden="true">
+        {on ? text.console.on : text.console.off}
+      </span>
+      <span className="ap-switch-track" aria-hidden="true">
+        <span className="ap-switch-thumb" />
+      </span>
     </button>
   );
 }
 
 const BAND_GLYPH: Record<Band, string> = {
-  human: "M0 -7 6.5 5H-6.5Z",
-  reviewing: "M-6 0a6 6 0 1 0 12 0a6 6 0 1 0-12 0",
-  commented: "M0 -7 6.5 5H-6.5Z",
-  approved: "M-6 0a6 6 0 1 0 12 0a6 6 0 1 0-12 0",
+  human: "M0 -6 5.6 4.5H-5.6Z",
+  reviewing: "M-4.5 0a4.5 4.5 0 1 0 9 0a4.5 4.5 0 1 0-9 0",
+  commented: "M0 -6 5.6 4.5H-5.6Z",
+  approved: "M-4.5 0a4.5 4.5 0 1 0 9 0a4.5 4.5 0 1 0-9 0",
 };
 
 function Glyph({ band }: { band: Band }) {
@@ -384,7 +217,7 @@ function Glyph({ band }: { band: Band }) {
 }
 
 /**
- * 完全自動運転の操作盤。一覧の白い図面の中に、ここだけ青焼きの挿し図として置く
+ * 完全自動運転の操作盤。画面でただひとつ、色と動きを持つ部品にする
  */
 export function AutopilotConsole({
   store,
@@ -398,9 +231,9 @@ export function AutopilotConsole({
   const text = t().autopilot;
   const view = useAutopilot(store);
   const now = useNow(view.enabled);
-  const blips = plotBlips(sessions);
   const counts = countBands(sessions);
   const moves = recentMoves(sessions);
+  const handledCount = BANDS.reduce((sum, band) => sum + counts[band], 0);
 
   const config = useSettings().autopilot;
   const modelName =
@@ -425,23 +258,25 @@ export function AutopilotConsole({
       data-motion={config.animations ? "on" : "off"}
       aria-labelledby="autopilot-title"
     >
-      <div className="ap-figure">
-        <Dial view={view} now={now} blips={blips} onSelect={onSelect} />
-      </div>
+      <header className="ap-head">
+        <h2 id="autopilot-title">{text.toggle}</h2>
+        <Switch on={view.enabled} onToggle={toggle} />
+      </header>
 
-      <div className="ap-body">
-        <div className="ap-head">
-          <h2 id="autopilot-title" className="ap-title">
-            {text.toggle}
-          </h2>
-          <Knob on={view.enabled} onToggle={toggle} />
-        </div>
-        <p className="ap-status" aria-live="polite">
-          {status}
-        </p>
+      <Dial view={view} now={now} handledCount={handledCount} />
 
+      <p id="autopilot-status" className="ap-status" aria-live="polite">
+        {status}
+      </p>
+
+      {/* まだ何も扱っていなければ、0 の並びは出さない。動いている間だけ、記録が残ることを伝える */}
+      {handledCount === 0 ? (
+        view.enabled ? (
+          <p className="ap-log-empty">{text.console.logEmpty}</p>
+        ) : null
+      ) : (
         <dl className="ap-tally">
-          {[...BANDS].reverse().map((band) => (
+          {BANDS.map((band) => (
             <div key={band} data-band={band} data-zero={counts[band] === 0}>
               <dt>
                 <Glyph band={band} />
@@ -451,60 +286,56 @@ export function AutopilotConsole({
             </div>
           ))}
         </dl>
+      )}
 
+      {moves.length === 0 ? null : (
         <ol className="ap-log" aria-label={text.console.logLabel}>
-          {moves.length === 0 ? (
-            <li className="ap-log-empty">{text.console.logEmpty}</li>
-          ) : (
-            moves.map((move) => (
-              <li key={`${sessionKey(move.pr)}@${move.updatedAt}`} data-band={move.status}>
-                <time dateTime={move.updatedAt}>{clockTime(Date.parse(move.updatedAt))}</time>
-                <Glyph band={move.status} />
-                <button
-                  type="button"
-                  className="ap-log-pr"
-                  onClick={() => onSelect({ repo: move.pr.repo, number: move.pr.number })}
-                >
-                  {move.pr.repo}#{move.pr.number}
-                </button>
-                <span className="ap-log-what">
-                  {move.status === "commented"
-                    ? move.held === true
-                      ? text.console.log.held
-                      : text.console.log.commented(move.rounds)
-                    : text.console.log[move.status]}
-                </span>
-              </li>
-            ))
-          )}
+          {moves.map((move) => (
+            <li key={`${sessionKey(move.pr)}@${move.updatedAt}`} data-band={move.status}>
+              <time dateTime={move.updatedAt}>{clockTime(Date.parse(move.updatedAt))}</time>
+              <Glyph band={move.status} />
+              <button
+                type="button"
+                className="ap-log-pr"
+                title={move.pr.title}
+                onClick={() => onSelect({ repo: move.pr.repo, number: move.pr.number })}
+              >
+                <span className="ap-log-repo">{move.pr.repo.split("/")[1] ?? move.pr.repo}</span>#
+                {move.pr.number}
+              </button>
+              <span className="ap-log-what">
+                {move.status === "commented"
+                  ? move.held === true
+                    ? text.console.log.held
+                    : text.console.log.commented(move.rounds)
+                  : text.console.log[move.status]}
+              </span>
+            </li>
+          ))}
         </ol>
+      )}
 
-        <p id="autopilot-description" className="ap-description">
-          {text.description(config.intervalMinutes, modelName, config.approve)}
-          {view.enabled ? <span className="ap-hint">{text.notifyHint}</span> : null}
-        </p>
-
-        {/* 図面の表題欄。この計器の縮尺と、誰が描いているか */}
-        <dl className="ap-titleblock">
-          <div>
-            <dt>{text.console.scale}</dt>
-            <dd>{text.console.scaleValue(config.intervalMinutes)}</dd>
-          </div>
-          <div>
-            <dt>{text.console.drafter}</dt>
-            <dd>{modelName}</dd>
-          </div>
-          <div>
-            <dt>{text.console.lastSweep}</dt>
-            <dd>{view.polledAt === null ? "—" : clockTime(Date.parse(view.polledAt))}</dd>
-          </div>
-        </dl>
-        {view.enabled && view.error !== null ? (
-          <p className="ap-error" role="alert">
-            {text.pollFailed(view.error)}
+      <footer className="ap-meta">
+        <span>{text.console.interval(config.intervalMinutes)}</span>
+        <span>{modelName}</span>
+        <span>
+          {text.console.lastSweep(
+            view.polledAt === null ? "—" : clockTime(Date.parse(view.polledAt)),
+          )}
+        </span>
+        <details className="ap-about">
+          <summary>{text.console.about}</summary>
+          <p>
+            {text.description(config.intervalMinutes, modelName, config.approve)}
+            {view.enabled ? <span className="ap-hint">{text.notifyHint}</span> : null}
           </p>
-        ) : null}
-      </div>
+        </details>
+      </footer>
+      {view.enabled && view.error !== null ? (
+        <p className="ap-error" role="alert">
+          {text.pollFailed(view.error)}
+        </p>
+      ) : null}
     </section>
   );
 }
