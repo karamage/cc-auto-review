@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import type { PRSummary } from "../../shared/types.ts";
 import { emptySession, type AutopilotState, type Sessions } from "../state/sessions.ts";
-import { countBands, formatCountdown, plotBlips, recentMoves } from "./AutopilotConsole.tsx";
+import { countBands, formatCountdown, recentMoves } from "./AutopilotConsole.tsx";
 
 function sessionsWith(statuses: AutopilotState["status"][]): Sessions {
   return Object.fromEntries(
@@ -24,24 +24,6 @@ function sessionsWith(statuses: AutopilotState["status"][]): Sessions {
     }),
   );
 }
-
-test("バルーンは帯をまたいでも同じ角度に来ず、6 時の方向を空けて並ぶ", () => {
-  const blips = plotBlips(
-    sessionsWith(["human", "reviewing", "approved", "approved", "commented"]),
-  );
-  const angles = blips.map((b) => b.angle);
-  expect(new Set(angles).size).toBe(angles.length);
-  for (const angle of angles) {
-    expect(Math.abs(angle - 180)).toBeGreaterThan(20);
-  }
-  expect(blips.map((b) => b.band)).toEqual([
-    "human",
-    "reviewing",
-    "approved",
-    "approved",
-    "commented",
-  ]);
-});
 
 test("帯ごとの件数と、新しい順の記録", () => {
   const sessions = sessionsWith(["human", "approved", "approved"]);

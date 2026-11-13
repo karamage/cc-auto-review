@@ -19,13 +19,11 @@ import { candidateCount } from "../state/learnings.ts";
 import {
   ActivityHeatmap,
   AuthorBars,
-  KpiStrip,
-  Panel,
-  RepoChart,
-  SeverityChart,
-  SideRail,
+  HeroSummary,
+  QueueStrip,
+  RepoBars,
+  SeverityBar,
   TopBar,
-  TrendChart,
 } from "../components/Dashboard.tsx";
 import { formatRelative, sizeRatio } from "../format.ts";
 import { t } from "../i18n.ts";
@@ -235,10 +233,14 @@ function AutoJudgeAction({ pr, store }: { pr: PRSummary; store: SessionStore }) 
   };
   return (
     <div className="auto-judge">
-      <button type="button" disabled={busy} onClick={run}>
+      <button
+        type="button"
+        disabled={busy}
+        title={text.hint(getSettings().autopilot.autoJudgeLabel)}
+        onClick={run}
+      >
         {busy ? text.busy : text.action}
       </button>
-      <span className="auto-judge-hint">{text.hint(getSettings().autopilot.autoJudgeLabel)}</span>
       {error === null ? null : (
         <span className="auto-judge-error" role="alert">
           {text.failed(error)}
@@ -255,10 +257,9 @@ function ReleaseAction({ pr, store }: { pr: PRSummary; store: SessionStore }) {
   const text = t().autopilot.release;
   return (
     <div className="auto-judge">
-      <button type="button" onClick={() => releaseFromAutopilot(store, pr)}>
+      <button type="button" title={text.hint} onClick={() => releaseFromAutopilot(store, pr)}>
         {text.action}
       </button>
-      <span className="auto-judge-hint">{text.hint}</span>
     </div>
   );
 }
@@ -389,47 +390,35 @@ function Legend() {
   );
 }
 
-/** 一覧の枠の見出し。件数と、未レビューをまとめて AI レビューする操作 */
-function RegisterHead({
-  count,
-  pending = 0,
-  onRunAll,
-}: {
-  count: number | null;
-  /** まだ最新の AI レビュー結果が無い PR の数 */
-  pending?: number;
-  onRunAll?: () => void;
-}) {
+/** 一覧の見出し。記号の凡例と、キーボードでの操作 */
+function QueueHead({ count, children }: { count: number | null; children?: ReactNode }) {
   const text = t().list;
   return (
-    <header className="register-head">
-      <div className="register-heading">
-        <h1>
-          {text.title}
-          {count === null || count === 0 ? null : <span className="register-total">{count}</span>}
-        </h1>
-        <p>{count === null ? text.loading : count === 0 ? text.none : text.waiting(count)}</p>
-      </div>
-      <div className="register-actions">
-        {count === null || count === 0 ? null : (
-          <>
-            <Legend />
-            <p className="key-hints" aria-hidden="true">
-              <kbd>j</kbd>
-              <kbd>k</kbd>
-              <span>{text.keysMove}</span>
-              <kbd>Enter</kbd>
-              <span>{text.keysOpen}</span>
-            </p>
-          </>
-        )}
-        {onRunAll === undefined || count === null || count === 0 ? null : (
-          <button type="button" data-variant="primary" disabled={pending === 0} onClick={onRunAll}>
-            {pending === 0 ? text.allReviewed : text.runPending(pending)}
-          </button>
-        )}
-      </div>
+    <header className="queue-head">
+      <h2 className="visually-hidden">{text.title}</h2>
+      {count === null || count === 0 ? null : (
+        <>
+          <Legend />
+          <p className="key-hints" aria-hidden="true">
+            <kbd>j</kbd>
+            <kbd>k</kbd>
+            <span>{text.keysMove}</span>
+            <kbd>Enter</kbd>
+            <span>{text.keysOpen}</span>
+          </p>
+        </>
+      )}
+      {children}
     </header>
+  );
+}
+
+/** まとめて AI レビューする操作。冒頭の要約に置く */
+function RunAll({ pending, onRunAll }: { pending: number; onRunAll: () => void }) {
+  return (
+    <button type="button" data-variant="primary" onClick={onRunAll}>
+      {t().list.runPending(pending)}
+    </button>
   );
 }
 
@@ -437,7 +426,7 @@ function RegisterHead({
 const OpenSettings = createContext<(() => void) | undefined>(undefined);
 const OpenLearnings = createContext<(() => void) | undefined>(undefined);
 
-/** 上辺の帯と左の帯で囲んだ、画面全体の枠 */
+/** 上辺の帯と、その下の本文からなる画面全体の枠 */
 function Shell({ children }: { children: ReactNode }) {
   const [pendingLearnings, setPendingLearnings] = useState(0);
   useEffect(() => {
@@ -454,8 +443,7 @@ function Shell({ children }: { children: ReactNode }) {
         onOpenLearnings={useContext(OpenLearnings)}
         pendingLearnings={pendingLearnings}
       />
-      <SideRail />
-      <main className="page dash" id="top">
+      <main className="dash" id="top">
         {children}
       </main>
     </div>
@@ -480,9 +468,8 @@ function OpenByUrl({ onSelect }: { onSelect: (pr: PRRef) => void }) {
   };
   return (
     <form id="open-by-url" className="open-by-url" onSubmit={onSubmit}>
-      <label htmlFor="open-by-url-input">
-        <strong>{text.openByUrl}</strong>
-        <span>{text.openByUrlLabel}</span>
+      <label htmlFor="open-by-url-input" className="visually-hidden">
+        {text.openByUrl}
       </label>
       <div className="open-by-url-field">
         <input
@@ -492,6 +479,7 @@ function OpenByUrl({ onSelect }: { onSelect: (pr: PRRef) => void }) {
           autoComplete="off"
           spellCheck={false}
           placeholder={text.openByUrlPlaceholder}
+          title={text.openByUrlLabel}
           value={value}
           aria-invalid={invalid}
           aria-describedby={invalid ? "open-by-url-error" : undefined}
@@ -569,18 +557,21 @@ function PRList({
   if (error !== null || list === null) {
     return (
       <Shell>
-        <div className="kpis" data-loading={error === null} aria-hidden="true">
-          {Array.from({ length: 6 }, (_, i) => (
-            // eslint-disable-next-line react/no-array-index-key -- 読み込み中の枠だけの並び
-            <div key={i} className="kpi" data-hero={i === 0} />
-          ))}
-        </div>
-        <div className="dash-grid" data-compact="true">
+        <div className="overview">
+          <HeroSummary
+            prs={null}
+            failed={error !== null}
+            sessions={[]}
+            saved={saved}
+            human={0}
+            posted={0}
+          />
           <AutopilotConsole store={autopilot} sessions={saved} onSelect={onSelect} />
         </div>
-        <section className="panel register-panel" id="requests">
-          <RegisterHead count={null} />
-          <OpenByUrl onSelect={onSelect} />
+        <section className="queue" id="requests">
+          <QueueHead count={null}>
+            <OpenByUrl onSelect={onSelect} />
+          </QueueHead>
           {error === null ? (
             <div className="register" data-loading="true" aria-busy="true">
               <div className="register-row" />
@@ -588,10 +579,10 @@ function PRList({
               <div className="register-row" />
             </div>
           ) : (
-            <p className="error">
-              {error.message}
-              {error.detail === null ? "" : `\n${error.detail}`}
-            </p>
+            <div className="load-error" role="alert">
+              <strong>{error.message}</strong>
+              {error.detail === null ? null : <pre>{error.detail}</pre>}
+            </div>
           )}
         </section>
       </Shell>
@@ -615,60 +606,34 @@ function PRList({
     const session = saved[sessionKey(pr)];
     return session === undefined || session.reviewedAt === null ? [] : [session];
   });
-  const totalLines = list.prs.reduce((sum, pr) => sum + pr.additions + pr.deletions, 0);
   const dash = t().dashboard;
   let index = 0;
 
   return (
     <Shell>
-      <KpiStrip
-        prs={list.prs}
-        sessions={reviewed}
-        saved={saved}
-        human={human.length}
-        posted={posted.length}
-        store={autopilot}
-      />
-      <div className="dash-grid" id="insights">
-        <Panel
-          className="dash-trend"
-          title={dash.trend.title}
-          aside={
-            <span className="panel-total">
-              {dash.trend.total}
-              <strong>{totalLines.toLocaleString()}</strong>
-              {t().list.lines}
-            </span>
+      <div className="overview">
+        <HeroSummary
+          prs={list.prs}
+          sessions={reviewed}
+          saved={saved}
+          human={human.length}
+          posted={posted.length}
+          strip={<QueueStrip prs={list.prs} saved={saved} human={humanKeys} onSelect={onSelect} />}
+          action={
+            pending.length === 0 ? undefined : (
+              <RunAll
+                pending={pending.length}
+                onRunAll={() => void runReviews(browserClient, sessions, pending)}
+              />
+            )
           }
-        >
-          <p className="panel-sub">{dash.trend.unit}</p>
-          <TrendChart prs={list.prs} />
-        </Panel>
-        <AutopilotConsole store={autopilot} sessions={saved} onSelect={onSelect} />
-        <Panel className="dash-severity" title={dash.severity.title}>
-          <SeverityChart sessions={reviewed} />
-        </Panel>
-        <Panel className="dash-repos" title={dash.repos.title}>
-          <RepoChart prs={list.prs} />
-        </Panel>
-        <Panel
-          className="dash-heatmap"
-          title={dash.heatmap.title}
-          aside={<span className="panel-note">{dash.heatmap.note}</span>}
-        >
-          <ActivityHeatmap prs={list.prs} sessions={Object.values(saved)} />
-        </Panel>
-        <Panel className="dash-authors" title={dash.authors.title}>
-          <AuthorBars prs={list.prs} />
-        </Panel>
-      </div>
-      <section className="panel register-panel" id="requests">
-        <RegisterHead
-          count={list.prs.length}
-          pending={pending.length}
-          onRunAll={() => void runReviews(browserClient, sessions, pending)}
         />
-        <OpenByUrl onSelect={onSelect} />
+        <AutopilotConsole store={autopilot} sessions={saved} onSelect={onSelect} />
+      </div>
+      <section className="queue" id="requests">
+        <QueueHead count={list.prs.length}>
+          <OpenByUrl onSelect={onSelect} />
+        </QueueHead>
         {human.length === 0 ? null : (
           <section className="register" data-kind="human">
             <h2>
@@ -687,12 +652,14 @@ function PRList({
                   autopilot={auto.enabled}
                   onSelect={onSelect}
                 />
-                {/* 覚えている head が古ければ、一覧の最新の head で AI レビューする */}
-                <AutoJudgeAction
-                  pr={list.prs.find((p) => sessionKey(p) === sessionKey(pr)) ?? pr}
-                  store={sessions}
-                />
-                <ReleaseAction pr={pr} store={sessions} />
+                <div className="human-actions">
+                  {/* 覚えている head が古ければ、一覧の最新の head で AI レビューする */}
+                  <AutoJudgeAction
+                    pr={list.prs.find((p) => sessionKey(p) === sessionKey(pr)) ?? pr}
+                    store={sessions}
+                  />
+                  <ReleaseAction pr={pr} store={sessions} />
+                </div>
               </div>
             ))}
           </section>
@@ -723,7 +690,7 @@ function PRList({
         )}
       </section>
       {posted.length === 0 ? null : (
-        <section className="panel register-panel" id="posted">
+        <section className="queue" id="posted">
           <section className="register" data-kind="posted">
             <h2>
               {t().list.postedHeading}
@@ -743,6 +710,17 @@ function PRList({
               />
             ))}
           </section>
+        </section>
+      )}
+      {list.prs.length === 0 ? null : (
+        <section className="insights" id="insights" aria-labelledby="insights-title">
+          <h2 id="insights-title">{dash.insights}</h2>
+          <div className="insights-grid">
+            <SeverityBar sessions={reviewed} />
+            <RepoBars prs={list.prs} />
+            <AuthorBars prs={list.prs} />
+            <ActivityHeatmap prs={list.prs} sessions={Object.values(saved)} />
+          </div>
         </section>
       )}
     </Shell>

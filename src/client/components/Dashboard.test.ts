@@ -4,12 +4,10 @@ import { emptySession, type ReviewSession } from "../state/sessions.ts";
 import {
   activityGrid,
   authorLoad,
-  cumulativeSize,
-  currentSection,
   HEATMAP_DAYS,
-  niceCeiling,
   repoShares,
   severityTotals,
+  stripState,
 } from "./Dashboard.tsx";
 
 function pr(repo: string, number: number, extra: Partial<PRSummary> = {}): PRSummary {
@@ -75,17 +73,6 @@ test("リポジトリは多い順、同数なら名前順に並べる", () => {
   ]);
 });
 
-test("変更行数は更新の古い順に積み上げ、最後が全体の量になる", () => {
-  const points = cumulativeSize([
-    pr("o/r", 1, { additions: 10, deletions: 5, updatedAt: "2026-10-20T02:00:00Z" }),
-    pr("o/r", 2, { additions: 1, deletions: 0, updatedAt: "2026-10-19T02:00:00Z" }),
-  ]);
-  expect(points.map((p) => [p.pr.number, p.total])).toEqual([
-    [2, 1],
-    [1, 16],
-  ]);
-});
-
 test("動きは日と時の表に数え、範囲より古いものと未来のものは数えない", () => {
   const now = new Date(2026, 9, 20, 15, 30).getTime();
   const at = (days: number, hour: number): string =>
@@ -123,32 +110,25 @@ test("作成者は変更行数の多い順に、上限の人数まで出す", ()
   ]);
 });
 
-test("目盛りの上限は、値を超える切りのよい数にする", () => {
-  expect(niceCeiling(0)).toBe(1);
-  expect(niceCeiling(5860)).toBe(6000);
-  expect(niceCeiling(1000)).toBe(1000);
-  expect(niceCeiling(1001)).toBe(1200);
-});
-
-test("currentSection はページ上の位置と入れ子で、いま見ている区画を選ぶ", () => {
-  // ページ上の並び: top(main) > insights(中に autopilot) > requests(中に open-by-url) > posted
-  const at = (shift: number) =>
-    [
-      { id: "top", top: 69, bottom: 4000, nested: false },
-      { id: "insights", top: 300, bottom: 1500, nested: false },
-      { id: "autopilot", top: 300, bottom: 1100, nested: true },
-      { id: "requests", top: 1600, bottom: 3200, nested: false },
-      { id: "open-by-url", top: 1700, bottom: 1800, nested: true },
-      { id: "posted", top: 3300, bottom: 3900, nested: false },
-    ].map((box) => ({ ...box, top: box.top - shift, bottom: box.bottom - shift }));
-  expect(currentSection(at(0), 900, false)).toBe("top");
-  // 分析と自動運転は上端がそろうので、外側の分析を選ぶ
-  expect(currentSection(at(212), 900, false)).toBe("insights");
-  // レビュー依頼の中の、まだ基準線に届かない URL で開くは選ばない
-  expect(currentSection(at(1512), 900, false)).toBe("requests");
-  expect(currentSection(at(1612), 900, false)).toBe("open-by-url");
-  expect(currentSection(at(1900), 900, false)).toBe("requests");
-  // 末尾では、基準線に届かない最後の区画を選ぶ
-  expect(currentSection(at(3000), 900, true)).toBe("posted");
-  expect(currentSection([], 900, false)).toBeUndefined();
+test("依頼の帯は、人に回したものを最優先にし、古い head の結果は未レビューとして数える", () => {
+  const fresh = pr("o/r", 1, { headSha: "new" });
+  const stale = pr("o/r", 2, { headSha: "new" });
+  const running = pr("o/r", 3);
+  const handed = pr("o/r", 4);
+  const untouched = pr("o/r", 5);
+  const done = (headSha: string): ReviewSession => ({
+    ...reviewed([]),
+    headSha,
+    reviewedAt: "2026-10-20T00:00:00.000Z",
+  });
+  const saved = {
+    "o/r#1": done("new"),
+    "o/r#2": done("old"),
+    "o/r#3": { ...emptySession("ja"), phase: "running" } as ReviewSession,
+    "o/r#4": done("s"),
+  };
+  const human = new Set(["o/r#4"]);
+  expect(
+    [fresh, stale, running, handed, untouched].map((p) => stripState(p, saved, human)),
+  ).toEqual(["reviewed", "pending", "running", "human", "pending"]);
 });
