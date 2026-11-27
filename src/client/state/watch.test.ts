@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test";
 import type { PRActivity, PRDigest, PRSummary, ReviewStreamEvent } from "../../shared/types.ts";
 import type { ApiClient } from "../api.ts";
-import { createSessionStore, type SessionStorage } from "./sessions.ts";
+import { createSessionStore, runReviews, type SessionStorage } from "./sessions.ts";
 import {
   checkWatched,
   detectChange,
@@ -209,6 +209,50 @@ test("何も起きていなければ確認時刻だけを進め、AI レビュ�
     startedAt: STARTED_AT,
   });
   expect(reviews).toEqual([]);
+});
+
+test("AI レビューを始めてから投稿するまでに来た返信も、見守りで拾う", async () => {
+  const store = createSessionStore();
+  // 投稿した下書きを作った AI レビュー。始めた時刻は投稿より前になる
+  await runReviews(
+    fakeApi(async () => activity()),
+    store,
+    [SUMMARY],
+  );
+  const reviewStartedAt = store.get(SUMMARY).reviewStartedAt as string;
+  const postedAt = new Date(Date.parse(reviewStartedAt) + 30 * MINUTE).toISOString();
+  recordPosted(store, SUMMARY, {
+    review: { url: null, submittedAt: postedAt },
+    headSha: "sha1",
+    event: "COMMENT",
+    comments: 1,
+  });
+  expect(store.get(SUMMARY).posted?.since).toBe(reviewStartedAt);
+  startWatching(store, SUMMARY, Date.parse(postedAt));
+
+  const since: string[] = [];
+  const reviews: { headSha: string }[] = [];
+  await checkWatched(
+    {
+      ...fakeApi(async () => activity({ replies: [reply(5)] }), reviews),
+      async fetchActivity(_pr, from) {
+        since.push(from);
+        return activity({ replies: [reply(5)] });
+      },
+    },
+    store,
+    Date.parse(postedAt) + INTERVAL,
+    INTERVAL,
+  );
+  // 投稿時刻ではなく、AI レビューを始めた時刻より後の返信を見る
+  expect(since).toEqual([reviewStartedAt]);
+  expect(store.get(SUMMARY).watch?.status).toBe("rereviewed");
+  expect(reviews).toEqual([{ headSha: "sha1" }]);
+});
+
+test("AI レビューの結果が無いまま投稿したなら、従来どおり投稿時刻より後を見る", () => {
+  const store = postedStore();
+  expect(store.get(SUMMARY).posted?.since).toBeUndefined();
 });
 
 test("修正が push されたら、新しい head で AI レビューをやり直す", async () => {

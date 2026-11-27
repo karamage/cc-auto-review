@@ -26,7 +26,7 @@ import {
   type Sessions,
   sessionKey,
 } from "./sessions.ts";
-import { hasSameContent, recordPosted, startWatching } from "./watch.ts";
+import { hasSameContent, recordPosted, repliesSince, startWatching } from "./watch.ts";
 
 /** レビュー依頼の一覧を確認しに行く間隔（ミリ秒）。設定の分から決める */
 export function autopilotIntervalMs(config: AutopilotConfig = getSettings().autopilot): number {
@@ -317,7 +317,13 @@ async function settleOne(
       held: true,
       note: text.heldNote(decision.unfixed.length + decision.unverified.length),
     });
-    startWatching(store, pr, now(), { headSha, since: new Date(now()).toISOString() });
+    // ただし AI レビューを始めてから見送りを決めるまでに来た返信は、この回では読んでいない。
+    // 見送りを決めた時刻で切ると、その返信は無かったことになるので、レビューを始めた時刻から拾う
+    const decidedAt = new Date(now()).toISOString();
+    startWatching(store, pr, now(), {
+      headSha,
+      since: repliesSince(store.get(pr), decidedAt) ?? decidedAt,
+    });
     return;
   }
 

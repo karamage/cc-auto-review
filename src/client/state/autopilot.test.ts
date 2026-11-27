@@ -1,4 +1,4 @@
-import { expect, test } from "bun:test";
+import { expect, setSystemTime, test } from "bun:test";
 import type { RiskAssessment } from "../../shared/risk.ts";
 import { defaultSettings } from "../../shared/settings.ts";
 import { SKIP_REVIEW_CODE } from "../../shared/types.ts";
@@ -528,7 +528,8 @@ test("再レビューで残ったのが直っていない既存の指摘だけ�
   await checkWatched(second.api, store, Date.now(), 10 * 60_000, (pr, now) =>
     takeOverRereview(store, pr, now),
   );
-  const heldAt = Date.parse("2026-10-21T00:00:00Z");
+  // 見送りを決めたのは、AI レビューを始めてしばらくたってから
+  const heldAt = Date.now() + 5 * 60_000;
   await settleAutopilot(
     second.api,
     store,
@@ -539,12 +540,16 @@ test("再レビューで残ったのが直っていない既存の指摘だけ�
   expect(second.submitted).toHaveLength(0);
   const session = store.get(PR);
   expect(session.autopilot).toMatchObject({ status: "commented", held: true, rounds: 1 });
+  // 返信は、見送りを決めた時刻ではなく AI レビューを始めた時刻より後を拾う。
+  // レビュー中に来た返信は、この回では読んでいないので、無かったことにしない
+  const reviewStartedAt = session.reviewStartedAt as string;
+  expect(Date.parse(reviewStartedAt)).toBeLessThan(heldAt);
   expect(session.watch).toMatchObject({
     status: "waiting",
-    baseline: { headSha: "sha2", since: new Date(heldAt).toISOString() },
+    baseline: { headSha: "sha2", since: reviewStartedAt },
   });
 
-  // 次の確認で head が見送った回と同じなら、何もしない。返信も見送った回より後だけを見る
+  // 次の確認で head が見送った回と同じなら、何もしない。返信も見送った回のレビューより後だけを見る
   const third = fakeApi({
     activity: { state: "OPEN", headSha: "sha2", replies: [], approvals: [] },
   });
@@ -552,19 +557,25 @@ test("再レビューで残ったのが直っていない既存の指摘だけ�
     takeOverRereview(store, pr, now),
   );
   expect(third.reviews).toHaveLength(0);
-  expect(third.activitySince).toEqual([new Date(heldAt).toISOString()]);
+  expect(third.activitySince).toEqual([reviewStartedAt]);
   expect(store.get(PR).watch?.status).toBe("waiting");
 
   // さらに直して push されたら、自動運転の回としてやり直す
   const fourth = fakeApi({
     activity: { state: "OPEN", headSha: "sha3", replies: [], approvals: [] },
   });
-  await checkWatched(fourth.api, store, heldAt + 22 * 60_000, 10 * 60_000, (pr, now) =>
-    takeOverRereview(store, pr, now),
-  );
-  expect(fourth.reviews[0]).toMatchObject({ headSha: "sha3", options: { assessRisk: true } });
-  await settleAutopilot(fourth.api, store);
-  expect(fourth.submitted[0]).toMatchObject({ event: "APPROVE", commitId: "sha3" });
+  // AI レビューは実際の時計で時刻を記録するので、時計をこの回の時刻に合わせる
+  setSystemTime(new Date(heldAt + 22 * 60_000));
+  try {
+    await checkWatched(fourth.api, store, Date.now(), 10 * 60_000, (pr, now) =>
+      takeOverRereview(store, pr, now),
+    );
+    expect(fourth.reviews[0]).toMatchObject({ headSha: "sha3", options: { assessRisk: true } });
+    await settleAutopilot(fourth.api, store);
+    expect(fourth.submitted[0]).toMatchObject({ event: "APPROVE", commitId: "sha3" });
+  } finally {
+    setSystemTime();
+  }
 });
 
 test("まだ投稿していない PR で、ほかの人の指摘が直っていないだけなら、投稿せずに次の head を待つ", async () => {

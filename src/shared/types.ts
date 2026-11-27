@@ -123,8 +123,14 @@ export interface ExistingComment {
    * 変更後の行番号と突き合わせると無関係な行に表示されるので区別する。
    */
   side: "LEFT" | "RIGHT" | null;
+  /**
+   * 書いた時刻。レビューの中で書いた行コメント（スレッドへの返信を含む）は、
+   * 下書きを書いた時刻で、レビューを提出して見えるようになった時刻より前になることがある
+   */
   createdAt: string;
   url: string;
+  /** 行コメントが属するレビューの ID。Issue コメントには無い */
+  reviewId?: number;
 }
 
 export interface Finding {

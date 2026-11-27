@@ -125,6 +125,8 @@ interface RawComment {
   side?: "LEFT" | "RIGHT" | null;
   created_at: string;
   html_url: string;
+  /** 行コメントが属するレビュー。Issue コメントには無い */
+  pull_request_review_id?: number | null;
 }
 
 export interface RawReview {
@@ -195,6 +197,7 @@ function toComment(raw: RawComment): ExistingComment {
     side: raw.side ?? null,
     createdAt: raw.created_at,
     url: raw.html_url,
+    ...(raw.pull_request_review_id == null ? {} : { reviewId: raw.pull_request_review_id }),
   };
 }
 
@@ -428,8 +431,11 @@ export class GitHubClient {
       }));
   }
 
-  /** レビューを出した人が承認したままでいるもの。fetchReviewBodies と同じ API を読む */
-  async fetchApprovals(pr: PRRef): Promise<Approval[]> {
+  /**
+   * 提出済みのレビューすべて。承認（currentApprovals）と、行コメントが見えるようになった時刻を
+   * 見るのに使う。fetchReviewBodies と同じ API を読む
+   */
+  async fetchReviews(pr: PRRef): Promise<RawReview[]> {
     const result = await this.run(
       ["gh", "api", "--paginate", `repos/${pr.repo}/pulls/${pr.number}/reviews`, "--jq", ".[]"],
       {
@@ -437,7 +443,7 @@ export class GitHubClient {
         en: `Could not fetch the reviews of ${pr.repo}#${pr.number}`,
       },
     );
-    return currentApprovals(parseJsonLines<RawReview>(result.stdout));
+    return parseJsonLines<RawReview>(result.stdout);
   }
 
   /** gh でログインしている自分のアカウント名。変わらないので一度だけ取る */
