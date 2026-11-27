@@ -28,6 +28,12 @@ export interface PostedRecord {
   event: ReviewEventKind;
   /** 投稿した指摘の数（行コメントと本文にまとめたものの合計） */
   comments: number;
+  /**
+   * 見守りで、これより後の返信を拾う時刻（ISO 8601）。投稿した下書きを作った AI レビューを始めた時刻。
+   * AI レビューを始めてから投稿するまでの返信は AI も人も見ていないので、投稿時刻で切ると見落とす。
+   * この項目ができる前に保存した記録には無いので、そのときは投稿時刻で代える
+   */
+  since?: string;
 }
 
 /**
@@ -111,6 +117,11 @@ export interface ReviewSession {
   headSha: string | null;
   /** 結果を受け取った時刻（ISO 8601）。一度も結果が出ていなければ null */
   reviewedAt: string | null;
+  /**
+   * draft と同じ回の AI レビューを始めた時刻（ISO 8601）。この回は、これより前の PR のコメントを読んでいる。
+   * これより後のコメントは読んでいないかもしれないので、見守りはここから後の返信を拾う
+   */
+  reviewStartedAt?: string;
   /** 最後に GitHub へ投稿したレビュー。投稿していなければ null */
   posted: PostedRecord | null;
   /** 投稿後の見守り。見守っていなければ null */
@@ -388,6 +399,8 @@ async function execute(
 
   // 指摘の番号が変わるので、走り始めた時点で会話を消す
   patch({ progress: t().session.fetching, chat: EMPTY_CHAT });
+  // PR のコメントはこの後に読む。これより後に来た返信は、この回では読んでいないものとして扱う
+  const startedAt = new Date().toISOString();
   // 指摘はリクエストを送ったときの言語で返ってくる。途中で画面の言語を変えても、下書きはその言語で作る
   const lang = getLang();
   // findings か error のどちらかが来ないまま接続が閉じたら、黙って終わらせずに失敗として出す
@@ -417,6 +430,7 @@ async function execute(
           profileId: auto ? (event.profileId ?? profileId) : profileId,
           headSha,
           reviewedAt: new Date().toISOString(),
+          reviewStartedAt: startedAt,
         });
       }
       if (event.type === "error") {

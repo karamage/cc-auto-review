@@ -38,12 +38,26 @@ export function recordPosted(
   pr: PRSummary,
   posted: { review: PostedReview; headSha: string; event: ReviewEventKind; comments: number },
 ): void {
-  store.update(pr, (s) => ({
-    ...s,
-    posted: { ...posted, pr },
-    watch: null,
-    autopilot: null,
-  }));
+  store.update(pr, (s) => {
+    const since = repliesSince(s, posted.review.submittedAt);
+    return {
+      ...s,
+      posted: { ...posted, pr, ...(since === undefined ? {} : { since }) },
+      watch: null,
+      autopilot: null,
+    };
+  });
+}
+
+/**
+ * 見守りで、これより後の返信を拾う時刻。いまの下書きを作った AI レビューを始めた時刻で、
+ * それが until より前のときだけ返す。AI レビューを始めてから until までに来た返信は、
+ * その回では読んでいないので、見守りで拾い直す。時刻が分からなければ undefined
+ */
+export function repliesSince(session: ReviewSession, until: string): string | undefined {
+  const started = session.reviewStartedAt;
+  if (started === undefined || session.reviewedAt === null) return undefined;
+  return Date.parse(started) < Date.parse(until) ? started : undefined;
 }
 
 export function stopWatching(store: SessionStore, pr: PRRef): void {
@@ -249,7 +263,7 @@ export async function checkWatched(
     const pr = posted.pr;
     // 自動運転が投稿せずに見送った回や、中身の変わらないコミットがあれば、それより後の動きだけを見る
     const baseline = watch?.baseline;
-    const since = baseline?.since ?? posted.review.submittedAt;
+    const since = baseline?.since ?? posted.since ?? posted.review.submittedAt;
     let activity: PRActivity;
     try {
       // 1 件ずつ確認する。見守る PR が多くても gh をまとめて叩かない

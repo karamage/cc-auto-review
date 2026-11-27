@@ -1,8 +1,16 @@
 import type { Hono } from "hono";
 import type { Lang } from "../../shared/i18n.ts";
 import { computeBaselineRisk } from "../../shared/risk-score.ts";
-import type { PRActivity, PRDetail, PRDigest, PRListResponse, PRRef } from "../../shared/types.ts";
+import type {
+  ExistingComment,
+  PRActivity,
+  PRDetail,
+  PRDigest,
+  PRListResponse,
+  PRRef,
+} from "../../shared/types.ts";
 import type { AppDeps } from "../app.ts";
+import { currentApprovals } from "../github/client.ts";
 import { diffDigest } from "../diff/digest.ts";
 import { parseUnifiedDiff } from "../diff/parse.ts";
 import { requestLang } from "../lang.ts";
@@ -43,8 +51,7 @@ export function registerPRRoutes(app: Hono, deps: AppDeps): void {
     return c.json(body);
   });
 
-  // 投稿したレビューへの反応を見る。since は投稿時刻で、それより後の作成者のコメントと、
-  // ほかの人の承認だけを返す
+  // 投稿したレビューへの反応を見る。since より後の作成者のコメントと、ほかの人の承認だけを返す
   app.get(`${PR_PATH}/activity`, async (c) => {
     const pr = parsePRRef(c.req.param());
     const since = Date.parse(c.req.query("since") ?? "");
@@ -52,20 +59,33 @@ export function registerPRRoutes(app: Hono, deps: AppDeps): void {
       return c.json({ message: invalidPR(requestLang(c), true), detail: null }, 400);
     }
 
-    const [{ state, headSha, author }, comments, approvals, viewer] = await Promise.all([
+    const [{ state, headSha, author }, comments, reviews, viewer] = await Promise.all([
       deps.github.fetchPRState(pr),
       deps.github.fetchComments(pr),
-      deps.github.fetchApprovals(pr),
+      deps.github.fetchReviews(pr),
       deps.github.fetchViewerLogin(),
     ]);
+    // レビューの中で書いた行コメント（スレッドへの返信など）は、レビューを提出するまで見えない。
+    // created_at は下書きを書いた時刻なので、提出が since より後でも since より前になることがある。
+    // 書いた時刻で切ると、その返信を見落とす。提出した時刻で比べる
+    const submittedAt = new Map(
+      reviews.flatMap((review) =>
+        review.submitted_at === null ? [] : [[review.id, review.submitted_at] as const],
+      ),
+    );
+    const visibleAt = (comment: ExistingComment): number => {
+      const submitted =
+        comment.reviewId === undefined ? undefined : submittedAt.get(comment.reviewId);
+      return Math.max(Date.parse(comment.createdAt), Date.parse(submitted ?? comment.createdAt));
+    };
     const body: PRActivity = {
       state,
       headSha,
       replies: comments.filter(
-        (comment) => comment.author === author && Date.parse(comment.createdAt) > since,
+        (comment) => comment.author === author && visibleAt(comment) > since,
       ),
       // 自分の承認は、自分が投稿したレビューそのもの。作成者は自分の PR を承認できない
-      approvals: approvals.filter(
+      approvals: currentApprovals(reviews).filter(
         (approval) =>
           approval.author !== viewer &&
           approval.author !== author &&

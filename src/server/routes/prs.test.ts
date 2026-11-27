@@ -280,6 +280,45 @@ test("GET .../activity は since より後の作成者のコメントと、PR �
   expect(body.approvals).toEqual([]);
 });
 
+test("GET .../activity は、下書きを since より前に書いてもレビューの提出が since より後のスレッド返信を返す", async () => {
+  // 作成者が「レビューを開始」で返信を下書きし、投稿の後で提出した。created_at は下書きの時刻になる
+  const threadReply = (id: number, createdAt: string, reviewId: number | null) =>
+    JSON.stringify({
+      ...JSON.parse(rawComment(id, "alice", createdAt)),
+      path: "src/a.ts",
+      line: 3,
+      side: "RIGHT",
+      in_reply_to_id: 100,
+      pull_request_review_id: reviewId,
+    });
+  const app = appWith({
+    [VIEWER_CMD]: ok("me\n"),
+    [STATE_CMD]: ok(
+      JSON.stringify({ state: "OPEN", headRefOid: "abc123", author: { login: "alice" } }),
+    ),
+    [REVIEWS_CMD]: ok(
+      [
+        rawReview(50, "alice", "COMMENTED", "2026-10-03T00:00:00Z"), // 投稿の後に提出
+        rawReview(51, "alice", "COMMENTED", "2026-10-01T12:00:00Z"), // 投稿より前に提出
+      ].join("\n"),
+    ),
+    "gh api --paginate repos/o/r/pulls/12/comments --jq .[]": ok(
+      [
+        threadReply(1, "2026-10-01T00:00:00Z", 50),
+        threadReply(2, "2026-10-01T00:00:00Z", 51),
+        threadReply(3, "2026-10-01T00:00:00Z", null),
+      ].join("\n"),
+    ),
+    "gh api --paginate repos/o/r/issues/12/comments --jq .[]": ok(""),
+  });
+
+  const res = await app.request(
+    `/api/repos/o/r/pulls/12/activity?since=${encodeURIComponent("2026-10-02T00:00:00Z")}`,
+  );
+  expect(res.status).toBe(200);
+  expect((await res.json()).replies.map((c: { id: number }) => c.id)).toEqual([1]);
+});
+
 test("GET .../activity は since より後の、自分と作成者と bot 以外の承認を返す", async () => {
   const app = appWith({
     [STATE_CMD]: ok(
